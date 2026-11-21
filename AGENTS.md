@@ -23,6 +23,14 @@ Every change to this site must meet WCAG 2.2 Level AA and stay easy for search e
 - Keep pages fast: small CSS and images, no unused frameworks, and a stable layout so Core Web Vitals stay healthy.
 - Follow current indexing guidance from Google, Bing, DuckDuckGo, and Brave: crawlable HTML, unique titles and descriptions, accurate canonicals, and no doorway or hidden-text tricks.
 
+## Arcade
+
+Each game is one folder, `/arcade/<slug>/index.html`. The list on `/arcade/` is the `$games` array in `arcade/index.php`: title, one-line description, path, and thumbnail. Adding a game is one new entry, in the order it should appear. Put the thumbnail in that game’s folder. The card title names the game, so the thumbnail alt text stays empty.
+
+Game files come from their own maintainers. Drop the new `index.html` in unchanged. Do not edit it in this repo. Games may keep settings and high scores in the browser’s local storage and must not load outside resources. When a game stores something new, describe it on `/privacy` under “Saved on your device” and update the effective date if the policy text changes.
+
+The homepage links to `/arcade/` from the section between About and Contact. The footer does too.
+
 ## OTRadio
 
 The player files in `otradio/` stay in the repo. While `TYLILO_OTRADIO_ENABLED` in `config.php` is `false`, `/otradio/` returns the site 404 page, sends `noindex`, is omitted from `sitemap.xml`, and is not linked from the footer. The script, stylesheet, and fonts under `otradio/` remain available. To publish the player again, set that flag to `true`, add `https://tylilo.com/otradio/` to `sitemap.xml`, and restore the OTRadio section on `/privacy`: on-device caption, speed, and position storage, plus catalog, audio, captions, and artwork loaded from `pub-a3eee908554d4a948d807c160caa454e.r2.dev`. Update the effective date on `/privacy` when you do. The footer link follows the flag.

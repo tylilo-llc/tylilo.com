@@ -1,5 +1,7 @@
 # Tylilo on HostM / Apache.
-DirectoryIndex index.php
+# index.php wins when a folder has one (the arcade list). Game folders
+# only have index.html, and that file must still be served.
+DirectoryIndex index.php index.html
 
 Options -Indexes -MultiViews
 AddDefaultCharset UTF-8
@@ -24,6 +26,12 @@ AddDefaultCharset UTF-8
   RewriteRule ^privacy/?$ privacy.php [L]
   RewriteCond %{THE_REQUEST} \s/+otradio/index\.php[\s?] [NC]
   RewriteRule ^otradio/index\.php$ /otradio/ [R=301,L]
+  RewriteCond %{THE_REQUEST} \s/+arcade/index\.php[\s?] [NC]
+  RewriteRule ^arcade/index\.php$ /arcade/ [R=301,L]
+  # /arcade/red-rain and /arcade/solitaire work with or without a slash.
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteCond %{REQUEST_URI} !/$
+  RewriteRule ^(.+)$ /$1/ [R=301,L]
 </IfModule>
 
 ErrorDocument 404 /404.php

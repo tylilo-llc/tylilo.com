@@ -26,6 +26,10 @@ if ($uri === '/otradio/index.php' && TYLILO_OTRADIO_ENABLED) {
     header('Location: /otradio/', true, 301);
     exit;
 }
+if ($uri === '/arcade/index.php') {
+    header('Location: /arcade/', true, 301);
+    exit;
+}
 if ($uri !== '/' && is_file($path)) {
     return false;
 }
@@ -46,6 +50,14 @@ if ($uri !== '/' && is_dir($path)) {
     $index = $path . 'index.php';
     if (is_file($index)) {
         require $index;
+        exit;
+    }
+
+    // Self-contained arcade games are index.html and are not PHP pages.
+    $html = $path . 'index.html';
+    if (is_file($html)) {
+        header('Content-Type: text/html; charset=UTF-8');
+        readfile($html);
         exit;
     }
 }

@@ -12,6 +12,7 @@ if (!defined('TYLILO_BOOTSTRAPPED')) {
 <?php if (TYLILO_OTRADIO_ENABLED): ?>
       <a href="/otradio/"<?php if (($pageCanonical ?? '') === TYLILO_URL . '/otradio/'): ?> aria-current="page"<?php endif; ?>>OTRadio</a>
 <?php endif; ?>
+      <a href="/arcade/"<?php if (($pageCanonical ?? '') === TYLILO_URL . '/arcade/'): ?> aria-current="page"<?php endif; ?>>Arcade</a>
       <a href="/accessibility"<?php if (($pageCanonical ?? '') === TYLILO_URL . '/accessibility'): ?> aria-current="page"<?php endif; ?>>Accessibility</a>
       <a href="/privacy"<?php if (($pageCanonical ?? '') === TYLILO_URL . '/privacy'): ?> aria-current="page"<?php endif; ?>>Privacy</a>
     </nav>
