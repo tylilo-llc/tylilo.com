@@ -19,6 +19,8 @@ AddDefaultCharset UTF-8
   RewriteCond %{THE_REQUEST} \s/+accessibility\.php[\s?] [NC]
   RewriteRule ^accessibility\.php$ /accessibility [R=301,L]
   RewriteRule ^accessibility/?$ accessibility.php [L]
+  RewriteCond %{THE_REQUEST} \s/+otradio/index\.php[\s?] [NC]
+  RewriteRule ^otradio/index\.php$ /otradio/ [R=301,L]
 </IfModule>
 
 ErrorDocument 404 /404.php

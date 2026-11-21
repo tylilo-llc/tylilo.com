@@ -67,28 +67,47 @@ accessibility.php         Accessibility statement
 contact.php               Form handler
 config.php                Email, site name, year
 includes/                 Shared header, footer, and form code
-assets/css/styles.css     All styles
+assets/css/styles.css     Site styles
 assets/js/theme.js        Light / dark / auto switch
 assets/js/form.js         Form status and double-submit guard
 assets/img/               Logos, favicons, social image
 assets/fonts/             Nunito (SIL Open Font License)
+otradio/                  OTRadio player (see below)
 favicon.ico               Browser icon
 site.webmanifest          Home-screen icon info
+sitemap.xml               Pages search engines should list
 .htaccess                 404 page, caching, and blocked private files
 .github/workflows/        Deploy to HostM
 router.php                Local preview only
 scripts/generate-icons.py Rebuild favicons from the round logo
 ```
 
-`assets/img/logo-round.webp` is the badge in the hero. `assets/img/logo.svg` is the wide wordmark, ready for later pages. Nunito’s license is `assets/fonts/OFL.txt`.
+`assets/img/logo-round.webp` is the badge in the hero. `assets/img/logo.svg` is the wide wordmark, ready for later pages. Nunito’s license is `assets/fonts/OFL.txt`. The player ships its own Nunito files; the same license is copied to `otradio/assets/fonts/OFL.txt`.
 
-To add another page, copy the top of `index.php` (the bootstrap and head includes), reuse `includes/topbar.php` inside `<header class="hero">`, and end with `includes/footer.php`. Give the page its own title, description, and canonical URL, and add it to `sitemap.xml`.
+To add another page, copy the top of `index.php` (the bootstrap and head includes), reuse `includes/topbar.php` inside `<header class="hero">`, and end with `includes/footer.php`. Give the page its own title, description, and canonical URL, and add it to `sitemap.xml`. Set `$pageStylesheets` to an array of stylesheet URLs before including the head when a page needs its own CSS.
 
 ## Standards
 
 Every change should meet WCAG 2.2 Level AA and stay in good shape for search. That means semantic HTML, a unique title, meta description, canonical URL, and Open Graph tags on each page, structured data where it fits, an updated `sitemap.xml` for new public pages, and a valid `robots.txt`. Keep pages fast enough for Core Web Vitals, and follow current indexing guidance from Google, Bing, DuckDuckGo, and Brave.
 
 The full rules and the pre-merge checklist (axe or pa11y, Lighthouse accessibility and SEO, keyboard-only use, both themes, and 200% zoom) are in [AGENTS.md](AGENTS.md).
+
+## OTRadio
+
+[https://tylilo.com/otradio/](https://tylilo.com/otradio/) is a static player for cleaned-up old-time radio episodes. There is no build step. The page is `otradio/index.php`. It uses the same header, footer, skip link, focus ring, and theme as the homepage.
+
+```
+otradio/index.php          Page (shared header and footer)
+otradio/player.css         Player styles, scoped under .otr-player
+otradio/player.js          Catalog, playback, captions
+otradio/assets/fonts/      Nunito for this page
+```
+
+The catalog address is the `CATALOG_URL` constant at the top of `otradio/player.js`. Episode audio, captions, and artwork resolve from the catalog’s `public_base_url`, which is `https://pub-a3eee908554d4a948d807c160caa454e.r2.dev`. That origin is allowed in the content security policy for this page only (`connect-src` for the catalog and caption files, `media-src` for audio and WebVTT tracks, `img-src` for artwork). Other pages are unchanged.
+
+The header’s Light / Dark / Auto switch is the only theme control. It uses the `tylilo-theme` value in this browser and sets `data-theme` on the page before the first paint, the same way the homepage does. Player colors are wired to the site’s tokens at the bottom of `player.css` (for example `--otr-navy` follows `--navy`, which stays `#0A3161`). The player’s own theme buttons are not on the page.
+
+Captions start on. The CC button turns them off for this browser. The footer links here, next to Accessibility, and the page is listed in `sitemap.xml`.
 
 ## Deploy to HostM
 

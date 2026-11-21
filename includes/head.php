@@ -68,4 +68,11 @@ $nonce = tylilo_e($cspNonce);
     })();
   </script>
   <link rel="stylesheet" href="/assets/css/styles.css">
+<?php if (!empty($pageStylesheets) && is_array($pageStylesheets)): ?>
+<?php foreach ($pageStylesheets as $pageStylesheet): ?>
+<?php if (is_string($pageStylesheet) && $pageStylesheet !== ''): ?>
+  <link rel="stylesheet" href="<?= tylilo_e($pageStylesheet) ?>">
+<?php endif; ?>
+<?php endforeach; ?>
+<?php endif; ?>
 </head>

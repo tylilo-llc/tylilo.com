@@ -21,8 +21,32 @@ if (str_contains($uri, "\0") || str_contains($uri, '..')) {
 }
 
 $path = __DIR__ . $uri;
+if ($uri === '/otradio/index.php') {
+    header('Location: /otradio/', true, 301);
+    exit;
+}
 if ($uri !== '/' && is_file($path)) {
     return false;
+}
+
+// Match Apache DirectoryIndex so /otradio/ serves otradio/index.php.
+// A missing trailing slash is redirected so relative URLs stay in the folder.
+if ($uri !== '/' && is_dir($path)) {
+    if (!str_ends_with($uri, '/')) {
+        if (!preg_match('#\A/[A-Za-z0-9._/-]*\z#', $uri)) {
+            http_response_code(400);
+            exit;
+        }
+        $query = $_SERVER['QUERY_STRING'] ?? '';
+        header('Location: ' . $uri . '/' . ($query !== '' ? '?' . $query : ''), true, 302);
+        exit;
+    }
+
+    $index = $path . 'index.php';
+    if (is_file($index)) {
+        require $index;
+        exit;
+    }
 }
 
 if ($uri === '/' || $uri === '/index.php') {
