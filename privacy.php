@@ -42,6 +42,7 @@ require __DIR__ . '/includes/head.php';
 
         <h2>Cookies</h2>
         <p>The homepage sets one cookie named <code>tylilo</code>. It is a session cookie: it lasts until you close the browser. It is HttpOnly, so page scripts cannot read it, and SameSite is Lax. When you visit over HTTPS, it is also marked Secure.</p>
+        <p>Signing in at the private admin area uses that same cookie so the browser stays signed in. The cookie is necessary for the login. There is no public sign-up and there are no member accounts yet.</p>
         <p>That cookie exists so the contact form can tell a real visit from a forged or repeated one. It is not a tracking cookie. The site does not set advertising cookies.</p>
 
         <h2>Saved on your device</h2>

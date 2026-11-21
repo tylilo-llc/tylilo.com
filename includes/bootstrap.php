@@ -37,7 +37,8 @@ $frameSrc = "'self'";
 $connectSrc = "'self'";
 $mediaSrc = '';
 $home = $requestPath === '/' || $requestPath === '/index.php';
-if ($home) {
+$needsTurnstile = $home || $requestPath === '/admin' || str_starts_with($requestPath, '/admin/');
+if ($needsTurnstile) {
     $scriptSrc .= ' https://challenges.cloudflare.com';
     $frameSrc .= ' https://challenges.cloudflare.com';
     $connectSrc .= ' https://challenges.cloudflare.com';
