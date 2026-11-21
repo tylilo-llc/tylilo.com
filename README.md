@@ -26,7 +26,7 @@ The contact form needs PHP, so opening the files directly from Finder or File Ex
 
 ## Edit the placeholder text
 
-The tagline on the homepage is **Under Construction**. It is the `$tagline` line at the top of `index.php`.
+The tagline on the homepage is **Welcome!**. It is the `$tagline` line at the top of `index.php`.
 
 Ryan has not written the About copy yet. Those stand-in words are in the same block:
 
