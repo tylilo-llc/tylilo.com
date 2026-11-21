@@ -25,3 +25,11 @@ const TYLILO_SITE_NAME = 'Tylilo';
 const TYLILO_LEGAL_NAME = 'Tylilo LLC';
 const TYLILO_YEAR = '2026';
 const TYLILO_URL = 'https://tylilo.com';
+
+/**
+ * OTRadio stays in otradio/ either way. false hides /otradio/ behind the
+ * normal 404 page and drops it from the footer. The script, stylesheet,
+ * and fonts stay on disk. Set this to true and add the URL back to
+ * sitemap.xml when the player should be public again.
+ */
+const TYLILO_OTRADIO_ENABLED = false;

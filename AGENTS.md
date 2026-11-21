@@ -22,6 +22,10 @@ Every change to this site must meet WCAG 2.2 Level AA and stay easy for search e
 - Keep pages fast: small CSS and images, no unused frameworks, and a stable layout so Core Web Vitals stay healthy.
 - Follow current indexing guidance from Google, Bing, DuckDuckGo, and Brave: crawlable HTML, unique titles and descriptions, accurate canonicals, and no doorway or hidden-text tricks.
 
+## OTRadio
+
+The player files in `otradio/` stay in the repo. While `TYLILO_OTRADIO_ENABLED` in `config.php` is `false`, `/otradio/` returns the site 404 page, sends `noindex`, is omitted from `sitemap.xml`, and is not linked from the footer. The script, stylesheet, and fonts under `otradio/` remain available. To publish the player again, set that flag to `true` and add `https://tylilo.com/otradio/` to `sitemap.xml`. The footer link follows the flag.
+
 ## Pre-merge checklist
 
 Run this before asking Ryan to merge:

@@ -2,6 +2,14 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/../config.php';
+
+if (!TYLILO_OTRADIO_ENABLED) {
+    header('X-Robots-Tag: noindex, follow');
+    require __DIR__ . '/../404.php';
+    exit;
+}
+
 require __DIR__ . '/../includes/bootstrap.php';
 
 $pageTitle = 'OTRadio — Old-time radio';

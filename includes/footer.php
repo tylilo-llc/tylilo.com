@@ -9,7 +9,9 @@ if (!defined('TYLILO_BOOTSTRAPPED')) {
 ?>
   <footer class="site-footer">
     <nav aria-label="Footer">
+<?php if (TYLILO_OTRADIO_ENABLED): ?>
       <a href="/otradio/"<?php if (($pageCanonical ?? '') === TYLILO_URL . '/otradio/'): ?> aria-current="page"<?php endif; ?>>OTRadio</a>
+<?php endif; ?>
       <a href="/accessibility"<?php if (($pageCanonical ?? '') === TYLILO_URL . '/accessibility'): ?> aria-current="page"<?php endif; ?>>Accessibility</a>
     </nav>
     <p>© <?= tylilo_e(TYLILO_YEAR) ?> <?= tylilo_e(TYLILO_LEGAL_NAME) ?></p>

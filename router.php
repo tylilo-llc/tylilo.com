@@ -21,7 +21,8 @@ if (str_contains($uri, "\0") || str_contains($uri, '..')) {
 }
 
 $path = __DIR__ . $uri;
-if ($uri === '/otradio/index.php') {
+require_once __DIR__ . '/config.php';
+if ($uri === '/otradio/index.php' && TYLILO_OTRADIO_ENABLED) {
     header('Location: /otradio/', true, 301);
     exit;
 }
