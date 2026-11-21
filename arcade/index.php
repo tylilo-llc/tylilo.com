@@ -8,7 +8,8 @@ require __DIR__ . '/../includes/bootstrap.php';
  * ARCADE GAMES
  * ------------
  * One entry is one tile, in the order shown on the page.
- * Add a game with one entry here plus arcade/<slug>/art.svg.
+ * Add a game with one entry here plus arcade/<slug>/cover-400.webp
+ * and arcade/<slug>/cover-800.webp.
  * The game file is arcade/<slug>/index.html. Another maintainer owns
  * that file; drop a new version in unchanged. Do not edit it here.
  * Artwork is decorative: the tile name is the accessible text.
@@ -22,25 +23,29 @@ $games = [
         'title' => 'Solitaire',
         'description' => 'Classic Klondike solitaire.',
         'href' => '/arcade/solitaire/',
-        'art' => '/arcade/solitaire/art.svg',
+        'art' => '/arcade/solitaire/cover-400.webp',
+        'art2x' => '/arcade/solitaire/cover-800.webp',
     ],
     [
         'title' => 'Red Rain',
         'description' => 'A missile-defense arcade game, playable on desktop and touch.',
         'href' => '/arcade/red-rain/',
-        'art' => '/arcade/red-rain/art.svg',
+        'art' => '/arcade/red-rain/cover-400.webp',
+        'art2x' => '/arcade/red-rain/cover-800.webp',
     ],
     [
         'title' => 'Pop Spiral',
         'description' => 'An original marble-shooter puzzle.',
         'href' => '/arcade/pop-spiral/',
-        'art' => '/arcade/pop-spiral/art.svg',
+        'art' => '/arcade/pop-spiral/cover-400.webp',
+        'art2x' => '/arcade/pop-spiral/cover-800.webp',
     ],
     [
         'title' => 'Jungle Rescue',
         'description' => 'A commando rescue run through the jungle.',
         'href' => '/arcade/jungle-rescue/',
-        'art' => '/arcade/jungle-rescue/art.svg',
+        'art' => '/arcade/jungle-rescue/cover-400.webp',
+        'art2x' => '/arcade/jungle-rescue/cover-800.webp',
     ],
 ];
 
@@ -84,15 +89,16 @@ require __DIR__ . '/../includes/head.php';
         <h1>Arcade</h1>
       </div>
       <div class="arcade-grid">
-<?php foreach ($games as $game): ?>
+<?php foreach ($games as $index => $game): ?>
 <?php
     $gameSlug = basename(trim((string) (parse_url($game['href'], PHP_URL_PATH) ?? ''), '/'));
     $scoresId = 'scores-' . $gameSlug;
+    $aboveFold = $index < 3;
 ?>
         <article class="game-slot">
           <a class="game-tile" href="<?= tylilo_e($game['href']) ?>">
             <span class="game-tile-art">
-              <img src="<?= tylilo_e(tylilo_asset($game['art'])) ?>" alt="" width="200" height="150">
+              <img src="<?= tylilo_e(tylilo_asset($game['art'])) ?>" srcset="<?= tylilo_e(tylilo_asset($game['art'])) ?> 400w, <?= tylilo_e(tylilo_asset($game['art2x'])) ?> 800w" sizes="200px" alt="" width="200" height="150" decoding="async"<?= $aboveFold ? '' : ' loading="lazy"' ?><?= $index === 0 ? ' fetchpriority="high"' : '' ?>>
             </span>
             <span class="game-tile-name"><?= tylilo_e($game['title']) ?></span>
             <span class="visually-hidden"><?= tylilo_e($game['description']) ?></span>

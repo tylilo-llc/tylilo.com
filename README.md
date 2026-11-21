@@ -98,17 +98,21 @@ The full rules and the pre-merge checklist (axe or pa11y, Lighthouse accessibili
 Games live under `arcade/`, one folder per game. The page at `/arcade/` reads a small array at the top of `arcade/index.php`. To add a game, add one entry there (title, description, URL, artwork) and put the files in `arcade/<slug>/`:
 
 ```
-arcade/solitaire/index.html   Klondike Solitaire
-arcade/solitaire/art.svg      Tile artwork
-arcade/red-rain/index.html    Red Rain
-arcade/red-rain/art.svg       Tile artwork
-arcade/pop-spiral/index.html    Pop Spiral
-arcade/pop-spiral/art.svg       Tile artwork
-arcade/jungle-rescue/index.html Jungle Rescue
-arcade/jungle-rescue/art.svg    Tile artwork
+arcade/solitaire/index.html         Klondike Solitaire
+arcade/solitaire/cover-400.webp     Tile cover, 400×300
+arcade/solitaire/cover-800.webp     Tile cover, 800×600
+arcade/red-rain/index.html          Red Rain
+arcade/red-rain/cover-400.webp      Tile cover, 400×300
+arcade/red-rain/cover-800.webp      Tile cover, 800×600
+arcade/pop-spiral/index.html        Pop Spiral
+arcade/pop-spiral/cover-400.webp    Tile cover, 400×300
+arcade/pop-spiral/cover-800.webp    Tile cover, 800×600
+arcade/jungle-rescue/index.html     Jungle Rescue
+arcade/jungle-rescue/cover-400.webp Tile cover, 400×300
+arcade/jungle-rescue/cover-800.webp Tile cover, 800×600
 ```
 
-The artwork is an SVG. The tile shows it above the game name, and the whole tile is the link. The name is the accessible text, so the image alt stays empty. The one-line description stays in the page for search and screen readers, visually hidden on the tile.
+Each new game adds `arcade/<slug>/cover-400.webp` and `cover-800.webp`. The tile shows the 400 image, with the 800 image in `srcset` for a denser screen, above the game name. The whole tile is the link. The name is the accessible text, so the image alt stays empty. The one-line description stays in the page for search and screen readers, visually hidden on the tile.
 
 Every game opens in the same tab. The tile link does not use `target="_blank"`, and it has no new-window hint or window icon. The homepage Arcade tile also opens `/arcade/` in the same tab. Game links are prefetched, not prerendered, so the game does not start running in the background.
 
