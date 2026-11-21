@@ -26,16 +26,29 @@ header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: strict-origin-when-cross-origin');
 header('X-Frame-Options: SAMEORIGIN');
 header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+// OTRadio (/otradio/) loads a public catalog, JPEG artwork, AAC audio, and
+// WebVTT captions from one R2 bucket. Other pages keep the original policy.
+$imgSrc = "'self'";
+$otradioSrc = '';
+$requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+$requestPath = is_string($requestPath) ? $requestPath : '/';
+if ($requestPath === '/otradio' || str_starts_with($requestPath, '/otradio/')) {
+    $otradioOrigin = 'https://pub-a3eee908554d4a948d807c160caa454e.r2.dev';
+    $imgSrc .= ' ' . $otradioOrigin;
+    $otradioSrc = "; connect-src 'self' {$otradioOrigin}; media-src 'self' {$otradioOrigin}";
+}
+
 header(
     "Content-Security-Policy: default-src 'self'; "
     . "base-uri 'self'; "
     . "form-action 'self'; "
     . "frame-ancestors 'self'; "
     . "object-src 'none'; "
-    . "img-src 'self'; "
+    . "img-src {$imgSrc}; "
     . "font-src 'self'; "
     . "style-src 'self'; "
     . "script-src 'self' 'nonce-{$cspNonce}'"
+    . $otradioSrc
 );
 
 function tylilo_e(string $value): string
