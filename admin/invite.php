@@ -72,10 +72,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                 $error = 'This invite link is no longer valid.';
             } else {
             tylilo_admin_log($newId, $username, 'join', 'Accepted an invite');
-            session_regenerate_id(true);
-            $_SESSION['admin_user_id'] = $newId;
-            $_SESSION['admin_last_seen'] = time();
-            $_SESSION['admin_csrf'] = bin2hex(random_bytes(32));
+            $joined = tylilo_admin_user_by_id($newId);
+            tylilo_admin_begin_session(is_array($joined) ? $joined : ['id' => $newId, 'session_version' => 1]);
             header('Location: /admin/', true, 303);
             exit;
             }

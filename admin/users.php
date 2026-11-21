@@ -52,18 +52,22 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                 foreach ($data['users'] as &$user) {
                     if ((int) $user['id'] === $id && !tylilo_admin_is_owner($user)) {
                         $user['permissions'] = $permissions;
+                        tylilo_admin_bump_session($user);
                     }
                 }
 
                 return $data;
             });
-            tylilo_admin_log((int) $me['id'], (string) $me['username'], 'permissions', 'Updated permissions for user ' . $id);
+            tylilo_admin_log((int) $me['id'], (string) $me['username'], 'permissions', 'Updated permissions and ended sessions for user ' . $id);
         } elseif ($action === 'disable' || $action === 'enable') {
             $disabled = $action === 'disable' ? 1 : 0;
             tylilo_admin_with(static function (array $data) use ($id, $disabled): array {
                 foreach ($data['users'] as &$user) {
                     if ((int) $user['id'] === $id && !tylilo_admin_is_owner($user)) {
                         $user['disabled'] = $disabled;
+                        if ($disabled === 1) {
+                            tylilo_admin_bump_session($user);
+                        }
                     }
                 }
 
@@ -78,7 +82,25 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 
                 return $data;
             });
-            tylilo_admin_log((int) $me['id'], (string) $me['username'], 'remove', 'Removed user ' . $id);
+            tylilo_admin_log((int) $me['id'], (string) $me['username'], 'remove', 'Removed user ' . $id . ' and ended their sessions');
+        } elseif ($action === 'signout') {
+            $targetName = '';
+            tylilo_admin_with(static function (array $data) use ($id, &$targetName): array {
+                foreach ($data['users'] as &$user) {
+                    if ((int) $user['id'] === $id) {
+                        tylilo_admin_bump_session($user);
+                        $targetName = (string) $user['username'];
+                    }
+                }
+
+                return $data;
+            });
+            tylilo_admin_log((int) $me['id'], (string) $me['username'], 'sign-out-everywhere', $targetName !== '' ? $targetName : ('User ' . $id));
+            if ($id === (int) $me['id']) {
+                tylilo_admin_end_session('signed-out');
+                header('Location: /admin/?out=1', true, 303);
+                exit;
+            }
         }
         if ($freshLink === '' && $error === '') {
             header('Location: /admin/users.php', true, 303);
@@ -110,6 +132,7 @@ $html .= '<button type="button" id="close-invite">Cancel</button></form></dialog
 foreach ($data['users'] as $user) {
     $html .= '<article class="card"><h2>' . tylilo_e((string) $user['username']) . '</h2>';
     $html .= '<p>' . (tylilo_admin_is_owner($user) ? 'Owner' : 'Team member') . ((int) ($user['disabled'] ?? 0) === 1 ? ' · turned off' : '') . '</p>';
+    $html .= '<form method="post" action="/admin/users.php"><input type="hidden" name="csrf" value="' . tylilo_e(tylilo_admin_csrf()) . '"><input type="hidden" name="action" value="signout"><input type="hidden" name="id" value="' . (int) $user['id'] . '"><button type="submit">Sign out everywhere</button></form>';
     if (!tylilo_admin_is_owner($user)) {
         $html .= '<p><a href="/admin/notes.php?user=' . (int) $user['id'] . '">View notes</a> · <a href="/admin/todos.php?user=' . (int) $user['id'] . '">View to-dos</a></p>';
         $perms = is_array($user['permissions'] ?? null) ? $user['permissions'] : [];
