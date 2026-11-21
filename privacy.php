@@ -5,7 +5,7 @@ declare(strict_types=1);
 require __DIR__ . '/includes/bootstrap.php';
 
 $pageTitle = 'Privacy — Tylilo';
-$pageDescription = 'What tylilo.com collects: the contact form, one session cookie, and a theme setting saved on your device.';
+$pageDescription = 'What tylilo.com collects: the contact form, one session cookie, and settings the browser keeps on your device.';
 $pageCanonical = TYLILO_URL . '/privacy';
 $pageRobots = 'index, follow';
 $contactEmail = TYLILO_CONTACT_EMAIL;
@@ -46,6 +46,7 @@ require __DIR__ . '/includes/head.php';
 
         <h2>Saved on your device</h2>
         <p>If you pick Light, Dark, or Auto, the browser stores that choice in local storage under <code>tylilo-theme</code>. It stays on your device. The site does not send it to us.</p>
+        <p>Arcade games save their settings and high scores the same way, in this browser’s local storage. Red Rain stores music and mute, difficulty, options, and high scores. Solitaire stores its draw mode under <code>klondike.draw</code>, its stats under <code>klondike.stats</code> (games played and won, streaks, best score and time for each draw mode, and whether a game is in progress; no personal data), and sound on or off under <code>klondike.muted</code>. Pop Spiral stores a best score and its settings. None of that is sent to us. The games load no outside resources.</p>
 
         <h2>What we don’t add</h2>
         <p>The site code does not include analytics, ads, or third-party tracking scripts. Fonts are files on this site, not a font service.</p>

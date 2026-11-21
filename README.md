@@ -64,6 +64,8 @@ Nothing secret is stored in this repository. The address above is the public con
 index.php                 Homepage
 accessibility.php         Accessibility statement
 privacy.php               Privacy policy
+arcade/index.php          Arcade list (one PHP array of cards)
+arcade/<slug>/index.html  One self-contained game, dropped in unchanged
 404.php                   Missing-page page
 contact.php               Form handler
 config.php                Email, site name, year
@@ -94,6 +96,25 @@ Every change should meet WCAG 2.2 Level AA and stay in good shape for search. Th
 A significant change, especially one that touches forms, cookies, storage, analytics, embeds, or another company’s service, must also review `/privacy` and update its effective date.
 
 The full rules and the pre-merge checklist (axe or pa11y, Lighthouse accessibility and SEO, keyboard-only use, both themes, 200% zoom, and a privacy-page check) are in [AGENTS.md](AGENTS.md).
+
+## Arcade
+
+Games live under `arcade/`, one folder per game. The page at `/arcade/` reads a small array at the top of `arcade/index.php`. To add a game, add one entry there (title, description, URL, thumbnail) and put the files in `arcade/<slug>/`:
+
+```
+arcade/solitaire/index.html   Klondike Solitaire
+arcade/solitaire/thumb.png    Card image
+arcade/red-rain/index.html    Red Rain
+arcade/red-rain/thumb.png     Card image
+arcade/pop-spiral/index.html  Pop Spiral
+arcade/pop-spiral/thumb.png   Card image
+```
+
+`index.html` is the whole game. It is maintained elsewhere and replaced as a unit, so leave the file as it arrives. Do not reformat it or point it at other hosts. The folder is served as `/arcade/<slug>/` with or without the trailing slash. `DirectoryIndex` lists `index.html` after `index.php`, so a game folder is not blocked by the PHP index used on the rest of the site.
+
+Red Rain stores music and mute, difficulty, options, and high scores in the browser’s local storage. Solitaire stores its draw mode under `klondike.draw`, stats under `klondike.stats` (games played and won, streaks, best score and time for each draw mode, and whether a game is in progress; no personal data), and sound on or off under `klondike.muted`. Pop Spiral stores a best score and its settings. None of that is sent to Tylilo, and the games do not load scripts, images, or fonts from another site. `/privacy` says so. If a future game stores something else, or starts loading a third-party file, update that section and its effective date.
+
+The homepage has an Arcade button between About and Contact. The footer links to Arcade as well.
 
 ## OTRadio
 
