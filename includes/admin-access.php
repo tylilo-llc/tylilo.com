@@ -70,6 +70,54 @@ function tylilo_admin_migrate(array $data): array
 }
 
 /**
+ * @return array<string, string>
+ */
+function tylilo_idea_help_texts(): array
+{
+    return [
+        'title' => 'The name you are using while the game is still an idea. It can change later. Example: Harbor Match.',
+        'pitch' => 'One sentence that says what the player does. Example: Slide boats into port, three at a time.',
+        'genre' => 'The kind of game it is. Example: Puzzle.',
+        'style' => 'How the game should look. Example: Retro pixel.',
+        'inspired' => 'A game, place, or feeling this reminds you of. It is a starting point, not a copy. Example: A quiet afternoon at the docks.',
+        'controls' => 'How the player gives commands. Tick every way that fits. Example: Keyboard and mouse.',
+        'devices' => 'Where someone should be able to play. Example: Phone and desktop.',
+        'session' => 'How long one sitting should take. Example: Under 2 min.',
+        'players' => 'Who plays at the same time. Example: Solo.',
+        'difficulty' => 'How demanding a normal game should feel. Example: Casual.',
+        'scoring' => 'What the player is trying to beat. Example: High score.',
+        'leaderboard' => 'Tick this if that result should be able to appear on a public Tylilo leaderboard later. Example: on, for a high-score puzzle.',
+        'audience' => 'Who the game is for. Example: Everyone.',
+        'effort' => 'A rough guess of how big the build is. It is not a promise. Example: A weekend.',
+        'status' => 'Where the idea is right now. Anyone can mark it Idea or Discussing. Only the owner can mark it Approved, In beta, or Published. Example: Discussing.',
+        'priority' => 'How soon the owner wants to look at this. Only the owner sets it. Example: High.',
+        'notes' => 'Extra detail that does not fit the other boxes. Example: Keep the palette cream and navy.',
+        'image' => 'An optional picture, such as a napkin sketch or a reference. Use a JPEG, PNG, WebP, or GIF under 2 MB. Example: a photo of a paper sketch.',
+    ];
+}
+
+function tylilo_idea_info_button(string $helpId, string $label): string
+{
+    return '<button type="button" class="idea-info" aria-expanded="false" aria-controls="' . tylilo_e($helpId) . '" aria-describedby="' . tylilo_e($helpId) . '" aria-label="About ' . tylilo_e($label) . '"><span aria-hidden="true">(i)</span></button>';
+}
+
+function tylilo_idea_info_panel(string $helpId, string $key): string
+{
+    $text = tylilo_idea_help_texts()[$key] ?? '';
+
+    return '<p id="' . tylilo_e($helpId) . '" class="idea-help" role="tooltip" hidden>' . tylilo_e($text) . '</p>';
+}
+
+function tylilo_idea_info(string $fieldId, string $label, string $key): string
+{
+    $helpId = $fieldId . '-help';
+
+    return '<span class="idea-label"><label for="' . tylilo_e($fieldId) . '">' . tylilo_e($label) . '</label>'
+        . tylilo_idea_info_button($helpId, $label) . '</span>'
+        . tylilo_idea_info_panel($helpId, $key);
+}
+
+/**
  * @return array<string, array<string, string>>
  */
 function tylilo_idea_choices(): array

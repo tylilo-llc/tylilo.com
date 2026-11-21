@@ -822,6 +822,57 @@ details summary {
   padding: 0 0.3rem;
 }
 
+.idea-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.3rem;
+}
+
+.idea-label label {
+  margin-bottom: 0;
+}
+
+.idea-info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-width: 1.75rem;
+  min-height: 1.75rem;
+  padding: 0 0.35rem;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--card-bg);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.idea-info[aria-expanded="true"] {
+  background: var(--navy);
+  color: var(--hero-text);
+  border-color: var(--navy);
+}
+
+.idea-help {
+  margin: 0 0 0.35rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: 0.75rem;
+  background: var(--chip-bg);
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.idea-help[hidden] {
+  display: none;
+}
+
 details summary {
   display: inline-flex;
   align-items: center;
