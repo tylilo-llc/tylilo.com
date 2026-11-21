@@ -139,12 +139,62 @@ function tylilo_turnstile_secret(): string
 /**
  * @return array{ok: bool, error: string}
  */
+/**
+ * One line for turnstile.log. Only Cloudflare's error-codes, hostname, and action.
+ * The secret and the visitor token are never included.
+ */
+function tylilo_turnstile_failure_line(?array $data, string $reason): string
+{
+    $codes = [];
+    if (is_array($data['error-codes'] ?? null)) {
+        foreach ($data['error-codes'] as $code) {
+            if (is_string($code) && preg_match('/^[a-z0-9_-]{1,80}$/', $code) === 1) {
+                $codes[] = $code;
+            }
+        }
+    }
+    $hostname = strtolower((string) ($data['hostname'] ?? ''));
+    if (preg_match('/^[a-z0-9.-]{1,253}$/', $hostname) !== 1) {
+        $hostname = '';
+    }
+    $action = is_string($data['action'] ?? null) ? $data['action'] : '';
+    if (preg_match('/^[A-Za-z0-9_-]{1,64}$/', $action) !== 1) {
+        $action = '';
+    }
+    $reason = preg_replace('/[^a-z0-9_-]/', '', $reason) ?? '';
+    if ($reason === '') {
+        $reason = 'rejected';
+    }
+
+    return 'error-codes=' . ($codes === [] ? '-' : implode(',', $codes))
+        . ' hostname=' . ($hostname === '' ? '-' : $hostname)
+        . ' action=' . ($action === '' ? '-' : $action)
+        . ' reason=' . $reason;
+}
+
+function tylilo_turnstile_log(string $line): void
+{
+    $line = str_replace(["\r", "\n"], ' ', $line);
+    $dirs = [tylilo_turnstile_dir() => true];
+    foreach (tylilo_turnstile_secret_candidates() as $file) {
+        if (is_file($file)) {
+            $dirs[dirname($file)] = true;
+        }
+    }
+    $entry = gmdate('c') . ' ' . $line . "\n";
+    foreach (array_keys($dirs) as $dir) {
+        if (!is_dir($dir) && !@mkdir($dir, 0700, true) && !is_dir($dir)) {
+            continue;
+        }
+        @file_put_contents($dir . '/turnstile.log', $entry, FILE_APPEND | LOCK_EX);
+    }
+    error_log('Turnstile: ' . $line);
+}
+
 function tylilo_turnstile_verify(string $token, string $remoteIp, string $expectedAction = 'contact'): array
 {
-    $fail = static function (string $why): array {
-        if ($why !== '') {
-            error_log('Turnstile: ' . $why);
-        }
+    $reject = static function (?array $data, string $reason): array {
+        tylilo_turnstile_log(tylilo_turnstile_failure_line($data, $reason));
 
         return [
             'ok' => false,
@@ -163,8 +213,8 @@ function tylilo_turnstile_verify(string $token, string $remoteIp, string $expect
     }
 
     $token = trim($token);
-    if ($token === '' || strlen($token) > 2048) {
-        return $fail('missing token');
+    if (strlen($token) > 2048) {
+        return $reject(null, 'token-length');
     }
 
     $body = http_build_query([
@@ -184,7 +234,7 @@ function tylilo_turnstile_verify(string $token, string $remoteIp, string $expect
     $raw = @file_get_contents('https://challenges.cloudflare.com/turnstile/v0/siteverify', false, $context);
     $data = is_string($raw) ? json_decode($raw, true) : null;
     if (!is_array($data) || ($data['success'] ?? null) !== true) {
-        return $fail('siteverify rejected the token');
+        return $reject(is_array($data) ? $data : null, 'siteverify');
     }
 
     $hostname = strtolower((string) ($data['hostname'] ?? ''));
@@ -193,10 +243,10 @@ function tylilo_turnstile_verify(string $token, string $remoteIp, string $expect
     // Cloudflare's public always-pass test secret reports hostname example.com and omits action.
     $dummyPass = hash_equals('1x0000000000000000000000000000000AA', $secret);
     if (!$allowed && !($dummyPass && $hostname === 'example.com')) {
-        return $fail('unexpected hostname');
+        return $reject($data, 'hostname');
     }
     if ($action !== $expectedAction && !($dummyPass && ($action === null || $action === ''))) {
-        return $fail('unexpected action');
+        return $reject($data, 'action');
     }
 
     return ['ok' => true, 'error' => ''];
