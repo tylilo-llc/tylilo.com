@@ -13,8 +13,9 @@ require __DIR__ . '/../includes/bootstrap.php';
  * that file; drop a new version in unchanged. Do not edit it here.
  * Artwork is decorative: the tile name is the accessible text.
  * Games open in the same tab. Do not add target="_blank".
- * A Top scores control, if added later, goes after the link
- * inside the article, not inside the link.
+ * The Top scores button sits after the link, inside the
+ * article, and is not part of the link. Its data-game value is the
+ * leaderboard slug in includes/scores.php.
  */
 $games = [
     [
@@ -84,6 +85,10 @@ require __DIR__ . '/../includes/head.php';
       </div>
       <div class="arcade-grid">
 <?php foreach ($games as $game): ?>
+<?php
+    $gameSlug = basename(trim((string) (parse_url($game['href'], PHP_URL_PATH) ?? ''), '/'));
+    $scoresId = 'scores-' . $gameSlug;
+?>
         <article class="game-slot">
           <a class="game-tile" href="<?= tylilo_e($game['href']) ?>">
             <span class="game-tile-art">
@@ -92,6 +97,15 @@ require __DIR__ . '/../includes/head.php';
             <span class="game-tile-name"><?= tylilo_e($game['title']) ?></span>
             <span class="visually-hidden"><?= tylilo_e($game['description']) ?></span>
           </a>
+          <div class="score-panel">
+            <button class="score-toggle" type="button" aria-expanded="false" aria-controls="<?= tylilo_e($scoresId) ?>" data-game="<?= tylilo_e($gameSlug) ?>">
+              Top scores<span class="visually-hidden"> for <?= tylilo_e($game['title']) ?></span>
+            </button>
+            <div class="score-body" id="<?= tylilo_e($scoresId) ?>" role="region" aria-label="Top scores for <?= tylilo_e($game['title']) ?>" hidden>
+              <p class="score-status visually-hidden" role="status"></p>
+              <div class="score-results"></div>
+            </div>
+          </div>
         </article>
 <?php endforeach; ?>
       </div>
@@ -112,4 +126,5 @@ require __DIR__ . '/../includes/head.php';
         'hasPart' => $gameParts,
     ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_THROW_ON_ERROR) ?>
   </script>
+  <script src="<?= tylilo_e(tylilo_asset('/assets/js/scores.js')) ?>" defer></script>
 <?php require __DIR__ . '/../includes/footer.php'; ?>
