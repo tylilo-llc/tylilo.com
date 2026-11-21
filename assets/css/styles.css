@@ -269,23 +269,31 @@ a { color: inherit; }
 
 .theme button {
   appearance: none;
-  border: 0;
-  background: transparent;
-  color: var(--hero-text);
-  font-family: inherit;
-  font-size: 0.78rem;
-  font-weight: 700;
-  line-height: 1.2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
   min-width: 2.75rem;
   min-height: 2.75rem;
-  padding: 0.5rem 0.9rem;
+  padding: 0;
+  border: 2px solid transparent;
+  background: transparent;
+  color: var(--hero-text);
   border-radius: 999px;
   cursor: pointer;
+}
+
+.theme button svg {
+  display: block;
+  width: 1.375rem;
+  height: 1.375rem;
 }
 
 .theme button[aria-pressed="true"] {
   background: var(--btn-bg);
   color: var(--btn-text);
+  border-color: var(--btn-text);
 }
 
 .hero-inner {
