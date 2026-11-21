@@ -363,6 +363,70 @@
     });
   }
 
+  // Short labels for bare URLs in show notes. Anything else uses the domain.
+  // This belongs upstream in OTRadio's player.js.
+  const NOTE_LINK_LABELS = [
+    { host: "web.archive.org", label: "Archived log (Wayback Machine)" },
+    { host: "creativecommons.org", path: "publicdomain", label: "Public Domain license" }
+  ];
+
+  function noteLinkInfo(raw) {
+    let parsed;
+    try {
+      parsed = new URL(raw);
+    } catch (e) {
+      return null;
+    }
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
+    const host = parsed.hostname.replace(/^www\./i, "").toLowerCase();
+    const path = (parsed.pathname + parsed.search).toLowerCase();
+    let label = host;
+    for (let i = 0; i < NOTE_LINK_LABELS.length; i++) {
+      const rule = NOTE_LINK_LABELS[i];
+      const hostMatch = host === rule.host || host.endsWith("." + rule.host);
+      if (hostMatch && (!rule.path || path.indexOf(rule.path) !== -1)) {
+        label = rule.label;
+        break;
+      }
+    }
+    return { href: parsed.href, host: host, label: label };
+  }
+
+  function appendNoteText(parent, text) {
+    const str = String(text || "");
+    const re = /https?:\/\/[^\s<]+/gi;
+    let last = 0;
+    let match;
+    while ((match = re.exec(str))) {
+      if (match.index > last) parent.appendChild(document.createTextNode(str.slice(last, match.index)));
+      let raw = match[0];
+      let tail = "";
+      while (raw && /[),.;:!?'"\]]/.test(raw.slice(-1))) {
+        tail = raw.slice(-1) + tail;
+        raw = raw.slice(0, -1);
+      }
+      const info = noteLinkInfo(raw);
+      if (!info) {
+        parent.appendChild(document.createTextNode(match[0]));
+      } else {
+        const a = document.createElement("a");
+        a.href = info.href;
+        a.title = info.host;
+        a.appendChild(document.createTextNode(info.label));
+        if (info.label !== info.host) {
+          const domain = document.createElement("span");
+          domain.className = "otr-visually-hidden";
+          domain.textContent = " (" + info.host + ")";
+          a.appendChild(domain);
+        }
+        parent.appendChild(a);
+        if (tail) parent.appendChild(document.createTextNode(tail));
+      }
+      last = match.index + match[0].length;
+    }
+    if (last < str.length) parent.appendChild(document.createTextNode(str.slice(last)));
+  }
+
   function listItem(label, node) {
     const wrap = document.createElement("div");
     const dt = document.createElement("dt");
@@ -377,7 +441,7 @@
   function renderNotes(series, ep) {
     const aside = $("otr-notes");
     const body = $("otr-notes-body");
-    body.innerHTML = "";
+    while (body.firstChild) body.removeChild(body.firstChild);
     const dl = document.createElement("dl");
 
     const air = document.createElement("div");
@@ -386,7 +450,7 @@
       const p = document.createElement("p");
       p.className = "otr-muted";
       p.style.marginTop = "0.35rem";
-      p.textContent = ep.air_date_notes;
+      appendNoteText(p, ep.air_date_notes);
       air.appendChild(p);
     }
     dl.appendChild(listItem("Air date", air));
@@ -411,7 +475,8 @@
         if (person.source) {
           const src = document.createElement("div");
           src.className = "otr-muted";
-          src.textContent = "Source: " + person.source;
+          src.appendChild(document.createTextNode("Source: "));
+          appendNoteText(src, person.source);
           li.appendChild(src);
         }
         ul.appendChild(li);
@@ -426,7 +491,7 @@
       const notes = document.createElement("p");
       notes.className = "otr-muted";
       notes.style.marginTop = "0.4rem";
-      notes.textContent = ep.cast_notes;
+      appendNoteText(notes, ep.cast_notes);
       castBox.appendChild(notes);
     }
     dl.appendChild(listItem("Cast", castBox));
@@ -448,7 +513,7 @@
       const ul = document.createElement("ul");
       rights.evidence.forEach((item) => {
         const li = document.createElement("li");
-        li.textContent = item;
+        appendNoteText(li, item);
         ul.appendChild(li);
       });
       rightsBox.appendChild(ul);
@@ -456,18 +521,24 @@
     if (Array.isArray(rights.caveats) && rights.caveats.length) {
       const caveat = document.createElement("div");
       caveat.className = "otr-caveat";
-      caveat.textContent = rights.caveats.join(" ");
+      appendNoteText(caveat, rights.caveats.join(" "));
       rightsBox.appendChild(caveat);
     }
     dl.appendChild(listItem("Rights", rightsBox));
 
     const archive = ep.archive || {};
-    if (archive.item_url) {
+    const archiveLink = noteLinkInfo(archive.item_url);
+    if (archiveLink) {
       const a = document.createElement("a");
-      a.href = archive.item_url;
+      a.href = archiveLink.href;
       a.target = "_blank";
       a.rel = "noopener noreferrer";
-      a.textContent = archive.item_id ? "Internet Archive: " + archive.item_id : "Open source on Internet Archive";
+      a.title = archiveLink.host;
+      a.appendChild(document.createTextNode(archive.item_id ? "Internet Archive: " + archive.item_id : "Open source on Internet Archive"));
+      const archiveDomain = document.createElement("span");
+      archiveDomain.className = "otr-visually-hidden";
+      archiveDomain.textContent = " (" + archiveLink.host + ")";
+      a.appendChild(archiveDomain);
       dl.appendChild(listItem("Source", a));
     }
 
