@@ -30,5 +30,10 @@ if ($uri === '/' || $uri === '/index.php') {
     exit;
 }
 
+if ($uri === '/accessibility' || $uri === '/accessibility/') {
+    require __DIR__ . '/accessibility.php';
+    exit;
+}
+
 http_response_code(404);
 require __DIR__ . '/404.php';

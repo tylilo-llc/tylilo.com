@@ -8,6 +8,9 @@ if (!defined('TYLILO_BOOTSTRAPPED')) {
 }
 ?>
   <footer class="site-footer">
+    <nav aria-label="Footer">
+      <a href="/accessibility"<?php if (($pageCanonical ?? '') === TYLILO_URL . '/accessibility'): ?> aria-current="page"<?php endif; ?>>Accessibility</a>
+    </nav>
     <p>© <?= tylilo_e(TYLILO_YEAR) ?> <?= tylilo_e(TYLILO_LEGAL_NAME) ?></p>
   </footer>
   <script src="/assets/js/theme.js"></script>

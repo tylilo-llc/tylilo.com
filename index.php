@@ -38,22 +38,24 @@ $contactEmail = TYLILO_CONTACT_EMAIL;
 require __DIR__ . '/includes/head.php';
 ?>
 <body>
-  <a class="skip-link" href="#content">Skip to content</a>
+  <a class="skip-link" href="#main">Skip to content</a>
   <header class="hero">
-    <span class="blob a" aria-hidden="true"></span>
-    <span class="blob b" aria-hidden="true"></span>
-    <span class="blob c" aria-hidden="true"></span>
+    <div class="hero-shapes" aria-hidden="true">
+      <span class="blob a"></span>
+      <span class="blob b"></span>
+      <span class="blob c"></span>
+    </div>
 <?php require __DIR__ . '/includes/topbar.php'; ?>
-    <div class="hero-inner" id="content" tabindex="-1">
+    <div class="hero-inner">
       <div class="logo-seal">
-        <img src="/assets/img/logo-round.webp" alt="Tylilo" width="168" height="168" fetchpriority="high">
+        <img src="/assets/img/logo-round.webp" alt="Tylilo logo" width="168" height="168" fetchpriority="high">
       </div>
       <h1 class="tagline"><?= tylilo_e($tagline) ?></h1>
       <a class="hero-cta" href="#contact">Say hello</a>
     </div>
   </header>
 
-  <main id="main">
+  <main id="main" tabindex="-1">
     <div class="wrap">
       <section class="card about-card" id="about" aria-labelledby="about-heading">
         <p class="kicker">About</p>
@@ -69,23 +71,23 @@ require __DIR__ . '/includes/head.php';
           <a class="email-btn" href="mailto:<?= tylilo_e($contactEmail) ?>"><?= tylilo_e($contactEmail) ?></a>
 
 <?php if ($success): ?>
-          <div class="form-status success" id="form-status" tabindex="-1" role="status">
+          <div class="form-status success" id="form-status" tabindex="-1" role="status" aria-live="polite" aria-atomic="true">
             <p>Thanks. Your message is on its way.</p>
           </div>
 <?php elseif (!empty($errors['form'])): ?>
-          <div class="form-status error" id="form-status" tabindex="-1" role="alert">
+          <div class="form-status error" id="form-status" tabindex="-1" role="alert" aria-live="assertive" aria-atomic="true">
             <p><?= tylilo_e((string) $errors['form']) ?></p>
           </div>
 <?php elseif ($errors !== []): ?>
-          <div class="form-status error" id="form-status" tabindex="-1" role="alert">
+          <div class="form-status error" id="form-status" tabindex="-1" role="alert" aria-live="assertive" aria-atomic="true">
             <p>Please fix the highlighted fields and try again. You can also use the email button above.</p>
           </div>
 <?php endif; ?>
 
-          <form action="/contact.php" method="post" data-contact-form accept-charset="UTF-8">
+          <form action="/contact.php" method="post" data-contact-form accept-charset="UTF-8" autocomplete="on">
             <div class="hp" aria-hidden="true">
               <label for="ty-extra">Leave this field empty</label>
-              <input id="ty-extra" type="text" name="ty_extra" tabindex="-1" autocomplete="off" value="">
+              <input id="ty-extra" type="text" name="ty_extra" tabindex="-1" autocomplete="off" aria-hidden="true" value="">
             </div>
             <input type="hidden" name="csrf" value="<?= tylilo_e($csrf) ?>">
             <div class="row">
