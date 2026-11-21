@@ -25,14 +25,28 @@ function tylilo_admin_layout(string $title, string $main): void
     if ($user !== null) {
         $path = parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH);
         $path = is_string($path) ? $path : '/';
+        $links = ['/admin/' => 'Home'];
+        if (tylilo_admin_can($user, 'notes')) {
+            $links['/admin/notes.php'] = 'Notes';
+            $links['/admin/todos.php'] = 'To-dos';
+        }
+        if (tylilo_admin_can($user, 'feedback')) {
+            $links['/admin/feedback.php'] = 'Feedback';
+        }
+        if (tylilo_admin_can($user, 'ideas')) {
+            $links['/admin/ideas.php'] = 'Ideas';
+        }
+        if (tylilo_admin_is_owner($user)) {
+            $links['/admin/games.php'] = 'Games';
+            $links['/admin/users.php'] = 'Users';
+            $links['/admin/activity.php'] = 'Activity';
+        }
+        if (tylilo_admin_can($user, 'leaderboards')) {
+            $links['/admin/scores.php'] = 'Scores';
+        }
+        $links['/admin/settings.php'] = 'Settings';
         echo '<nav class="admin-nav" aria-label="Admin">';
-        foreach ([
-            '/admin/' => 'Home',
-            '/admin/notes.php' => 'Notes',
-            '/admin/todos.php' => 'To-dos',
-            '/admin/games.php' => 'Games',
-            '/admin/settings.php' => 'Settings',
-        ] as $href => $label) {
+        foreach ($links as $href => $label) {
             $here = $href === '/admin/'
                 ? ($path === '/admin' || $path === '/admin/' || $path === '/admin/index.php')
                 : str_starts_with($path, $href);
@@ -49,12 +63,19 @@ function tylilo_admin_layout(string $title, string $main): void
 function tylilo_admin_guard(): array
 {
     $user = tylilo_admin_current();
-    if ($user === null) {
+    if ($user === null || (int) ($user['disabled'] ?? 0) === 1) {
         header('Location: /admin/', true, 303);
         exit;
     }
 
     return $user;
+}
+
+function tylilo_admin_forbid(): void
+{
+    http_response_code(403);
+    tylilo_admin_layout('Not allowed', '<div class="card" role="alert"><h2>You do not have access to that page.</h2></div>');
+    exit;
 }
 
 function tylilo_admin_field(string $name): string

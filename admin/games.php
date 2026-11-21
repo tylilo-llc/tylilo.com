@@ -3,7 +3,10 @@
 declare(strict_types=1);
 
 require __DIR__ . '/_init.php';
-tylilo_admin_guard();
+$user = tylilo_admin_guard();
+if (!tylilo_admin_is_owner($user)) {
+    tylilo_admin_forbid();
+}
 
 $error = '';
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {

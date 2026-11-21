@@ -56,7 +56,7 @@ tylilo_admin_with(static function (array $data): array {
     return $data;
 });
 check(tylilo_admin_has_admin(), 'an admin account can be stored');
-check((tylilo_admin_user_by_name('ryan')['role'] ?? '') === 'admin', 'the user role column is admin');
+check((tylilo_admin_user_by_name('ryan')['role'] ?? '') === 'owner', 'the first admin is stored as the owner');
 
 $ip = tylilo_admin_ip_hash('203.0.113.8');
 $now = time();
@@ -96,7 +96,7 @@ tylilo_admin_with(static function (array $data): array {
 $pdo = new PDO('sqlite:' . $sqliteDir . '/admin.sqlite');
 $columns = array_column($pdo->query('PRAGMA table_info(users)')->fetchAll(PDO::FETCH_ASSOC), 'name');
 $roles = $pdo->query('SELECT role FROM users ORDER BY id')->fetchAll(PDO::FETCH_COLUMN);
-check(in_array('role', $columns, true) && $roles === ['admin', 'member'], 'SQLite users table stores admin and member roles');
+check(in_array('role', $columns, true) && $roles === ['owner', 'member'], 'SQLite users table stores owner and member roles');
 
 $setupDoc = $dir . '-doc/public_html';
 $savedDataDir = getenv('TYLILO_DATA_DIR');

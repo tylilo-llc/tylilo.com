@@ -40,11 +40,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                 });
             }
         }
-        if ($accepted && is_array($account)) {
+            if ($accepted && is_array($account)) {
             session_regenerate_id(true);
             unset($_SESSION['admin_pending_id']);
             $_SESSION['admin_user_id'] = (int) $account['id'];
+            $_SESSION['admin_last_seen'] = time();
             $_SESSION['admin_csrf'] = bin2hex(random_bytes(32));
+            tylilo_admin_log((int) $account['id'], (string) $account['username'], 'sign-in', 'Completed the second step');
             header('Location: /admin/', true, 303);
             exit;
         }
@@ -66,6 +68,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             tylilo_admin_note_attempt($ipHash, $username, $ok, time());
             if (!$ok || !is_array($account)) {
                 $error = 'That username or password was not accepted.';
+            } elseif ((int) ($account['disabled'] ?? 0) === 1) {
+                $error = 'This account is turned off.';
             } elseif ((int) $account['totp_enabled'] === 1) {
                 session_regenerate_id(true);
                 $_SESSION['admin_pending_id'] = (int) $account['id'];
@@ -75,7 +79,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             } else {
                 session_regenerate_id(true);
                 $_SESSION['admin_user_id'] = (int) $account['id'];
+                $_SESSION['admin_last_seen'] = time();
                 $_SESSION['admin_csrf'] = bin2hex(random_bytes(32));
+                tylilo_admin_log((int) $account['id'], (string) $account['username'], 'sign-in', 'Signed in');
                 header('Location: /admin/', true, 303);
                 exit;
             }
@@ -87,7 +93,12 @@ $user = tylilo_admin_current();
 if ($user !== null) {
     $html = '<div class="card"><h2>Hello, ' . tylilo_e((string) $user['username']) . '</h2>';
     $html .= '<p>Your role is ' . tylilo_e((string) $user['role']) . '.</p>';
-    $html .= '<p>Notes, the to-do list, and game versions are in the sections above.</p></div>';
+    if (tylilo_admin_is_owner($user)) {
+        $html .= '<p>Notes, the to-do list, users, and game versions are in the sections above.</p>';
+    } else {
+        $html .= '<p>Your notes, to-dos, feedback, and ideas are in the sections above.</p>';
+    }
+    $html .= '</div>';
     tylilo_admin_layout('Admin', $html);
     exit;
 }

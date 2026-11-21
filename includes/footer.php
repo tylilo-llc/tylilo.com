@@ -15,6 +15,13 @@ if (!defined('TYLILO_BOOTSTRAPPED')) {
       <a href="/arcade/"<?php if (($pageCanonical ?? '') === TYLILO_URL . '/arcade/'): ?> aria-current="page"<?php endif; ?>>Arcade</a>
       <a href="/accessibility"<?php if (($pageCanonical ?? '') === TYLILO_URL . '/accessibility'): ?> aria-current="page"<?php endif; ?>>Accessibility</a>
       <a href="/privacy"<?php if (($pageCanonical ?? '') === TYLILO_URL . '/privacy'): ?> aria-current="page"<?php endif; ?>>Privacy</a>
+<?php
+$tyliloPath = parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH);
+$tyliloPath = is_string($tyliloPath) ? $tyliloPath : '/';
+if ($tyliloPath !== '/admin' && !str_starts_with($tyliloPath, '/admin/')):
+?>
+      <a href="/admin/" rel="nofollow">Sign in</a>
+<?php endif; ?>
     </nav>
     <p>© <?= tylilo_e(TYLILO_YEAR) ?> <?= tylilo_e(TYLILO_LEGAL_NAME) ?></p>
   </footer>

@@ -42,8 +42,11 @@ require __DIR__ . '/includes/head.php';
 
         <h2>Cookies</h2>
         <p>The homepage sets one cookie named <code>tylilo</code>. It is a session cookie: it lasts until you close the browser. It is HttpOnly, so page scripts cannot read it, and SameSite is Lax. When you visit over HTTPS, it is also marked Secure.</p>
-        <p>Signing in at the private admin area uses that same cookie so the browser stays signed in. The cookie is necessary for the login. There is no public sign-up and there are no member accounts yet.</p>
+        <p>Signing in at the private admin area uses that same cookie so the browser stays signed in. The cookie is necessary for the login. There is no public sign-up. A team account is created only when someone opens an invite from the owner.</p>
         <p>That cookie exists so the contact form can tell a real visit from a forged or repeated one. It is not a tracking cookie. The site does not set advertising cookies.</p>
+
+        <h2>Team accounts</h2>
+        <p>People who help run the site can sign in. There is no public sign-up. The owner can invite someone with a one-time link that works once and expires after 7 days. We store the username, a password hash, optional authenticator-app setup, the permissions the owner chose, private notes and to-dos, game feedback, ideas and comments, and an activity log of who did what and when. That stays in the site’s private storage. It is not shown on the public pages. The owner can see team members’ notes and to-dos. The owner’s own notes and to-dos stay private.</p>
 
         <h2>Saved on your device</h2>
         <p>If you pick Light, Dark, or Auto, the browser stores that choice in local storage under <code>tylilo-theme</code>. It stays on your device. The site does not send it to us.</p>
