@@ -57,8 +57,249 @@ function tylilo_admin_migrate(array $data): array
         }
         unset($row);
     }
+    foreach ($data['ideas'] as &$idea) {
+        if (is_array($idea)) {
+            $idea = tylilo_idea_normalize($idea);
+        }
+    }
+    unset($idea);
 
     return $data;
+}
+
+/**
+ * @return array<string, array<string, string>>
+ */
+function tylilo_idea_choices(): array
+{
+    return [
+        'genre' => [
+            'arcade' => 'Arcade',
+            'puzzle' => 'Puzzle',
+            'platformer' => 'Platformer',
+            'shooter' => 'Shooter',
+            'racing' => 'Racing',
+            'card' => 'Card/board',
+            'strategy' => 'Strategy',
+            'sports' => 'Sports',
+            'rhythm' => 'Rhythm',
+            'adventure' => 'Adventure',
+            'other' => 'Other',
+        ],
+        'style' => [
+            'pixel' => 'Retro pixel',
+            '8-bit' => '8-bit',
+            'neon' => 'Vector/neon',
+            'cartoon' => 'Cartoon',
+            'low-poly' => 'Low-poly 3D',
+            'hand-drawn' => 'Hand-drawn',
+            'minimal' => 'Minimal',
+            'other' => 'Other',
+        ],
+        'controls' => [
+            'keyboard' => 'Keyboard',
+            'mouse' => 'Mouse/tap',
+            'swipe' => 'Touch swipe',
+            'gamepad' => 'Gamepad',
+        ],
+        'devices' => [
+            'phone' => 'Phone',
+            'tablet' => 'Tablet',
+            'desktop' => 'Desktop',
+        ],
+        'session' => [
+            'short' => 'Under 2 min',
+            'medium' => '5–10 min',
+            'long' => '30+ min',
+        ],
+        'players' => [
+            'solo' => 'Solo',
+            'local' => 'Local 2-player',
+            'turns' => 'Take turns',
+        ],
+        'difficulty' => [
+            'casual' => 'Casual',
+            'medium' => 'Medium',
+            'hardcore' => 'Hardcore',
+        ],
+        'scoring' => [
+            'score' => 'High score',
+            'time' => 'Time',
+            'levels' => 'Levels cleared',
+            'none' => 'None',
+        ],
+        'audience' => [
+            'everyone' => 'Everyone',
+            'kids' => 'Kids',
+            'teens' => 'Teens and up',
+        ],
+        'effort' => [
+            'weekend' => 'Weekend',
+            'weeks' => 'A few weeks',
+            'big' => 'Big project',
+        ],
+        'status' => [
+            'idea' => 'Idea',
+            'discussing' => 'Discussing',
+            'approved' => 'Approved',
+            'beta' => 'In beta',
+            'published' => 'Published',
+        ],
+        'priority' => [
+            'low' => 'Low',
+            'medium' => 'Medium',
+            'high' => 'High',
+        ],
+    ];
+}
+
+function tylilo_idea_owner_statuses(): array
+{
+    return ['approved', 'beta', 'published'];
+}
+
+function tylilo_idea_choice(string $group, string $value): string
+{
+    $choices = tylilo_idea_choices();
+
+    return $choices[$group][$value] ?? '';
+}
+
+function tylilo_idea_list(string $group, mixed $values): array
+{
+    $allowed = array_keys(tylilo_idea_choices()[$group] ?? []);
+    $values = is_array($values) ? $values : [];
+    $picked = [];
+    foreach ($values as $value) {
+        if (is_string($value) && in_array($value, $allowed, true) && !in_array($value, $picked, true)) {
+            $picked[] = $value;
+        }
+    }
+
+    return $picked;
+}
+
+function tylilo_idea_normalize(array $idea): array
+{
+    $status = (string) ($idea['status'] ?? '');
+    if ($status === 'proposed' || $status === '') {
+        $status = 'idea';
+    }
+    if (tylilo_idea_choice('status', $status) === '') {
+        $status = 'idea';
+    }
+    $priority = (string) ($idea['priority'] ?? '');
+    if ($priority !== '' && tylilo_idea_choice('priority', $priority) === '') {
+        $priority = '';
+    }
+    $votes = [];
+    foreach (is_array($idea['votes'] ?? null) ? $idea['votes'] : [] as $vote) {
+        $vote = (int) $vote;
+        if ($vote > 0 && !in_array($vote, $votes, true)) {
+            $votes[] = $vote;
+        }
+    }
+
+    return [
+        'id' => (int) ($idea['id'] ?? 0),
+        'user_id' => (int) ($idea['user_id'] ?? 0),
+        'title' => (string) ($idea['title'] ?? ''),
+        'pitch' => (string) ($idea['pitch'] ?? ''),
+        'notes' => (string) ($idea['notes'] ?? ''),
+        'inspired' => (string) ($idea['inspired'] ?? ''),
+        'genre' => tylilo_idea_choice('genre', (string) ($idea['genre'] ?? '')) === '' ? '' : (string) $idea['genre'],
+        'style' => tylilo_idea_choice('style', (string) ($idea['style'] ?? '')) === '' ? '' : (string) $idea['style'],
+        'controls' => tylilo_idea_list('controls', $idea['controls'] ?? []),
+        'devices' => tylilo_idea_list('devices', $idea['devices'] ?? []),
+        'session' => tylilo_idea_choice('session', (string) ($idea['session'] ?? '')) === '' ? '' : (string) $idea['session'],
+        'players' => tylilo_idea_choice('players', (string) ($idea['players'] ?? '')) === '' ? '' : (string) $idea['players'],
+        'difficulty' => tylilo_idea_choice('difficulty', (string) ($idea['difficulty'] ?? '')) === '' ? '' : (string) $idea['difficulty'],
+        'scoring' => tylilo_idea_choice('scoring', (string) ($idea['scoring'] ?? '')) === '' ? '' : (string) $idea['scoring'],
+        'leaderboard' => !empty($idea['leaderboard']) ? 1 : 0,
+        'audience' => tylilo_idea_choice('audience', (string) ($idea['audience'] ?? '')) === '' ? '' : (string) $idea['audience'],
+        'effort' => tylilo_idea_choice('effort', (string) ($idea['effort'] ?? '')) === '' ? '' : (string) $idea['effort'],
+        'status' => $status,
+        'priority' => $priority,
+        'image' => (string) ($idea['image'] ?? ''),
+        'votes' => $votes,
+        'created_at' => (int) ($idea['created_at'] ?? time()),
+    ];
+}
+
+function tylilo_idea_posted_list(string $name, string $group): array
+{
+    $raw = $_POST[$name] ?? [];
+
+    return tylilo_idea_list($group, is_array($raw) ? $raw : []);
+}
+
+function tylilo_idea_post_field(string $name): string
+{
+    return is_string($_POST[$name] ?? null) ? trim($_POST[$name]) : '';
+}
+
+function tylilo_idea_from_post(bool $owner, array $previous): array
+{
+    $previous = tylilo_idea_normalize($previous);
+    $posted = tylilo_idea_post_field('status');
+    $memberStatus = in_array($posted, ['idea', 'discussing'], true) ? $posted : '';
+    if ($owner) {
+        $status = tylilo_idea_choice('status', $posted) === '' ? $previous['status'] : $posted;
+        $priority = tylilo_idea_post_field('priority');
+        $priority = tylilo_idea_choice('priority', $priority) === '' ? '' : $priority;
+    } else {
+        $status = $memberStatus !== '' && !in_array($previous['status'], tylilo_idea_owner_statuses(), true)
+            ? $memberStatus
+            : $previous['status'];
+        $priority = $previous['priority'];
+    }
+
+    return tylilo_idea_normalize([
+        'id' => $previous['id'],
+        'user_id' => $previous['user_id'],
+        'title' => tylilo_idea_post_field('title'),
+        'pitch' => tylilo_idea_post_field('pitch'),
+        'notes' => is_string($_POST['notes'] ?? null) ? trim($_POST['notes']) : '',
+        'inspired' => tylilo_idea_post_field('inspired'),
+        'genre' => tylilo_idea_post_field('genre'),
+        'style' => tylilo_idea_post_field('style'),
+        'controls' => tylilo_idea_posted_list('controls', 'controls'),
+        'devices' => tylilo_idea_posted_list('devices', 'devices'),
+        'session' => tylilo_idea_post_field('session'),
+        'players' => tylilo_idea_post_field('players'),
+        'difficulty' => tylilo_idea_post_field('difficulty'),
+        'scoring' => tylilo_idea_post_field('scoring'),
+        'leaderboard' => isset($_POST['leaderboard']) ? 1 : 0,
+        'audience' => tylilo_idea_post_field('audience'),
+        'effort' => tylilo_idea_post_field('effort'),
+        'status' => $status,
+        'priority' => $priority,
+        'image' => $previous['image'],
+        'votes' => $previous['votes'],
+        'created_at' => $previous['created_at'],
+    ]);
+}
+
+function tylilo_idea_toggle_vote(array $votes, int $userId): array
+{
+    $next = [];
+    $had = false;
+    foreach ($votes as $id) {
+        $id = (int) $id;
+        if ($id <= 0 || in_array($id, $next, true)) {
+            continue;
+        }
+        if ($id === $userId) {
+            $had = true;
+            continue;
+        }
+        $next[] = $id;
+    }
+    if (!$had && $userId > 0) {
+        $next[] = $userId;
+    }
+
+    return $next;
 }
 
 function tylilo_admin_is_owner(array $user): bool
@@ -180,9 +421,37 @@ function tylilo_admin_store_idea_image(array $file): string
         return '';
     }
     $name = bin2hex(random_bytes(16)) . '.' . $ext;
-    if (!move_uploaded_file($tmp, $dir . '/' . $name)) {
+    if (!is_uploaded_file($tmp) || !tylilo_admin_idea_image_write($tmp, $dir . '/' . $name, $ext)) {
         return '';
     }
 
     return $name;
+}
+
+function tylilo_admin_idea_image_write(string $src, string $dest, string $ext): bool
+{
+    $loaders = [
+        'jpg' => 'imagecreatefromjpeg',
+        'png' => 'imagecreatefrompng',
+        'webp' => 'imagecreatefromwebp',
+        'gif' => 'imagecreatefromgif',
+    ];
+    $loader = $loaders[$ext] ?? '';
+    if ($loader === '' || !function_exists($loader)) {
+        return false;
+    }
+    $image = @$loader($src);
+    if ($image === false) {
+        return false;
+    }
+    $ok = match ($ext) {
+        'jpg' => imagejpeg($image, $dest, 90),
+        'png' => imagepng($image, $dest),
+        'webp' => function_exists('imagewebp') && imagewebp($image, $dest, 90),
+        'gif' => imagegif($image, $dest),
+        default => false,
+    };
+    imagedestroy($image);
+
+    return $ok;
 }
