@@ -297,6 +297,14 @@ function tylilo_score_seeds(): array
             'score' => 187100,
             'at' => 1795271100,
         ],
+        [
+            'id' => 'link-red-rain-easy-1011970',
+            'game' => 'red-rain',
+            'board' => 'easy',
+            'name' => 'LINK',
+            'score' => 1011970,
+            'at' => 1795280280,
+        ],
     ];
 }
 
