@@ -466,6 +466,12 @@ h2 {
 .game-slot {
   min-width: 0;
   align-self: start;
+  container-type: inline-size;
+}
+
+.score-panel {
+  width: 100%;
+  min-width: 0;
 }
 
 .score-toggle {
@@ -519,16 +525,47 @@ h2 {
 
 .score-row {
   display: grid;
-  grid-template-columns: 1.5rem minmax(0, 1fr) auto;
-  gap: 0.35rem;
+  grid-template-columns: 1.75rem minmax(0, 1fr);
+  column-gap: 0.35rem;
   align-items: baseline;
-  padding: 0.2rem 0;
+  padding: 0.35rem 0;
   font-weight: 700;
+  min-height: 1.5rem;
 }
 
-.score-name { overflow-wrap: anywhere; }
+.score-rank {
+  grid-row: 1 / span 2;
+  font-variant-numeric: tabular-nums;
+}
 
-.score-value { font-variant-numeric: tabular-nums; }
+.score-name {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.score-value {
+  grid-column: 2;
+  grid-row: 2;
+  font-variant-numeric: tabular-nums;
+}
+
+@container (min-width: 16rem) {
+  .score-row {
+    grid-template-columns: 1.75rem minmax(0, 1fr) auto;
+    padding: 0.2rem 0;
+  }
+
+  .score-rank { grid-row: auto; }
+
+  .score-name { grid-row: 1; }
+
+  .score-value {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
 
 .game-tile {
   position: relative;
