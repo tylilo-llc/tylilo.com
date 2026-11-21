@@ -44,12 +44,13 @@ html[data-theme="light"] {
   --btn2-bg: #0A3161;
   --btn2-text: #FFF6EA;
   --field-bg: #FFF6EA;
-  --field-border: #A68455;
+  --field-border: #9A7A4E;
   --blob: rgba(255, 246, 234, 0.08);
   --chip-bg: rgba(10, 49, 97, 0.08);
   --shadow: 0 14px 40px rgba(10, 49, 97, 0.10);
   --kicker: #0A3161;
   --focus: #0A3161;
+  --focus-halo: #FFF6EA;
   --placeholder: #4A627C;
   --danger: #8C2F22;
   --danger-bg: #FDE8E4;
@@ -80,6 +81,7 @@ html[data-theme="dark"] {
   --shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
   --kicker: #F6E4C8;
   --focus: #FFE08A;
+  --focus-halo: #0E1620;
   --placeholder: #C5D2E0;
   --danger: #FFD0C8;
   --danger-bg: #3A1E1C;
@@ -111,6 +113,7 @@ html[data-theme="dark"] {
     --shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
     --kicker: #F6E4C8;
     --focus: #FFE08A;
+    --focus-halo: #0E1620;
     --placeholder: #C5D2E0;
     --danger: #FFD0C8;
     --danger-bg: #3A1E1C;
@@ -151,6 +154,7 @@ a { color: inherit; }
 :focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 3px;
+  box-shadow: 0 0 0 2px var(--focus-halo);
 }
 
 .visually-hidden {
@@ -172,6 +176,9 @@ a { color: inherit; }
   top: 0.75rem;
   z-index: 20;
   transform: translateY(-200%);
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
   background: #FFF6EA;
   color: #0A3161;
   font-weight: 800;
@@ -182,7 +189,8 @@ a { color: inherit; }
 
 .skip-link:focus,
 .skip-link:focus-visible {
-  transform: none;
+  left: 50%;
+  transform: translateX(-50%);
   outline: 3px solid #FFE08A;
   outline-offset: 3px;
   box-shadow: 0 0 0 6px #0A3161;
@@ -190,13 +198,13 @@ a { color: inherit; }
 
 .hero {
   --focus: #FFE08A;
+  --focus-halo: #0A3161;
   position: relative;
   background:
     radial-gradient(1200px 500px at 10% -10%, var(--navy-soft), transparent 55%),
     radial-gradient(900px 500px at 110% 110%, var(--navy-deep), transparent 50%),
     var(--hero-bg);
   color: var(--hero-text);
-  overflow: hidden;
   border-bottom-left-radius: 2.75rem;
   border-bottom-right-radius: 2.75rem;
   padding:
@@ -204,6 +212,15 @@ a { color: inherit; }
     max(1.5rem, env(safe-area-inset-right))
     3.25rem
     max(1.5rem, env(safe-area-inset-left));
+}
+
+.hero-shapes {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit;
+  pointer-events: none;
 }
 
 .blob {
@@ -231,6 +248,9 @@ a { color: inherit; }
 }
 
 .wordmark {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
   font-weight: 800;
   font-size: 1.15rem;
   letter-spacing: 0.02em;
@@ -256,19 +276,16 @@ a { color: inherit; }
   font-size: 0.78rem;
   font-weight: 700;
   line-height: 1.2;
-  min-height: 2rem;
-  padding: 0.42rem 0.75rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.9rem;
   border-radius: 999px;
   cursor: pointer;
-  opacity: 0.8;
 }
-
-.theme button:hover { opacity: 1; }
 
 .theme button[aria-pressed="true"] {
   background: var(--btn-bg);
   color: var(--btn-text);
-  opacity: 1;
 }
 
 .hero-inner {
@@ -452,6 +469,7 @@ textarea {
   font-size: 1.0625rem;
   font-weight: 500;
   line-height: 1.4;
+  min-height: 2.75rem;
   color: var(--ink);
   background: var(--field-bg);
   border: 2px solid var(--field-border);
@@ -508,6 +526,47 @@ textarea:-webkit-autofill {
   font-weight: 700;
 }
 
+.site-footer nav {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin-bottom: 0.35rem;
+}
+
+.site-footer a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.35rem 0.6rem;
+  color: var(--ink);
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.prose p + p,
+.prose h2,
+.prose ul {
+  margin-top: 1rem;
+}
+
+.prose ul {
+  margin-left: 1.25rem;
+}
+
+.prose li + li {
+  margin-top: 0.35rem;
+}
+
+.prose a {
+  color: var(--ink);
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
 @media (max-width: 640px) {
   .hero {
     border-bottom-left-radius: 2rem;
@@ -530,8 +589,10 @@ textarea:-webkit-autofill {
   *,
   *::before,
   *::after {
+    animation: none !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+    transition: none !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }

@@ -62,6 +62,7 @@ Nothing secret is stored in this repository. The address above is the public con
 
 ```
 index.php                 Homepage
+accessibility.php         Accessibility statement
 404.php                   Missing-page page
 contact.php               Form handler
 config.php                Email, site name, year
@@ -81,7 +82,13 @@ scripts/generate-icons.py Rebuild favicons from the round logo
 
 `assets/img/logo-round.webp` is the badge in the hero. `assets/img/logo.svg` is the wide wordmark, ready for later pages. Nunito’s license is `assets/fonts/OFL.txt`.
 
-To add another page, copy the top of `index.php` (the bootstrap and head includes), reuse `includes/topbar.php` inside `<header class="hero">`, and end with `includes/footer.php`.
+To add another page, copy the top of `index.php` (the bootstrap and head includes), reuse `includes/topbar.php` inside `<header class="hero">`, and end with `includes/footer.php`. Give the page its own title, description, and canonical URL, and add it to `sitemap.xml`.
+
+## Standards
+
+Every change should meet WCAG 2.2 Level AA and stay in good shape for search. That means semantic HTML, a unique title, meta description, canonical URL, and Open Graph tags on each page, structured data where it fits, an updated `sitemap.xml` for new public pages, and a valid `robots.txt`. Keep pages fast enough for Core Web Vitals, and follow current indexing guidance from Google, Bing, DuckDuckGo, and Brave.
+
+The full rules and the pre-merge checklist (axe or pa11y, Lighthouse accessibility and SEO, keyboard-only use, both themes, and 200% zoom) are in [AGENTS.md](AGENTS.md).
 
 ## Deploy to HostM
 

@@ -13,22 +13,24 @@ $pageRobots = 'noindex, follow';
 require __DIR__ . '/includes/head.php';
 ?>
 <body>
-  <a class="skip-link" href="#content">Skip to content</a>
+  <a class="skip-link" href="#main">Skip to content</a>
   <header class="hero">
-    <span class="blob a" aria-hidden="true"></span>
-    <span class="blob b" aria-hidden="true"></span>
-    <span class="blob c" aria-hidden="true"></span>
+    <div class="hero-shapes" aria-hidden="true">
+      <span class="blob a"></span>
+      <span class="blob b"></span>
+      <span class="blob c"></span>
+    </div>
 <?php require __DIR__ . '/includes/topbar.php'; ?>
     <div class="hero-inner">
       <div class="logo-seal">
-        <img src="/assets/img/logo-round.webp" alt="Tylilo" width="168" height="168">
+        <img src="/assets/img/logo-round.webp" alt="Tylilo logo" width="168" height="168">
       </div>
     </div>
   </header>
 
-  <main id="main">
+  <main id="main" tabindex="-1">
     <div class="wrap solo">
-      <section class="card about-card" id="content" tabindex="-1">
+      <section class="card about-card">
         <p class="kicker">404</p>
         <h1>Page not found.</h1>
         <p class="muted">That link doesn't go anywhere. It may have moved, or the address might be mistyped.</p>
