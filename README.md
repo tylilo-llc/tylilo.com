@@ -99,7 +99,7 @@ The full rules and the pre-merge checklist (axe or pa11y, Lighthouse accessibili
 
 The player is in the repo, but it is hidden until the app is further along. `TYLILO_OTRADIO_ENABLED` in `config.php` is `false`, so `/otradio/` returns the normal 404 page (with `noindex`), the footer does not link to it, and it is not in `sitemap.xml`. The player files stay in place. `otradio/player.js`, `otradio/player.css`, and `otradio/assets/fonts/` are still served, so turning the page back on does not require putting those files back.
 
-To show it again, set `TYLILO_OTRADIO_ENABLED` to `true` and add `https://tylilo.com/otradio/` to `sitemap.xml`. The footer link follows the flag. The page is `otradio/index.php`. It uses the same header, footer, skip link, focus ring, and theme as the homepage.
+To show it again, set `TYLILO_OTRADIO_ENABLED` to `true` and add `https://tylilo.com/otradio/` to `sitemap.xml`. Also restore the OTRadio section on `/privacy` (on-device caption, speed, and position storage, plus catalog, audio, captions, and artwork loaded from `https://pub-a3eee908554d4a948d807c160caa454e.r2.dev`) and update that page’s effective date. The footer link follows the flag. The page is `otradio/index.php`. It uses the same header, footer, skip link, focus ring, and theme as the homepage.
 
 ```
 otradio/index.php          Page (shared header and footer)

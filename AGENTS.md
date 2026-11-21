@@ -25,7 +25,7 @@ Every change to this site must meet WCAG 2.2 Level AA and stay easy for search e
 
 ## OTRadio
 
-The player files in `otradio/` stay in the repo. While `TYLILO_OTRADIO_ENABLED` in `config.php` is `false`, `/otradio/` returns the site 404 page, sends `noindex`, is omitted from `sitemap.xml`, and is not linked from the footer. The script, stylesheet, and fonts under `otradio/` remain available. To publish the player again, set that flag to `true` and add `https://tylilo.com/otradio/` to `sitemap.xml`. The footer link follows the flag.
+The player files in `otradio/` stay in the repo. While `TYLILO_OTRADIO_ENABLED` in `config.php` is `false`, `/otradio/` returns the site 404 page, sends `noindex`, is omitted from `sitemap.xml`, and is not linked from the footer. The script, stylesheet, and fonts under `otradio/` remain available. To publish the player again, set that flag to `true`, add `https://tylilo.com/otradio/` to `sitemap.xml`, and restore the OTRadio section on `/privacy`: on-device caption, speed, and position storage, plus catalog, audio, captions, and artwork loaded from `pub-a3eee908554d4a948d807c160caa454e.r2.dev`. Update the effective date on `/privacy` when you do. The footer link follows the flag.
 
 ## Pre-merge checklist
 
