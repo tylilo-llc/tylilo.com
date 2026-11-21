@@ -14,12 +14,17 @@ if (PHP_SAPI !== 'cli' && realpath((string) ($_SERVER['SCRIPT_FILENAME'] ?? ''))
  * ============================================================
  *  CONTACT EMAIL — change this one line
  * ============================================================
- * This is the only place the address is defined. The homepage
- * mailto button and the contact form both use it.
+ * This is the only place the address is defined. It is the mailbox
+ * that receives the contact form. It is not shown on the site.
  * hello@tylilo.com is a placeholder until the real mailbox exists.
  * ============================================================
  */
 const TYLILO_CONTACT_EMAIL = 'hello@tylilo.com';
+
+/**
+ * Public Turnstile sitekey for the contact form. The secret is not here.
+ */
+const TYLILO_TURNSTILE_SITEKEY = '0x4AAAAAAGLxGfk9two8K9sp';
 
 const TYLILO_SITE_NAME = 'Tylilo';
 const TYLILO_LEGAL_NAME = 'Tylilo, LLC';

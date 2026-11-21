@@ -46,7 +46,7 @@ function tylilo_validate_contact(array $post, string $expectedToken): array
     $errors = [];
 
     if ($expectedToken === '' || !hash_equals($expectedToken, $token)) {
-        $errors['form'] = 'We could not confirm that submission. Please try again, or use the email button above.';
+        $errors['form'] = 'We could not confirm that submission. Please try again.';
     }
 
     if ($name === '') {

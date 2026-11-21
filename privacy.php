@@ -8,7 +8,6 @@ $pageTitle = 'Privacy — Tylilo';
 $pageDescription = 'What tylilo.com collects: the contact form, one session cookie, settings the browser keeps on your device, and names saved to the arcade leaderboard.';
 $pageCanonical = TYLILO_URL . '/privacy';
 $pageRobots = 'index, follow';
-$contactEmail = TYLILO_CONTACT_EMAIL;
 
 require __DIR__ . '/includes/head.php';
 ?>
@@ -37,8 +36,9 @@ require __DIR__ . '/includes/head.php';
         <p>Tylilo, LLC (“Tylilo”) runs <a href="/">tylilo.com</a>. This page says what the site actually does with information. It is short on purpose.</p>
 
         <h2>Contact form</h2>
-        <p>If you write to us, the form asks for your name, email address, and message. We email those three things to <a href="mailto:<?= tylilo_e($contactEmail) ?>"><?= tylilo_e($contactEmail) ?></a> so we can read them and reply. The site does not sell that information, and it does not send it to advertisers or other companies.</p>
+        <p>If you write to us, the form asks for your name, email address, and message. We email those three things to ourselves so we can read them and reply. The site does not show our mailbox address. The site does not sell that information, and it does not send it to advertisers or other companies.</p>
         <p>We do not keep a database of messages. Your words sit in a temporary server session only long enough to show a thank-you or an error, and then that copy is removed. The same session holds a security token and the times of recent sends (five messages in 30 minutes) so the form is harder to spam. The site code does not write your message into its own log file. The email itself goes out through the web host’s mail system, which is how it reaches us.</p>
+        <p>Before a message is accepted, the form asks Cloudflare Turnstile to tell a person from a bot. Cloudflare processes the visitor’s signals for that check, including the IP address, browser type, and the site the form was on. We do not use Turnstile for advertising. Cloudflare’s description of that processing is in the <a href="https://www.cloudflare.com/turnstile-privacy-policy/">Turnstile Privacy Addendum</a>.</p>
 
         <h2>Cookies</h2>
         <p>The homepage sets one cookie named <code>tylilo</code>. It is a session cookie: it lasts until you close the browser. It is HttpOnly, so page scripts cannot read it, and SameSite is Lax. When you visit over HTTPS, it is also marked Secure.</p>
@@ -53,13 +53,13 @@ require __DIR__ . '/includes/head.php';
         <p>To slow down repeated submissions, we store a hash of the network address with the time of the save, not the address itself. That hash cannot be turned back into the address, and we delete it after it is no longer needed for the limit. We also store a hash of a single-use start token so the same game cannot be saved twice. The leaderboard does not set a cookie.</p>
 
         <h2>What we don’t add</h2>
-        <p>The site code does not include analytics, ads, or third-party tracking scripts. Fonts are files on this site, not a font service.</p>
+        <p>The site code does not include analytics, ads, or third-party tracking scripts. The contact form loads Cloudflare Turnstile, described above, only to tell people from bots. Fonts are files on this site, not a font service.</p>
 
         <h2>Hosting</h2>
         <p>The site is hosted on HostM. Like most web hosts, their servers may keep ordinary access logs, such as an IP address, browser type, and the time of a visit. This site’s pages do not turn on a separate analytics log.</p>
 
         <h2>Asking about your information</h2>
-        <p>You can ask what we have from a message you sent or from a name on the leaderboard, ask us to correct it, or ask us to delete it. Use the <a href="/#contact">contact form</a> or email <a href="mailto:<?= tylilo_e($contactEmail) ?>"><?= tylilo_e($contactEmail) ?></a>.</p>
+        <p>You can ask what we have from a message you sent or from a name on the leaderboard, ask us to correct it, or ask us to delete it. Use the <a href="/#contact">contact form</a>.</p>
         <p>If you are in the UK or the European Economic Area, you can make those requests about the message you sent us or a leaderboard name. If you are in California, you can ask us to tell you what we have from that message or name and to delete it. We do not sell personal information.</p>
         <p>This site is not directed at children under 13, and we do not knowingly collect information from them.</p>
 
@@ -84,7 +84,6 @@ require __DIR__ . '/includes/head.php';
         'publisher' => [
             '@type' => 'Organization',
             'name' => TYLILO_LEGAL_NAME,
-            'email' => $contactEmail,
         ],
     ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_THROW_ON_ERROR) ?>
   </script>

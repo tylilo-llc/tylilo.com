@@ -37,26 +37,21 @@ The browser title stays **Tylilo**. The About paragraph is also the page descrip
 
 ### Contact email
 
-`hello@tylilo.com` is a placeholder. It lives in **one** place:
-
-```php
-const TYLILO_CONTACT_EMAIL = 'hello@tylilo.com';
-```
-
-That line is in `config.php`, under the heading **CONTACT EMAIL**. The homepage button and the form’s recipient both read it. Create that mailbox in cPanel (or change the constant to a mailbox that already exists) before you rely on the form. Hosting mail filters often drop messages whose From address is not a real mailbox on the account.
+`hello@tylilo.com` is a placeholder mailbox. It lives in **one** place, `TYLILO_CONTACT_EMAIL` in `config.php`. The form emails that mailbox. The address is not shown on the site, and there is no mailto link. Create that mailbox in cPanel (or change the constant to a mailbox that already exists) before you rely on the form. Hosting mail filters often drop messages whose From address is not a real mailbox on the account.
 
 The footer reads `© 2026 Tylilo, LLC` from `TYLILO_YEAR` and `TYLILO_LEGAL_NAME` in the same file.
 
 ## How the contact form works
 
-The form posts to `contact.php`, which checks the fields on the server and emails the result to `TYLILO_CONTACT_EMAIL` with PHP `mail()`. Reply goes to the person who wrote in.
+The form posts to `contact.php`. The server checks Cloudflare Turnstile before the other checks, then emails the result to `TYLILO_CONTACT_EMAIL` with PHP `mail()`. Reply goes to the person who wrote in.
 
+- Turnstile’s public sitekey is in the homepage. The secret is not in this repository. Deploy writes it from the GitHub Actions secret `TURNSTILE_SECRET` into `tylilo-data/turnstile.php` beside the site (outside the web root) and into `data/turnstile.php`, which the site refuses to serve. If that secret is missing, the form rejects the message.
+- Local tests can set `TURNSTILE_SITEKEY` and `TURNSTILE_SECRET` to Cloudflare’s dummy keys. Do not put those dummy values in `config.php`.
 - A hidden field (`ty_extra`) is a honeypot. People never see it. If it is filled in, the submission is discarded and the page still says thank you, so a bot is not told it was blocked.
 - Name, email, and message are required. The email must look like an email. The message can be up to 5,000 characters.
 - A session token blocks forged cross-site posts. More than five successful sends in half an hour from the same browser asks the visitor to wait.
-- The email button stays on the page. If PHP mail is unavailable, or the visitor would rather not use the form, that button opens their mail app. If sending fails, the page says so and points them back to the button.
 
-Nothing secret is stored in this repository. The address above is the public contact address.
+Nothing secret is stored in this repository.
 
 ## Project layout
 
