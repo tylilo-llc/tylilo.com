@@ -801,6 +801,60 @@ textarea:-webkit-autofill {
   .a2hs { transition: none; }
 }
 
+.idea-form fieldset,
+.idea-filters {
+  border: 2px solid var(--field-border);
+  border-radius: 1rem;
+}
+
+.idea-form fieldset {
+  margin: 0;
+  padding: 0.35rem 0.9rem 0.8rem;
+}
+
+.idea-form legend,
+.idea-filters h2,
+details summary {
+  font-weight: 800;
+}
+
+.idea-form legend {
+  padding: 0 0.3rem;
+}
+
+details summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  cursor: pointer;
+}
+
+.idea-facts {
+  display: grid;
+  grid-template-columns: minmax(7rem, 9rem) 1fr;
+  gap: 0.35rem 0.75rem;
+  margin: 0.8rem 0;
+}
+
+.idea-facts dt {
+  font-weight: 800;
+}
+
+.idea-facts dd,
+.idea-comments {
+  margin: 0;
+}
+
+.idea-comments {
+  padding-left: 1.2rem;
+}
+
+.idea-filters {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1rem;
+}
+
 dialog.card {
   border: 0;
   margin: auto;
