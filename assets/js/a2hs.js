@@ -25,7 +25,7 @@
   var banner = document.createElement("aside");
   banner.className = "a2hs";
   banner.setAttribute("role", "region");
-  banner.setAttribute("aria-label", "Add Tylilo Arcade to your Home Screen");
+  banner.setAttribute("aria-label", "Add UDLR Arcade to your Home Screen");
   banner.innerHTML =
     '<p>To open the Arcade like an app, tap the Share button ' +
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +

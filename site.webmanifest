@@ -1,6 +1,6 @@
 {
-  "name": "Tylilo Arcade",
-  "short_name": "Arcade",
+  "name": "UDLR Arcade",
+  "short_name": "UDLR Arcade",
   "start_url": "/arcade/",
   "scope": "/",
   "display": "standalone",
