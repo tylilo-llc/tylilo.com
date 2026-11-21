@@ -127,4 +127,5 @@ require __DIR__ . '/../includes/head.php';
     ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_THROW_ON_ERROR) ?>
   </script>
   <script src="<?= tylilo_e(tylilo_asset('/assets/js/scores.js')) ?>" defer></script>
+<?php $pageA2hs = true; ?>
 <?php require __DIR__ . '/../includes/footer.php'; ?>

@@ -1,22 +1,23 @@
 {
-  "name": "Tylilo",
-  "short_name": "Tylilo",
-  "start_url": "/",
+  "name": "Tylilo Arcade",
+  "short_name": "Arcade",
+  "start_url": "/arcade/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FFF6EA",
+  "theme_color": "#0A3161",
   "icons": [
     {
       "src": "/assets/img/favicon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/assets/img/favicon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
-  ],
-  "theme_color": "#0A3161",
-  "background_color": "#FFF6EA",
-  "display": "standalone"
+  ]
 }

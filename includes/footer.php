@@ -18,6 +18,9 @@ if (!defined('TYLILO_BOOTSTRAPPED')) {
     </nav>
     <p>© <?= tylilo_e(TYLILO_YEAR) ?> <?= tylilo_e(TYLILO_LEGAL_NAME) ?></p>
   </footer>
+<?php if (!empty($pageA2hs)): ?>
+  <script src="<?= tylilo_e(tylilo_asset('/assets/js/a2hs.js')) ?>" defer></script>
+<?php endif; ?>
   <script src="<?= tylilo_e(tylilo_asset('/assets/js/theme.js')) ?>" defer></script>
   <script src="<?= tylilo_e(tylilo_asset('/assets/js/form.js')) ?>" defer></script>
 <?php if (!empty($pageTurnstile)): ?>
