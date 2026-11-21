@@ -89,14 +89,34 @@ jobs:
               -T "$work/turnstile.php" \
               "ftp://${FTP_SERVER}/${dest}"
           }
-          outside="tylilo-data/turnstile.php"
-          inside="${FTP_SERVER_DIR}data/turnstile.php"
-          if upload "$outside"; then
-            echo "Stored the Turnstile secret outside the web root."
+          # FTP_SERVER_DIR is the web root, usually public_html/. The login
+          # directory itself may be that web root, or its parent. Write the
+          # secret in every place PHP looks, and do not stop after the first
+          # success: a path curl can write may still be outside open_basedir.
+          web="${FTP_SERVER_DIR%/}"
+          parent=$(dirname "$web")
+          if [ "$parent" = "." ] || [ "$parent" = "/" ]; then
+            sibling="tylilo-data/turnstile.php"
           else
-            echo "Could not store the secret beside the site. Trying the blocked data directory."
-            upload "$inside"
-            echo "Stored the Turnstile secret in the blocked data directory."
+            sibling="${parent}/tylilo-data/turnstile.php"
+          fi
+          dests=(
+            "$sibling"
+            "${FTP_SERVER_DIR}tylilo-data/turnstile.php"
+            "${FTP_SERVER_DIR}data/turnstile.php"
+          )
+          stored=0
+          for dest in "${dests[@]}"; do
+            if upload "$dest"; then
+              echo "Stored the Turnstile secret at ${dest}."
+              stored=$((stored + 1))
+            else
+              echo "Could not store the Turnstile secret at ${dest}."
+            fi
+          done
+          if [ "$stored" -eq 0 ]; then
+            echo "The Turnstile secret was not stored. The contact form will keep rejecting messages."
+            exit 1
           fi
           rm -rf "$work"
           echo "The secret value was not printed."
