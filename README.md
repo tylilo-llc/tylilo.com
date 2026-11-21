@@ -94,7 +94,9 @@ The full rules and the pre-merge checklist (axe or pa11y, Lighthouse accessibili
 
 ## OTRadio
 
-[https://tylilo.com/otradio/](https://tylilo.com/otradio/) is a static player for cleaned-up old-time radio episodes. There is no build step. The page is `otradio/index.php`. It uses the same header, footer, skip link, focus ring, and theme as the homepage.
+The player is in the repo, but it is hidden until the app is further along. `TYLILO_OTRADIO_ENABLED` in `config.php` is `false`, so `/otradio/` returns the normal 404 page (with `noindex`), the footer does not link to it, and it is not in `sitemap.xml`. The player files stay in place. `otradio/player.js`, `otradio/player.css`, and `otradio/assets/fonts/` are still served, so turning the page back on does not require putting those files back.
+
+To show it again, set `TYLILO_OTRADIO_ENABLED` to `true` and add `https://tylilo.com/otradio/` to `sitemap.xml`. The footer link follows the flag. The page is `otradio/index.php`. It uses the same header, footer, skip link, focus ring, and theme as the homepage.
 
 ```
 otradio/index.php          Page (shared header and footer)
@@ -107,7 +109,7 @@ The catalog address is the `CATALOG_URL` constant at the top of `otradio/player.
 
 The header’s theme switch is the only theme control. It uses the `tylilo-theme` value in this browser and sets `data-theme` on the page before the first paint, the same way the homepage does. Player colors are wired to the site’s tokens at the bottom of `player.css` (for example `--otr-navy` follows `--navy`, which stays `#0A3161`). The player’s own theme buttons are not on the page.
 
-Captions start on. The CC button turns them off for this browser. If a caption file cannot be loaded, the player says so and disables that button. Show notes turn a bare web address into a short link (an archived log, a public-domain license, or the site’s domain) and still wrap inside the card if a long word remains. The footer links here, next to Accessibility, and the page is listed in `sitemap.xml`.
+Captions start on. The CC button turns them off for this browser. If a caption file cannot be loaded, the player says so and disables that button. Show notes turn a bare web address into a short link (an archived log, a public-domain license, or the site’s domain) and still wrap inside the card if a long word remains. None of that is linked from the public site while the flag above is `false`.
 
 ## Deploy to HostM
 
