@@ -29,7 +29,7 @@ The legal name is written **Tylilo, LLC**, with a comma. Use `TYLILO_LEGAL_NAME`
 
 Each game is one folder, `/arcade/<slug>/index.html`. The list on `/arcade/` is the `$games` array in `arcade/index.php`: title, one-line description, path, and `art`. Adding a game is one new entry, in the order it should appear, plus an `art.svg` in that game’s folder. The tile name is the accessible text, so the artwork stays decorative (`alt=""`).
 
-Every game opens in a new window. The template adds `target="_blank"`, `rel="noopener"`, visually hidden text “(opens in a new window)”, and a decorative window icon. That is the default when `newWindow` is omitted. Do not turn it off for a game. The homepage Arcade tile is the exception: it opens `/arcade/` in the same tab.
+Every game opens in the same tab. Do not add `target="_blank"`, a new-window hint, or a window icon to a game link. The homepage Arcade tile also opens `/arcade/` in the same tab. Speculation rules prefetch `a.game-tile` and do not prerender those links, so a game’s audio and loop do not start in the background.
 
 A Top scores control, if one is added later, goes in the article under the tile link, not inside the link.
 
