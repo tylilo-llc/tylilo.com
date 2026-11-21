@@ -150,6 +150,20 @@
   }
   #win h2, #statsDlg h2, #newsDlg h2 { margin: 0 0 8px; color: #f2c94c; font-size: 28px; }
   #win p { margin: 4px 0 14px; line-height: 1.5; }
+  #win { max-width: calc(100vw - 16px); }
+  #lbForm { margin: 0 0 8px; font-size: 14px; }
+  #lbForm[hidden] { display: none; }
+  #lbForm label { display: block; margin-bottom: 6px; }
+  #lbForm .opt { opacity: .7; }
+  #lbForm .lbrow { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+  #lbNameInput {
+    font: inherit; font-size: 16px; /* 16px stops iOS zooming into the field */
+    width: 11em; max-width: 100%; padding: 5px 8px; border-radius: 6px;
+    border: 1px solid rgba(255,255,255,.45); background: rgba(255,255,255,.95); color: #111;
+    -webkit-user-select: text; user-select: text;
+  }
+  #lbMsg { font-size: 13px; min-height: 0; margin: 0 0 10px; opacity: .9; }
+  #lbMsg:empty { display: none; }
   #statsDlg { top: 10%; z-index: 8500; max-width: calc(100vw - 16px); padding: 16px 18px; }
   #statsDlg table { border-collapse: collapse; margin: 4px auto 12px; font-variant-numeric: tabular-nums; }
   #statsDlg th, #statsDlg td { padding: 5px 12px; text-align: right; border-bottom: 1px solid rgba(255,255,255,.12); }
@@ -215,13 +229,22 @@
   <span id="copyright">&copy; <span id="copyYear">2026</span> Tylilo, LLC</span>
   <span class="right">
     <button id="newsBtn" type="button" title="See what changed in each version">What's New</button>
-    <span id="version">v1.1.4</span>
+    <span id="version">v1.1.5</span>
   </span>
 </footer>
 <canvas id="fx"></canvas>
 <div id="win" role="dialog" aria-live="polite">
   <h2>You won!</h2>
   <p id="winText"></p>
+  <form id="lbForm" hidden novalidate>
+    <label for="lbNameInput">Save your score to the Arcade leaderboard <span class="opt">(optional)</span></label>
+    <div class="lbrow">
+      <input id="lbNameInput" name="name" type="text" maxlength="12" autocomplete="nickname" autocapitalize="words" spellcheck="false" placeholder="Your name" aria-describedby="lbMsg">
+      <button id="lbSaveBtn" type="submit" class="primary">Save score</button>
+      <button id="lbSkipBtn" type="button">Skip</button>
+    </div>
+  </form>
+  <p id="lbMsg" role="status" aria-live="polite"></p>
   <div class="row"><button id="againBtn" type="button" class="primary">Play again</button>
   <button id="winArcadeBtn" type="button" aria-label="Back to Arcade">Back to Arcade</button></div>
 </div>
@@ -243,7 +266,7 @@
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
-/* Klondike Solitaire v1.1.4 - single-file, no dependencies. */
+/* Klondike Solitaire v1.1.5 - single-file, no dependencies. */
 'use strict';
 
 /* ======================= Core rules engine (DOM-free) ======================= */
@@ -571,6 +594,16 @@ const Engine = (function () {
   }
   const winRate = m => (m.played ? Math.round(m.won / m.played * 100) : 0);
 
+  /* ---------- Arcade leaderboard rules (pure) ---------- */
+  const LEADERBOARD = { game: 'solitaire', minScore: 0, maxScore: 20000, minPlayedMs: 20000, nameMax: 12 };
+  const lbBoard = dc => (dc === 3 ? 'draw-3' : 'draw-1');
+  const lbScore = v => Math.min(LEADERBOARD.maxScore, Math.max(LEADERBOARD.minScore, Math.round(Number(v) || 0)));
+  const lbEligible = (playedMs, minMs) => Number(playedMs) >= Math.max(LEADERBOARD.minPlayedMs, Number(minMs) || 0);
+  const lbName = n => String(n == null ? '' : n).replace(/\s+/g, ' ').trim().slice(0, LEADERBOARD.nameMax);
+  function lbSubmitBody(board, name, score, playedMs, token) {
+    return { op: 'submit', game: LEADERBOARD.game, board, name: lbName(name), score: lbScore(score), playedMs: Math.max(0, Math.round(playedMs)), token };
+  }
+
   function totalCards(s) {
     return s.stock.length + s.waste.length +
       s.tableau.reduce((a, p) => a + p.length, 0) +
@@ -582,7 +615,8 @@ const Engine = (function () {
     mulberry32, createDeck, shuffle, newGame, isRed, canTableau, canFoundation,
     getPile, isValidRun, canPick, canMove, move, draw, foundationTarget, autoTarget,
     isWon, allTableauUp, clone, foundationStep, autoStep, canAutoComplete, totalCards,
-    findHint, emptyStats, normStats, statsStart, statsLose, statsWin, winRate
+    findHint, emptyStats, normStats, statsStart, statsLose, statsWin, winRate,
+    LEADERBOARD, lbBoard, lbScore, lbEligible, lbName, lbSubmitBody
   };
 })();
 
@@ -590,11 +624,18 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Engine;
 
 /* ============================ Browser UI layer ============================ */
 if (typeof document !== 'undefined') (function () {
-  const VERSION = '1.1.4';
+  const VERSION = '1.1.5';
   const ARCADE_URL = '/arcade/';
+  // The only network traffic in the game: the tylilo.com Arcade leaderboard (same origin, relative URL).
+  const LB_API = '/api/scores.php';
   // In-game "What's New" notes, newest first. Plain-language version of CHANGELOG.md - update every release.
   // Shown only when the player opens it (footer button); it never opens by itself.
   const RELEASE_NOTES = [
+    { v: '1.1.5', date: '2026-11-21', items: [
+      'Arcade leaderboard: after a win you can type a name and save your score to the tylilo.com leaderboard (Draw 1 and Draw 3 have separate boards). It is optional - press Skip and nothing is sent.',
+      'Wins under 20 seconds are not eligible, and the game remembers the last name you saved with.',
+      'If the leaderboard cannot be reached (offline, or the game opened from a file), you just see a short note - the game works as before.'
+    ] },
     { v: '1.1.4', date: '2026-11-21', items: [
       'New "Back to Arcade" button at the top left takes you back to the tylilo.com arcade in the same tab. On phones it shows as a back arrow.',
       'If you are in the middle of a game, it asks first, because leaving counts as a loss in Stats. Otherwise it goes straight there.'
@@ -634,7 +675,7 @@ if (typeof document !== 'undefined') (function () {
   $('version').textContent = 'v' + VERSION;
 
   // Every localStorage key the game uses (all access is wrapped so blocked storage just means "not remembered").
-  const KEYS = { draw: 'klondike.draw', stats: 'klondike.stats', muted: 'klondike.muted' };
+  const KEYS = { draw: 'klondike.draw', stats: 'klondike.stats', muted: 'klondike.muted', lbName: 'klondike.lbName' };
   const store = {
     get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
     set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* storage blocked or full */ } }
@@ -654,7 +695,55 @@ if (typeof document !== 'undefined') (function () {
     gameCounted = true;
     Engine.statsStart(stats, state.drawCount);
     saveStats();
+    LB.startRun(state.drawCount);
   }
+
+  /* ---------- Arcade leaderboard (optional; only works when served from tylilo.com) ---------- */
+  // Spec: /workspace/arcade-handoff/LEADERBOARD-API.md. A run token is requested when a game starts (first move);
+  // a score is submitted only when the player presses "Save score" after a win. Any failure just shows a message.
+  const LB = (function () {
+    const available = () => /^https?:$/.test(location.protocol) && typeof fetch === 'function';
+    let run = null;
+    async function post(body) {
+      const res = await fetch(LB_API, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+        credentials: 'same-origin', cache: 'no-store'
+      });
+      let data = null;
+      try { data = await res.json(); } catch (e) { /* not JSON */ }
+      return { status: res.status, ok: res.ok && !(data && data.ok === false), data };
+    }
+    function startRun(dc) {
+      run = null;
+      if (!available()) return;
+      const r = { board: Engine.lbBoard(dc), token: null, minPlayedMs: Engine.LEADERBOARD.minPlayedMs };
+      r.ready = post({ op: 'start', game: Engine.LEADERBOARD.game, board: r.board })
+        .then(res => {
+          if (res.ok && res.data && typeof res.data.token === 'string' && res.data.token) {
+            r.token = res.data.token;
+            if (Number(res.data.minPlayedMs) > 0) r.minPlayedMs = Number(res.data.minPlayedMs);
+          }
+        })
+        .catch(() => { /* offline: the game carries on; saving will explain */ });
+      run = r;
+    }
+    function takeRun() { const r = run; run = null; return r; }
+    function cancelRun() { run = null; }
+    async function submit(r, name, score, playedMs) {
+      if (!available()) return { ok: false, msg: 'The leaderboard works when you play on tylilo.com.' };
+      if (!r) return { ok: false, msg: "Couldn't reach the leaderboard. Your game is fine." };
+      try { await r.ready; } catch (e) { /* handled below */ }
+      if (!r.token) return { ok: false, retry: false, msg: "Couldn't reach the leaderboard for this game. Your game is fine." };
+      let res;
+      try { res = await post(Engine.lbSubmitBody(r.board, name, score, playedMs, r.token)); }
+      catch (e) { return { ok: false, retry: true, msg: "Couldn't reach the leaderboard. Check your connection and try again." }; }
+      if (res.ok) return { ok: true, msg: 'Score saved to the Arcade leaderboard!' };
+      if (res.status === 429) return { ok: false, retry: true, msg: 'Try again later.' };
+      const serverMsg = res.data && (res.data.error || res.data.message);
+      return { ok: false, retry: true, msg: serverMsg ? String(serverMsg).slice(0, 160) : "The leaderboard couldn't save this score." };
+    }
+    return { available, startRun, takeRun, cancelRun, submit };
+  })();
 
   /* ---------- Sound (Web Audio, generated; starts only after a user gesture) ---------- */
   const Sound = (function () {
@@ -945,6 +1034,8 @@ if (typeof document !== 'undefined') (function () {
   function newGame() {
     if (gameCounted && !won) { Engine.statsLose(stats); saveStats(); }
     gameCounted = false;
+    LB.cancelRun();
+    hideLeaderboard();
     stopCelebration();
     if (timerId) clearInterval(timerId);
     timerId = null; startTime = 0; frozenElapsed = null;
@@ -1196,10 +1287,12 @@ if (typeof document !== 'undefined') (function () {
   function onWin() {
     if (won) return;
     won = true;
+    const playedMs = startTime ? Date.now() - startTime : 0;
     stopTimer();
     const t = elapsedSec();
     const bonus = t >= 30 ? Math.round(700000 / t) : 0;
     finalScore = displayScore() + bonus;
+    const lbRun = LB.takeRun();
     Engine.statsWin(stats, state.drawCount, finalScore, t);
     gameCounted = false;
     saveStats();
@@ -1208,10 +1301,45 @@ if (typeof document !== 'undefined') (function () {
     ui.winText.innerHTML = 'Score: <b>' + finalScore + '</b>' + (bonus ? ' (time bonus +' + bonus + ')' : '') +
       '<br>Moves: <b>' + state.moves + '</b> &nbsp; Time: <b>' + fmtTime(t) + '</b>' +
       '<br>Win streak: <b>' + m.streak + '</b> &nbsp; Best: <b>' + m.bestStreak + '</b>';
+    showLeaderboard(lbRun, finalScore, playedMs);
     ui.win.style.display = 'block';
     Sound.play('win');
     if (animOn()) startCascade();
   }
+
+  /* ---------- Leaderboard name entry on the win screen ---------- */
+  let lbPending = null;
+  const lbUi = { form: $('lbForm'), input: $('lbNameInput'), save: $('lbSaveBtn'), skip: $('lbSkipBtn'), msg: $('lbMsg') };
+  function hideLeaderboard() { lbPending = null; lbUi.form.hidden = true; lbUi.msg.textContent = ''; }
+  function showLeaderboard(run, score, playedMs) {
+    hideLeaderboard();
+    if (!LB.available()) { lbUi.msg.textContent = 'Leaderboard saving works when you play on tylilo.com.'; return; }
+    const minMs = run ? run.minPlayedMs : Engine.LEADERBOARD.minPlayedMs;
+    if (!Engine.lbEligible(playedMs, minMs)) {
+      lbUi.msg.textContent = 'Wins under ' + Math.round(Math.max(minMs, Engine.LEADERBOARD.minPlayedMs) / 1000) + ' seconds can\'t go on the leaderboard.';
+      return;
+    }
+    lbPending = { run, score: Engine.lbScore(score), playedMs };
+    lbUi.input.value = store.get(KEYS.lbName) || '';
+    lbUi.save.disabled = false; lbUi.skip.disabled = false; lbUi.input.disabled = false;
+    lbUi.form.hidden = false;
+  }
+  lbUi.form.addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!lbPending || lbUi.save.disabled) return;
+    const name = Engine.lbName(lbUi.input.value);
+    if (!name) { lbUi.msg.textContent = 'Type a name (1-12 characters) or press Skip.'; lbUi.input.focus(); return; }
+    const p = lbPending;
+    lbUi.save.disabled = true; lbUi.skip.disabled = true; lbUi.input.disabled = true;
+    lbUi.msg.textContent = 'Saving...';
+    const r = await LB.submit(p.run, name, p.score, p.playedMs);
+    if (lbPending !== p) return; // a new game started meanwhile
+    lbUi.msg.textContent = r.msg;
+    if (r.ok) { store.set(KEYS.lbName, name); lbPending = null; lbUi.form.hidden = true; return; }
+    if (r.retry) { lbUi.save.disabled = false; lbUi.skip.disabled = false; lbUi.input.disabled = false; }
+    else { lbPending = null; lbUi.form.hidden = true; }
+  });
+  lbUi.skip.addEventListener('click', () => { hideLeaderboard(); ui.againBtn.focus(); });
 
   function startCascade() {
     celebrating = true;
@@ -1296,6 +1424,8 @@ if (typeof document !== 'undefined') (function () {
   });
   renderMute();
   document.addEventListener('keydown', e => {
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return; // typing a name
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
     if (e.key === 'Escape' && (ui.statsDlg.style.display === 'block' || ui.newsDlg.style.display === 'block')) { hideStats(); hideNews(); return; }
     if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === 'h') showHint();
@@ -1311,7 +1441,7 @@ if (typeof document !== 'undefined') (function () {
   // Test hook (handy for automated checks; harmless for players).
   window.__klondike = {
     get state() { return state; }, set state(s) { state = s; history = []; render({ instant: true }); },
-    render, Engine, version: VERSION, releaseNotes: RELEASE_NOTES, arcadeUrl: ARCADE_URL, get inProgress() { return gameInProgress(); }, sound: Sound, get stats() { return stats; }, keys: KEYS
+    render, Engine, version: VERSION, releaseNotes: RELEASE_NOTES, arcadeUrl: ARCADE_URL, get inProgress() { return gameInProgress(); }, backdate(ms) { if (startTime) startTime -= ms; }, sound: Sound, get stats() { return stats; }, keys: KEYS
   };
 
   computeLayout();
