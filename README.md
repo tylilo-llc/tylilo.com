@@ -26,14 +26,14 @@ The contact form needs PHP, so opening the files directly from Finder or File Ex
 
 ## Edit the placeholder text
 
-Ryan has not written the final copy. The stand-in words are at the top of `index.php`, in the block marked **PLACEHOLDER COPY**:
+The tagline on the homepage is **Under Construction**. It is the `$tagline` line at the top of `index.php`.
 
-- browser title
-- tagline (`Your tagline here`)
+Ryan has not written the About copy yet. Those stand-in words are in the same block:
+
 - About heading
 - About paragraph
 
-The About paragraph is also the page description used for search and link previews. Change it once and both update.
+The browser title stays **Tylilo**. The About paragraph is also the page description used for search and link previews. Change that paragraph once and both update. The tagline is not copied into the title or the description.
 
 ### Contact email
 

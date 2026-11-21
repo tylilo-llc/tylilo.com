@@ -5,14 +5,15 @@ declare(strict_types=1);
 require __DIR__ . '/includes/bootstrap.php';
 
 /**
- * PLACEHOLDER COPY
- * ----------------
- * Ryan hasn't written the real words yet. Edit these four lines.
- * The contact email is not here — change TYLILO_CONTACT_EMAIL in config.php.
- * That one constant updates the email button and the form together.
+ * HOMEPAGE COPY
+ * -------------
+ * The tagline is set. The About heading and paragraph below are still
+ * placeholders. The contact email is not here — change
+ * TYLILO_CONTACT_EMAIL in config.php. That one constant updates the
+ * email button and the form together.
  */
 $pageTitle = 'Tylilo';
-$tagline = 'Your tagline here';
+$tagline = 'Under Construction';
 $aboutHeading = 'A friendly little studio.';
 $aboutBody = 'A short description of Tylilo will live here — who you are, what you make, and why it matters. This is placeholder copy for a company or studio homepage.';
 
