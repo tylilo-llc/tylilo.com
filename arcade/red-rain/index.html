@@ -2,6 +2,31 @@
 <!--
   RED RAIN - changelog
   ====================
+  v2.2.1 (2026-11-21)
+  - Versioning is now MAJOR.MINOR.BUILD. BUILD goes up by 1 with every shipped release and never
+    resets; MINOR moves only when a roadmap milestone is reached. v2.2 is read as 2.2.0.
+  - What's New: a WHAT'S NEW button on the title menu and in the pause screen's button grid (also the
+    W key on the title and pause screens) opens a scrollable overlay listing every release from 2.2.1
+    back to 1.0, newest first, in plain player language (built from the WHATS_NEW data array). It never
+    opens by itself. Close with CLOSE, Esc, W or a tap outside; gameplay gets no taps while it is open.
+    The Controls / How to Play overlay mentions it.
+  - Favicon: an original inline SVG icon (dark red night sky, red moon, falling missile with a glowing
+    trail, city skyline) on <link rel="icon">, plus a 180x180 PNG apple-touch-icon. Both are data URIs,
+    so the game is still one self-contained file.
+  - Copyright: a small, muted "(c) <current year> Tylilo, LLC" line next to the version tag on the
+    title and pause screens. The year comes from the device clock.
+  - Title menu: PLAY, CONTROLS, OPTIONS and WHAT'S NEW. Stacked on tall screens, a 2x2 grid or a single
+    row on short ones; buttons shrink (never below 44 px) so everything fits on short landscape phones.
+    Pause screen: RESUME, CONTROLS, OPTIONS, WHAT'S NEW, MAIN MENU (RESUME spans the top row in the
+    grid layout used on short screens).
+  - Accessibility: pinch zoom is allowed again. The viewport no longer sets maximum-scale=1 or
+    user-scalable=no. The canvas uses touch-action: pinch-zoom (instead of none), so one-finger taps
+    still fire instantly and never scroll, pan or double-tap zoom, while a two-finger pinch zooms and
+    pans. The document touch handlers now block only one-finger moves (page scroll / pull-to-refresh)
+    and no longer cancel multi-touch or iOS gesture events. Ctrl + wheel / trackpad pinch zoom works on
+    desktop. While the page is pinch-zoomed the game keeps its unzoomed layout (iOS Safari reports the
+    zoomed visual size in innerWidth/innerHeight) and re-lays out when zoom returns to 100%.
+
   v2.2 (2026-10-04)
   - Optimization and cleanup pass. Gameplay, balance, visuals and rules are unchanged; still one file.
     - Rendering: static gradients (turrets, flak, bombers, stealth, nukes, drones, crates, HUD, fog,
@@ -207,16 +232,18 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#07040f">
-<title>Red Rain v2.2</title>
+<title>Red Rain v2.2.1</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Cdefs%3E%3ClinearGradient%20id='s'%20x1='0'%20y1='0'%20x2='0'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%2314030c'/%3E%3Cstop%20offset='.65'%20stop-color='%233d0812'/%3E%3Cstop%20offset='1'%20stop-color='%236e1414'/%3E%3C/linearGradient%3E%3CradialGradient%20id='m'%20cx='.4'%20cy='.4'%20r='.6'%3E%3Cstop%20offset='0'%20stop-color='%23ff8a66'/%3E%3Cstop%20offset='1'%20stop-color='%23c0181e'/%3E%3C/radialGradient%3E%3ClinearGradient%20id='t'%20gradientUnits='userSpaceOnUse'%20x1='6'%20y1='2'%20x2='33'%20y2='37'%3E%3Cstop%20offset='0'%20stop-color='%23ff3b2f'%20stop-opacity='0'/%3E%3Cstop%20offset='.7'%20stop-color='%23ff5a3c'%20stop-opacity='.8'/%3E%3Cstop%20offset='1'%20stop-color='%23ffc27a'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20width='64'%20height='64'%20rx='12'%20fill='url(%23s)'/%3E%3Ccircle%20cx='47'%20cy='16'%20r='13'%20fill='%23ff3b2f'%20opacity='.18'/%3E%3Ccircle%20cx='47'%20cy='16'%20r='8.5'%20fill='url(%23m)'/%3E%3Ccircle%20cx='44'%20cy='14'%20r='1.6'%20fill='%23a3121a'%20opacity='.6'/%3E%3Ccircle%20cx='50'%20cy='19'%20r='1.2'%20fill='%23a3121a'%20opacity='.6'/%3E%3Ccircle%20cx='14'%20cy='9'%20r='.8'%20fill='%23ffd9cc'/%3E%3Ccircle%20cx='26'%20cy='5'%20r='.6'%20fill='%23ffd9cc'/%3E%3Ccircle%20cx='58'%20cy='34'%20r='.6'%20fill='%23ffd9cc'/%3E%3Cpath%20d='M6%202L33%2037'%20stroke='url(%23t)'%20stroke-width='5'%20stroke-linecap='round'%20opacity='.45'/%3E%3Cpath%20d='M6%202L33%2037'%20stroke='url(%23t)'%20stroke-width='2.2'%20stroke-linecap='round'/%3E%3Ccircle%20cx='33.5'%20cy='37.5'%20r='6'%20fill='%23ff5a3c'%20opacity='.45'/%3E%3Ccircle%20cx='33.5'%20cy='37.5'%20r='2.6'%20fill='%23fff1d6'/%3E%3Cpath%20d='M0%2064V50h5v-6h4v6h3v-9h6v9h4v-5h5v5h3v-11h6v11h4v-7h5v7h3v-4h4v4h6v-8h6v22z'%20fill='%230d0208'/%3E%3Cpath%20d='M0%2053h64'%20stroke='%23ff3b2f'%20stroke-width='.6'%20opacity='.35'/%3E%3Crect%20x='14'%20y='44'%20width='1.4'%20height='1.4'%20fill='%23ffcf7a'/%3E%3Crect%20x='32'%20y='43'%20width='1.4'%20height='1.4'%20fill='%23ffcf7a'/%3E%3Crect%20x='35'%20y='47'%20width='1.4'%20height='1.4'%20fill='%23ffcf7a'/%3E%3Crect%20x='54'%20y='48'%20width='1.4'%20height='1.4'%20fill='%23ffcf7a'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" sizes="180x180" href="data:image/png;base64,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">
 <style>
   html,body{margin:0;padding:0;width:100%;height:100%;background:#07040f;overflow:hidden;
-    position:fixed;inset:0;overscroll-behavior:none;touch-action:none;
+    position:fixed;inset:0;overscroll-behavior:none;touch-action:pinch-zoom;
     -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-text-size-adjust:100%;}
-  canvas{display:block;position:fixed;left:0;top:0;width:100%;height:100%;touch-action:none;cursor:none;
+  canvas{display:block;position:fixed;left:0;top:0;width:100%;height:100%;touch-action:pinch-zoom;cursor:none;
     -webkit-tap-highlight-color:transparent;outline:none;}
   #safe{position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;
     padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);}
@@ -228,7 +255,7 @@
 <script>
 (() => {
 'use strict';
-const VERSION = '2.2';
+const VERSION = '2.2.1';   // MAJOR.MINOR.BUILD - BUILD +1 per shipped release, never reset
 document.title = 'Red Rain v' + VERSION;
 // ---------- helpers ----------
 const canvas = document.getElementById('c');
@@ -276,11 +303,19 @@ function readSafe() {
   safe.t = parseFloat(s.paddingTop) || 0; safe.r = parseFloat(s.paddingRight) || 0;
   safe.b = parseFloat(s.paddingBottom) || 0; safe.l = parseFloat(s.paddingLeft) || 0;
 }
+// v2.2.1: pinch zoom is allowed. iOS Safari reports the zoomed-in visual size in innerWidth/innerHeight,
+// but the fixed canvas still covers the unzoomed layout viewport, so while zoomed keep the current size.
+const pinchZoomed = () => !!(window.visualViewport && window.visualViewport.scale > 1.01);
+function viewSize() {
+  if (pinchZoomed() && cssW > 1 && cssH > 1) return { w: cssW, h: cssH };
+  if (pinchZoomed()) { const de = document.documentElement; return { w: Math.max(1, de.clientWidth || window.innerWidth), h: Math.max(1, de.clientHeight || window.innerHeight) }; }
+  return { w: Math.max(1, window.innerWidth), h: Math.max(1, window.innerHeight) };
+}
 function layout() {
   GRAD.clear();   // cached gradients that embed layout values
   const old = { W, H, GROUND, PL, PR, k };
   dpr = Math.min(window.devicePixelRatio || 1, 2);   // v1.9: backing store capped at 2x (3x phones looked identical but cost 2.25x the fill)
-  cssW = Math.max(1, window.innerWidth); cssH = Math.max(1, window.innerHeight);
+  const vsz = viewSize(); cssW = vsz.w; cssH = vsz.h;
   canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
   readSafe();
   isTouch = (window.matchMedia && matchMedia('(pointer: coarse)').matches) || (navigator.maxTouchPoints || 0) > 0;
@@ -943,7 +978,7 @@ canvas.addEventListener('pointermove', e => {
     const dy = p.cy - d.y0;
     if (Math.abs(dy) > 8) d.moved = true;
     if (d.kind === 'slider') { optSliderFromX(d.row, p.cx); return; }
-    if (d.moved) { if (d.kind === 'opt') G.optScroll = clamp(d.s0 - dy, 0, OPT.maxScroll); else if (d.kind === 'help') G.helpScroll = clamp(d.s0 - dy, 0, HELP.maxScroll); else G.shopScroll = clamp(d.s0 - dy, 0, SHOP.maxScroll); }
+    if (d.moved) { if (d.kind === 'wn') G.wnScroll = clamp(d.s0 - dy, 0, WN.maxScroll); else if (d.kind === 'opt') G.optScroll = clamp(d.s0 - dy, 0, OPT.maxScroll); else if (d.kind === 'help') G.helpScroll = clamp(d.s0 - dy, 0, HELP.maxScroll); else G.shopScroll = clamp(d.s0 - dy, 0, SHOP.maxScroll); }
   }
 });
 canvas.addEventListener('pointerleave', () => { G.mouse.on = false; });
@@ -960,6 +995,11 @@ canvas.addEventListener('pointerdown', e => {
   }
   if (G.helpOpen) {   // controls overlay is modal: drag scrolls, a tap closes/acts on release
     G.drag = { id: e.pointerId, y0: p.cy, s0: G.helpScroll, moved: false, kind: 'help' };
+    try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+    return;
+  }
+  if (G.wnOpen) {   // What's New overlay is modal too: gameplay never sees these taps
+    G.drag = { id: e.pointerId, y0: p.cy, s0: G.wnScroll, moved: false, kind: 'wn' };
     try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
     return;
   }
@@ -985,6 +1025,7 @@ function endDrag(e, cancel) {
   if (d.kind === 'slider') { flushOptions(); return; }
   if (d.kind === 'opt') { if (!cancel && !d.moved) { const p = evPos(e); optTap({ x: p.cx, y: p.cy }); } return; }
   if (d.kind === 'help') { if (!cancel && !d.moved) { const p = evPos(e); helpTap({ x: p.cx, y: p.cy }); } return; }
+  if (d.kind === 'wn') { if (!cancel && !d.moved) { const p = evPos(e); wnTap({ x: p.cx, y: p.cy }); } return; }
   if (!cancel && !d.moved && G.state === 'shop') { const p = evPos(e); shopTap({ x: p.cx, y: p.cy }); }
 }
 canvas.addEventListener('pointerup', e => {
@@ -999,8 +1040,10 @@ canvas.addEventListener('pointerup', e => {
 });
 canvas.addEventListener('pointercancel', e => { G.fsPress = null; endDrag(e, true); });
 canvas.addEventListener('wheel', e => {
+  if (e.ctrlKey) return;   // v2.2.1: Ctrl + wheel / trackpad pinch = browser zoom (accessibility)
   e.preventDefault();
-  if (G.optOpen && !e.ctrlKey) G.optScroll = clamp(G.optScroll + e.deltaY, 0, OPT.maxScroll);
+  if (G.wnOpen) G.wnScroll = clamp(G.wnScroll + e.deltaY, 0, WN.maxScroll);
+  else if (G.optOpen && !e.ctrlKey) G.optScroll = clamp(G.optScroll + e.deltaY, 0, OPT.maxScroll);
   else if (G.helpOpen && !e.ctrlKey) G.helpScroll = clamp(G.helpScroll + e.deltaY, 0, HELP.maxScroll);
   else if (G.state === 'shop' && !e.ctrlKey) G.shopScroll = clamp(G.shopScroll + e.deltaY, 0, SHOP.maxScroll);
 }, { passive: false });
@@ -1026,6 +1069,16 @@ window.addEventListener('keydown', e => {
     e.preventDefault();
     return;
   }
+  if (G.wnOpen) {
+    if (key === 'escape' || key === 'w' || key === 'enter' || key === ' ') closeWhatsNew();
+    else if (key === 'arrowdown' || key === 'pagedown') G.wnScroll = clamp(G.wnScroll + (key === 'pagedown' ? 240 : 60), 0, WN.maxScroll);
+    else if (key === 'arrowup' || key === 'pageup') G.wnScroll = clamp(G.wnScroll - (key === 'pageup' ? 240 : 60), 0, WN.maxScroll);
+    else if (key === 'm') setMuted(!muted);
+    else if (key === 'n') setMusic(!musicOn);
+    else if (key === 'f' && !e.repeat) toggleFullscreen();
+    e.preventDefault();
+    return;
+  }
   if (G.quitConfirm) {
     if (G.state !== 'paused') G.quitConfirm = false;
     else {
@@ -1039,6 +1092,7 @@ window.addEventListener('keydown', e => {
   }
   if ((key === 'h' || key === '?') && (G.state === 'title' || G.state === 'paused')) { openHelp(); e.preventDefault(); return; }
   if (key === 'o' && (G.state === 'title' || G.state === 'paused')) { openOptions(); e.preventDefault(); return; }
+  if (key === 'w' && !e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey && (G.state === 'title' || G.state === 'paused')) { openWhatsNew(); e.preventDefault(); return; }
   if (key === 'p' || key === 'escape') { togglePause(); e.preventDefault(); }
   else if (key === 'm') { initAudio(); setMuted(!muted); }
   else if (key === 'n' && !e.repeat) { initAudio(); setMusic(!musicOn); }
@@ -1069,13 +1123,11 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 window.addEventListener('pagehide', flushOptions);
-// no page scroll, pinch / double-tap zoom, pull-to-refresh or iOS gesture zoom
-document.addEventListener('touchmove', e => { e.preventDefault(); }, { passive: false });
-document.addEventListener('touchstart', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
-document.addEventListener('gesturestart', e => e.preventDefault(), { passive: false });
-document.addEventListener('gesturechange', e => e.preventDefault(), { passive: false });
+// no page scroll, pull-to-refresh or double-tap zoom. v2.2.1: two-finger pinch zoom is allowed again
+// (accessibility) - only one-finger moves are blocked; touch-action: pinch-zoom on the canvas keeps
+// single taps instant and stops one-finger panning / double-tap zoom.
+document.addEventListener('touchmove', e => { if (e.touches.length < 2) e.preventDefault(); }, { passive: false });
 document.addEventListener('dblclick', e => e.preventDefault(), { passive: false });
-window.addEventListener('wheel', e => { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
 
 // ---------- controls / how-to-play overlay ----------
 const HELP = { panel: null, close: null, maxScroll: 0 }, PAUSEUI = { ctrl: null };
@@ -1095,6 +1147,8 @@ function helpContent() {
     ['Tap (title / pause)', 'Start the game / resume'],
     ['NEXT WAVE button', 'Leave the Armory and start the next wave'],
     ['Swipe the Armory', 'Scroll the cards'],
+    ['WHAT\'S NEW button', 'See what changed in each version (title and pause screens)'],
+    ['Pinch (two fingers)', 'Zoom in for a closer look; pinch out to return'],
   ]) : [
     ['Click / tap', 'Fire an interceptor at that point'],
     ['P / Esc', 'Pause / resume'],
@@ -1104,6 +1158,7 @@ function helpContent() {
     ['Enter / Space', 'Start the game / next wave'],
     ['Arrows, PgUp / PgDn', 'Scroll the Armory (arrows pick the difficulty on the title)'],
     ['H / ?', 'Show / hide this help'],
+    ['W', 'What\'s New: what changed in each version (also a button on the title and pause screens)'],
   ];
   const how = [
     'Protect the 6 cities - the game ends when all of them fall.',
@@ -1163,6 +1218,120 @@ function drawHelp() {
   ctx.fillStyle = hov ? '#d0402c' : '#a8301f'; ctx.fillRect(c.x, c.y, c.w, c.h);
   ctx.strokeStyle = '#ffb3a0'; ctx.lineWidth = 2; ctx.strokeRect(c.x, c.y, c.w, c.h);
   txt('CLOSE', b.cx, c.y + c.h / 2, clamp(c.h * 0.42, 16, 22), '#fff');
+}
+// ---------- what's new overlay (v2.2.1) ----------
+// Player-facing release notes, newest first, written from the changelog. Opens ONLY from the
+// WHAT'S NEW button or the W key - never automatically.
+const WHATS_NEW = [
+  { v: '2.2.1', d: '2026-11-21', items: [
+    'New: this What\'s New screen. Find it on the title and pause menus, or press W.',
+    'Pinch to zoom now works on phones and tablets.',
+    'Red Rain has its own icon for browser tabs and home screens.',
+    'Version numbers now have three parts, like 2.2.1.' ] },
+  { v: '2.2', d: '2026-10-04', items: [
+    'Smoother performance, especially on phones and 120 Hz screens.',
+    'The game pauses and goes quiet when you switch tabs.',
+    'Fixed sounds that could play after pausing or quitting.',
+    'More reliable sound on iPhone and iPad.' ] },
+  { v: '2.1', d: '2026-10-04', items: [
+    'Armory prices rebalanced: each upgrade level costs more than the last.',
+    'Auto Flak level 2 is no longer cheaper than level 1.' ] },
+  { v: '2.0', d: '2026-10-04', items: [
+    'New way to lose: if every turret is destroyed at once, the game ends.',
+    'A dramatic DEFENSES DOWN finale when it happens.' ] },
+  { v: '1.9', d: '2026-10-03', items: [
+    'Big visual upgrade: moonlit sky, mountains, 3D cities, fiery explosions and glassy shields.',
+    'New Graphics setting (High / Low) in Options for slower devices.' ] },
+  { v: '1.8', d: '2026-10-03', items: [
+    'Pause screen gets a MAIN MENU button, with a check so you don\'t quit by accident.' ] },
+  { v: '1.7', d: '2026-10-03', items: [
+    'Four difficulty levels - Easy, Normal, Expert and Insane - each with its own high score.',
+    'New CONTROLS screen with a quick How to Play.',
+    'New OPTIONS: music, sound effects, volume, brightness, screen shake and more.' ] },
+  { v: '1.6', d: '2026-10-03', items: [
+    'Nukes take 2 hits (or one direct hit), speed up as they fall and burst in the air.',
+    'Rebuild City now needs a charge: you earn one every 6 waves.' ] },
+  { v: '1.5', d: '2026-10-03', items: [
+    'A direct hit now downs a stealth bomber in one shot.',
+    'City Shields cost more.' ] },
+  { v: '1.4', d: '2026-10-03', items: [
+    'More bombers in later waves.',
+    'Fireworks when you pass 1,000,000 points - and a banner plane you shouldn\'t shoot.',
+    'Nuke blasts shake the whole screen.' ] },
+  { v: '1.3', d: '2026-10-03', items: [
+    'City Shields in the Armory.',
+    'Stealth bombers carrying nukes arrive from wave 11.' ] },
+  { v: '1.2', d: '2026-10-03', items: [
+    'Full screen mode.',
+    'Original background music (toggle it with the note button or N).' ] },
+  { v: '1.1', d: '2026-10-03', items: [
+    'Fits any screen: phone or desktop, portrait or landscape.',
+    'Stays clear of notches and rounded corners.' ] },
+  { v: '1.0', d: '2026-10-03', items: [
+    'Defend your cities with chain-reacting interceptor blasts.',
+    'The Armory: spend your cash on upgrades between waves.',
+    'Ammo crates, kamikaze drones, Builder Crew and Turret Shield.' ] },
+];
+const WN = { panel: null, close: null, maxScroll: 0 };
+const WN_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const wnDate = d => { const p = d.split('-'); return WN_MONTHS[+p[1] - 1] + ' ' + (+p[2]) + ', ' + p[0]; };
+function openWhatsNew() { G.wnOpen = true; G.wnScroll = 0; G.drag = null; }
+function closeWhatsNew() { G.wnOpen = false; G.drag = null; }
+function wnTap(pt) {
+  if (WN.close && inRect(pt, WN.close)) { closeWhatsNew(); return; }
+  if (WN.panel && !inRect(pt, WN.panel)) closeWhatsNew();   // tap outside the panel
+}
+function drawWhatsNew() {
+  if (!G.wnOpen) return;
+  ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(-60, -60, cssW + 120, cssH + 120);
+  const b = box(), o = ov();
+  const pw = Math.min(b.w, 660), ph = Math.min(cssH - safe.t - safe.b - 20, 760);
+  const px = b.cx - pw / 2, py = safe.t + (cssH - safe.t - safe.b - ph) / 2;
+  WN.panel = { x: px, y: py, w: pw, h: ph };
+  panel(px, py, pw, ph, 0.95);
+  const hS = clamp(26 * o, 18, 30), fS = clamp(15 * u, 13, 17), lh = fS * 1.45, pad = clamp(pw * 0.05, 12, 26);
+  const bh = isTouch ? 50 : 44, bw = Math.min(220, pw - 2 * pad);
+  WN.close = { x: b.cx - bw / 2, y: py + ph - bh - 12, w: bw, h: bh };
+  const cTop = py + hS * 1.9, cBot = WN.close.y - 10, cH = cBot - cTop;
+  txt('WHAT\'S NEW', b.cx, py + hS * 0.95, hS, '#ff5a3c', 'center', 'bold', pw - 2 * pad);
+  ctx.save(); ctx.beginPath(); ctx.rect(px, cTop, pw, cH); ctx.clip();
+  let y = cTop + 6 - G.wnScroll;
+  WHATS_NEW.forEach((r, ri) => {
+    if (y + 400 > cTop - 40 && y < cTop + cH + 40) {   // skip drawing far off-screen sections
+      txt('v' + r.v, px + pad, y + fS * 0.6, fS * 1.1, '#ffd166', 'left', 'bold');
+      const vw = textW('v' + r.v, fS * 1.1);
+      txt(wnDate(r.d) + (ri === 0 ? '  \u00b7  LATEST' : ''), px + pad + vw + 12, y + fS * 0.6, fS * 0.85, ri === 0 ? '#ffb3a0' : '#999', 'left', 'normal');
+    }
+    y += lh * 1.25;
+    for (const s2 of r.items) {
+      const lines = wrap(s2, pw - 2 * pad - 16, fS);
+      if (y + lh * lines.length > cTop - 40 && y < cTop + cH + 40) {
+        txt('\u2022', px + pad, y + fS * 0.6, fS, '#ff9e40', 'left', 'bold');
+        lines.forEach((l, i) => txt(l, px + pad + 16, y + fS * 0.6 + i * lh, fS, '#ddd', 'left', 'normal'));
+      }
+      y += lh * lines.length + 4;
+    }
+    y += lh * 0.7;
+  });
+  ctx.restore();
+  const contentH = y + G.wnScroll - cTop + 6;
+  WN.maxScroll = Math.max(0, contentH - cH);
+  G.wnScroll = clamp(G.wnScroll || 0, 0, WN.maxScroll);
+  if (WN.maxScroll > 0) {
+    const th = Math.max(30, cH * cH / (cH + WN.maxScroll)), ty = cTop + (cH - th) * (G.wnScroll / WN.maxScroll);
+    ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.fillRect(px + pw - 7, cTop, 3, cH);
+    ctx.fillStyle = 'rgba(255,170,140,0.75)'; ctx.fillRect(px + pw - 7, ty, 3, th);
+  }
+  const c = WN.close, hov = G.mouse.on && inRect({ x: G.mouse.cx, y: G.mouse.cy }, c);
+  ctx.fillStyle = hov ? '#d0402c' : '#a8301f'; ctx.fillRect(c.x, c.y, c.w, c.h);
+  ctx.strokeStyle = '#ffb3a0'; ctx.lineWidth = 2; ctx.strokeRect(c.x, c.y, c.w, c.h);
+  txt('CLOSE', b.cx, c.y + c.h / 2, clamp(c.h * 0.42, 16, 22), '#fff');
+}
+// version tag + copyright line, bottom-right on the title and pause screens (year from the device clock)
+function drawVersionTag(b) {
+  txt('v' + VERSION, b.R, b.B - 8, 12, 'rgba(255,255,255,0.45)', 'right', 'normal');
+  const vw = textW('v' + VERSION, 12, 'normal');
+  txt('\u00a9 ' + new Date().getFullYear() + ' Tylilo, LLC', b.R - vw - 14, b.B - 8, 12, 'rgba(255,225,215,0.5)', 'right', 'normal', Math.max(60, b.w - vw - 20));
 }
 // ---------- options overlay ----------
 const OPT = { panel: null, back: null, rows: [], maxScroll: 0, cTop: 0, cH: 0, focus: -1 };
@@ -1305,7 +1474,7 @@ function quitToMenu() {
   for (const k of ['enemies', 'bombers', 'drones', 'shots', 'crates', 'nukes', 'explosions', 'particles', 'beams', 'markers', 'floaters', 'schedule']) G[k].length = 0;
   G.fw = null; G.bplane = null; G.bplaneCrash = null; G.build = null; G.auto = null; G.bonus = null;
   G.quake = null; G.shake = 0; G.flash = 0; G.banner = 0; G.drag = null; G.finale = null;
-  G.quitConfirm = false; G.helpOpen = false; G.optOpen = false; G.prevState = null;
+  G.quitConfirm = false; G.helpOpen = false; G.optOpen = false; G.wnOpen = false; G.prevState = null;
   setState('title');   // music follows the state: calm title mood
 }
 function togglePause() {
@@ -1322,6 +1491,7 @@ function handleClick(p) {
       if (hit) { setSelDiff(hit.d); SFX.buy(); }
       else if (TITLE.ctrl && inRect(pt, TITLE.ctrl)) openHelp();
       else if (TITLE.opts && inRect(pt, TITLE.opts)) openOptions();
+      else if (TITLE.wn && inRect(pt, TITLE.wn)) openWhatsNew();
       else newGame();   // PLAY button or anywhere else
       break;
     }
@@ -1334,6 +1504,7 @@ function handleClick(p) {
       }
       if (PAUSEUI.ctrl && inRect(pt, PAUSEUI.ctrl)) { openHelp(); break; }
       if (PAUSEUI.opts && inRect(pt, PAUSEUI.opts)) { openOptions(); break; }
+      if (PAUSEUI.wn && inRect(pt, PAUSEUI.wn)) { openWhatsNew(); break; }
       if (PAUSEUI.menu && inRect(pt, PAUSEUI.menu)) { G.quitConfirm = true; break; }
       togglePause(); break;   // RESUME button or anywhere else
     }
@@ -1476,7 +1647,7 @@ function buyItem(id) {
 G._dbg = { waveSpec: n => waveSpec(n), fireAt: (x, y) => fireAt(x, y), startWave: () => startWave(), buy: id => buyItem(id),
   spawnCrate: x => spawnCrate(x), collectCrate: c => collectCrate(c), crateMaxPerWave: () => crateMaxPerWave(), maxAmmo: () => maxAmmo(),
   layout: () => ({ W, H, GROUND, PL, PR, k, gs, vS, hS, HIT, dpr, cssW, cssH, portrait, isTouch, safe: { ...safe }, ui: JSON.parse(JSON.stringify(UI)) }),
-  shopLayout: () => { shopLayout(); return JSON.parse(JSON.stringify(SHOP)); }, toCss: (x, y) => toCss(x, y), blastRadius: () => blastRadius(), cityShieldCost: () => cityShieldCost(), spawnStealth: () => spawnStealth(), waveSpecBase: n => waveSpecBase(n), diff: () => ({ sel: selDiff, game: G.diff, hi: { ...hiScores } }), setSelDiff: d => setSelDiff(d), titleBtns: () => TITLE.btns, titleUi: () => ({ play: TITLE.play, ctrl: TITLE.ctrl }), pauseCtrl: () => PAUSEUI.ctrl, pauseUi: () => ({ ...PAUSEUI, confirmOpen: !!G.quitConfirm }), pauseOpts: () => PAUSEUI.opts, titleOpts: () => TITLE.opts, opts: () => ({ open: !!G.optOpen, set: { ...SET }, music: musicOn, muted, filter: canvas.style.filter, sfxGain: sfxGain ? sfxGain.gain.value : null, rows: OPT.rows.map(r => ({ key: r.key, type: r.type, rect: r.rect, track: r.track, segs: r.segs })), back: OPT.back, panel: OPT.panel, maxScroll: OPT.maxScroll, scroll: G.optScroll || 0 }), quakeOff: () => quakeOffset(), help: () => ({ open: !!G.helpOpen, scroll: G.helpScroll || 0, maxScroll: HELP.maxScroll, panel: HELP.panel, close: HELP.close }), goBtn: () => GO.btn, stealthDirectR: () => STEALTH_DIRECT_R(), bplane: () => G.bplane ? { state: G.bplane.state, x: G.bplane.x, y: G.bplane.y, dir: G.bplane.dir, banner: !!G.bplane.banner } : null, bplaneCrash: () => G.bplaneCrash, quake: () => G.quake ? { t: G.quake.t, dur: G.quake.dur, off: quakeOffset() } : null, shootBannerPlane: () => shootBannerPlane(),
+  shopLayout: () => { shopLayout(); return JSON.parse(JSON.stringify(SHOP)); }, toCss: (x, y) => toCss(x, y), blastRadius: () => blastRadius(), cityShieldCost: () => cityShieldCost(), spawnStealth: () => spawnStealth(), waveSpecBase: n => waveSpecBase(n), diff: () => ({ sel: selDiff, game: G.diff, hi: { ...hiScores } }), setSelDiff: d => setSelDiff(d), titleBtns: () => TITLE.btns, titleUi: () => ({ play: TITLE.play, ctrl: TITLE.ctrl }), pauseCtrl: () => PAUSEUI.ctrl, pauseUi: () => ({ ...PAUSEUI, confirmOpen: !!G.quitConfirm }), pauseOpts: () => PAUSEUI.opts, titleOpts: () => TITLE.opts, opts: () => ({ open: !!G.optOpen, set: { ...SET }, music: musicOn, muted, filter: canvas.style.filter, sfxGain: sfxGain ? sfxGain.gain.value : null, rows: OPT.rows.map(r => ({ key: r.key, type: r.type, rect: r.rect, track: r.track, segs: r.segs })), back: OPT.back, panel: OPT.panel, maxScroll: OPT.maxScroll, scroll: G.optScroll || 0 }), quakeOff: () => quakeOffset(), wn: () => ({ open: !!G.wnOpen, scroll: G.wnScroll || 0, maxScroll: WN.maxScroll, panel: WN.panel, close: WN.close, title: TITLE.wn, pause: PAUSEUI.wn, count: WHATS_NEW.length }), help: () => ({ open: !!G.helpOpen, scroll: G.helpScroll || 0, maxScroll: HELP.maxScroll, panel: HELP.panel, close: HELP.close }), goBtn: () => GO.btn, stealthDirectR: () => STEALTH_DIRECT_R(), bplane: () => G.bplane ? { state: G.bplane.state, x: G.bplane.x, y: G.bplane.y, dir: G.bplane.dir, banner: !!G.bplane.banner } : null, bplaneCrash: () => G.bplaneCrash, quake: () => G.quake ? { t: G.quake.t, dur: G.quake.dur, off: quakeOffset() } : null, shootBannerPlane: () => shootBannerPlane(),
   fireworks: () => G.fw ? { t: G.fw.t, rockets: G.fw.rockets.length, sparks: G.fw.sparks.length } : null, spawnNuke: (x, y) => spawnNuke(x, y), nukeImpact: (x, y) => nukeImpact(x, y), nukeDirectR: () => NUKE_DIRECT_R(), nukeBurstY: () => nukeBurstY(), spawnMissile: (t, x, y, tg) => spawnMissile(t, x, y, tg), impact: (x, y) => impact(x, y), inShield: (x, y) => !!inShield(x, y),
   fsSupported, toggleFullscreen: () => toggleFullscreen(), fsRect: () => fsRect(),
   music: () => ({ on: musicOn, built: !!music, step: music ? music.step : 0, ctx: actx ? actx.state : 'none', bus: music ? music.bus.gain.value : 0, muted, stored: (() => { try { return localStorage.getItem('redReignMusic'); } catch (e) { return 'n/a'; } })() }), setMusic: on => setMusic(on) };
@@ -3311,13 +3482,15 @@ function drawTitle() {
   const sgap = clamp(10 * o, 8, 14), rows = b.w >= 600 ? 1 : 2, cols = 4 / rows;
   const sbw = Math.min(rows === 1 ? 200 : 240, (b.w - sgap * (cols - 1)) / cols), sbh = clamp(62 * o, 54, 78);
   const lblS = fsz(13, o, 12), selH = lblS * 1.6 + rows * sbh + (rows - 1) * sgap;
-  const mbh = isTouch ? clamp(56 * o, 50, 64) : clamp(52 * o, 46, 60), mbw = Math.min(240, (b.w - sgap) / 2);
-  const avail = b.B - (b.T + UI.bs + 6);
+  let mbh = isTouch ? clamp(56 * o, 50, 64) : clamp(52 * o, 46, 60);
+  const avail = b.B - 22 - (b.T + UI.bs + 6);   // keep clear of the version / copyright line at the bottom
   const mgap = isTouch ? 10 : 8;
-  let menuRow = false;
-  const menuH = () => menuRow ? mbh : 3 * mbh + 2 * mgap;
+  // v2.2.1: 4 menu buttons - a column on tall screens, else a single row (wide) or a 2x2 grid
+  let menuMode = 'col';
+  const menuH = () => menuMode === 'row' ? mbh : menuMode === 'grid' ? 2 * mbh + mgap : 4 * mbh + 3 * mgap;
   const totalOf = () => tS + gap * 1.2 + selH + gap * 1.3 + menuH() + gap * 0.9 + hiS;
-  if (totalOf() > avail && b.w >= 3 * 150 + 2 * mgap) menuRow = true;
+  if (totalOf() > avail) menuMode = b.w >= 4 * 140 + 3 * mgap ? 'row' : 'grid';
+  if (totalOf() > avail) mbh = Math.max(44, mbh - (totalOf() - avail) / (menuMode === 'grid' ? 2 : 1));
   if (totalOf() > avail) tS = Math.max(28, tS - (totalOf() - avail));
   let y = Math.max(b.T + UI.bs + 6, b.cy - totalOf() / 2);
   const pulse = 1 + Math.sin(G.time * 2) * 0.03;
@@ -3337,14 +3510,15 @@ function drawTitle() {
     txt(D.desc, r.x + r.w / 2, r.y + r.h * 0.72, dS, on ? '#fff' : '#aaa', 'center', 'normal', r.w - 10);
   }
   y += rows * sbh + (rows - 1) * sgap + gap * 1.3;
-  if (menuRow) {
-    const w3 = Math.min(220, (b.w - 2 * mgap) / 3), x0 = b.cx - (3 * w3 + 2 * mgap) / 2;
-    TITLE.play = { x: x0, y, w: w3, h: mbh }; TITLE.ctrl = { x: x0 + w3 + mgap, y, w: w3, h: mbh }; TITLE.opts = { x: x0 + 2 * (w3 + mgap), y, w: w3, h: mbh };
+  if (menuMode === 'row') {
+    const w4 = Math.min(200, (b.w - 3 * mgap) / 4), x0 = b.cx - (4 * w4 + 3 * mgap) / 2;
+    [TITLE.play, TITLE.ctrl, TITLE.opts, TITLE.wn] = [0, 1, 2, 3].map(i => ({ x: x0 + i * (w4 + mgap), y, w: w4, h: mbh }));
+  } else if (menuMode === 'grid') {
+    const w2 = Math.min(240, (b.w - mgap) / 2), x0 = b.cx - w2 - mgap / 2;
+    [TITLE.play, TITLE.ctrl, TITLE.opts, TITLE.wn] = [0, 1, 2, 3].map(i => ({ x: x0 + (i % 2) * (w2 + mgap), y: y + Math.floor(i / 2) * (mbh + mgap), w: w2, h: mbh }));
   } else {
     const w1 = Math.min(280, b.w);
-    TITLE.play = { x: b.cx - w1 / 2, y, w: w1, h: mbh };
-    TITLE.ctrl = { x: b.cx - w1 / 2, y: y + mbh + mgap, w: w1, h: mbh };
-    TITLE.opts = { x: b.cx - w1 / 2, y: y + 2 * (mbh + mgap), w: w1, h: mbh };   // directly below Controls
+    [TITLE.play, TITLE.ctrl, TITLE.opts, TITLE.wn] = [0, 1, 2, 3].map(i => ({ x: b.cx - w1 / 2, y: y + i * (mbh + mgap), w: w1, h: mbh }));
   }
   const pp = 1 + 0.03 * Math.sin(G.time * 4);
   const pcx = TITLE.play.x + TITLE.play.w / 2, pcy = TITLE.play.y + mbh / 2;
@@ -3352,9 +3526,10 @@ function drawTitle() {
   drawMenuBtn(TITLE.play, 'PLAY  >', true); ctx.restore();
   drawMenuBtn(TITLE.ctrl, 'CONTROLS', false);
   drawMenuBtn(TITLE.opts, 'OPTIONS', false);
+  drawMenuBtn(TITLE.wn, 'WHAT\'S NEW', false);
   y += menuH() + gap * 0.9;
   txt(DIFFS[selDiff].name.toUpperCase() + ' HIGH SCORE ' + hiScores[selDiff], b.cx, y + hiS / 2, hiS, '#aaa', 'center', 'bold', b.w);
-  txt('v' + VERSION, b.R, b.B - 8, 12, 'rgba(255,255,255,0.45)', 'right', 'normal');
+  drawVersionTag(b);
   drawButtons(false);
 }
 
@@ -3362,12 +3537,14 @@ function drawPause() {
   ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(0, 0, cssW, cssH);
   const o = ov(), b = box();
   const tS = fsz(56, o, 36), mS = fsz(16, o, 13), hS = fsz(16, o, 13);
-  const bh = isTouch ? 54 : 48, gap = isTouch ? 12 : 10;
-  const colH = 4 * bh + 3 * gap, gridH = 2 * bh + gap;
+  let bh = isTouch ? 54 : 48;
+  const gap = isTouch ? 12 : 10;
+  const colH = 5 * bh + 4 * gap;
   const head = mS * 1.4 + tS * 1.05 + hS * 1.6 + 8;
   const top = safe.t + UI.hudH + 4, bot = b.B - 14;   // keep clear of the HUD and the version tag
   const grid = head + colH > bot - top;
-  const total = head + (grid ? gridH : colH);
+  if (grid && head + 3 * bh + 2 * gap > bot - top) bh = Math.max(44, (bot - top - head - 2 * gap) / 3);   // very short screens
+  const total = head + (grid ? 3 * bh + 2 * gap : colH);
   let y = top + Math.max(0, (bot - top - total) / 2);
   txt(DF().name.toUpperCase() + ' MODE  \u00b7  WAVE ' + G.wave, b.cx, y + mS * 0.7, mS, DF().col, 'center', 'bold', b.w);
   y += mS * 1.4;
@@ -3376,19 +3553,20 @@ function drawPause() {
   txt(isTouch ? 'Tap RESUME or outside the buttons to continue' : 'P or Esc to resume', b.cx, y + hS * 0.6, hS, '#ccc', 'center', 'normal', b.w);
   y += hS * 1.6 + 8;
   let rects;
-  if (grid) {
+  if (grid) {   // RESUME spans the top row, then CONTROLS / OPTIONS and WHAT'S NEW / MAIN MENU
     const w2 = Math.min(240, (b.w - gap) / 2), x0 = b.cx - w2 - gap / 2;
-    rects = [0, 1, 2, 3].map(i => ({ x: x0 + (i % 2) * (w2 + gap), y: y + Math.floor(i / 2) * (bh + gap), w: w2, h: bh }));
+    rects = [{ x: x0, y, w: 2 * w2 + gap, h: bh }].concat([0, 1, 2, 3].map(i => ({ x: x0 + (i % 2) * (w2 + gap), y: y + (1 + Math.floor(i / 2)) * (bh + gap), w: w2, h: bh })));
   } else {
     const w1 = Math.min(260, b.w);
-    rects = [0, 1, 2, 3].map(i => ({ x: b.cx - w1 / 2, y: y + i * (bh + gap), w: w1, h: bh }));
+    rects = [0, 1, 2, 3, 4].map(i => ({ x: b.cx - w1 / 2, y: y + i * (bh + gap), w: w1, h: bh }));
   }
-  [PAUSEUI.resume, PAUSEUI.ctrl, PAUSEUI.opts, PAUSEUI.menu] = rects;
+  [PAUSEUI.resume, PAUSEUI.ctrl, PAUSEUI.opts, PAUSEUI.wn, PAUSEUI.menu] = rects;
   drawMenuBtn(PAUSEUI.resume, 'RESUME', true);
   drawMenuBtn(PAUSEUI.ctrl, 'CONTROLS', false);
   drawMenuBtn(PAUSEUI.opts, 'OPTIONS', false);
+  drawMenuBtn(PAUSEUI.wn, 'WHAT\'S NEW', false);
   drawMenuBtn(PAUSEUI.menu, 'MAIN MENU', false);
-  txt('v' + VERSION, b.R, b.B - 8, 12, 'rgba(255,255,255,0.45)', 'right', 'normal');
+  drawVersionTag(b);
   PAUSEUI.quit = PAUSEUI.cancel = PAUSEUI.confirm = null;
   if (G.quitConfirm) {
     ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(0, 0, cssW, cssH);
@@ -3572,7 +3750,9 @@ function render() {
   }
   if (G.helpOpen && G.state !== 'title' && G.state !== 'paused') G.helpOpen = false;
   if (G.optOpen && G.state !== 'title' && G.state !== 'paused') G.optOpen = false;
+  if (G.wnOpen && G.state !== 'title' && G.state !== 'paused') G.wnOpen = false;
   drawHelp();
+  drawWhatsNew();
   drawOptions();
   drawCrosshair();
 }
@@ -3628,7 +3808,8 @@ function frame(now) {
   if (document.hidden) return;   // some embedded browsers keep firing rAF in the background: do nothing
   try {
     // re-layout when marked dirty, or on any size / pixel-ratio change the events missed (some in-app browsers)
-    if (layoutDirty || window.innerWidth !== cssW || window.innerHeight !== cssH || Math.min(window.devicePixelRatio || 1, 2) !== dpr) { layoutDirty = false; layout(); }
+    const vsz = viewSize();
+    if (layoutDirty || vsz.w !== cssW || vsz.h !== cssH || Math.min(window.devicePixelRatio || 1, 2) !== dpr) { layoutDirty = false; layout(); }
     if (G.state === 'title') { G.time += dt; titleDemo(dt); updateParticles(dt); }
     else {
       const steps = G._timeScale || 1;   // test hook: extra fixed sub-steps (default 1 = normal speed)
