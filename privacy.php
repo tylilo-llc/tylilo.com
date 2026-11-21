@@ -34,7 +34,7 @@ require __DIR__ . '/includes/head.php';
         <p class="kicker">Privacy</p>
         <h1>Privacy</h1>
         <p><strong>Effective date:</strong> November 21, 2026</p>
-        <p>Tylilo LLC (“Tylilo”) runs <a href="/">tylilo.com</a>. This page says what the site actually does with information. It is short on purpose.</p>
+        <p>Tylilo, LLC (“Tylilo”) runs <a href="/">tylilo.com</a>. This page says what the site actually does with information. It is short on purpose.</p>
 
         <h2>Contact form</h2>
         <p>If you write to us, the form asks for your name, email address, and message. We email those three things to <a href="mailto:<?= tylilo_e($contactEmail) ?>"><?= tylilo_e($contactEmail) ?></a> so we can read them and reply. The site does not sell that information, and it does not send it to advertisers or other companies.</p>

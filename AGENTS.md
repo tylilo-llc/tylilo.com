@@ -2,6 +2,8 @@
 
 Every change to this site must meet WCAG 2.2 Level AA and stay easy for search engines to understand. These rules apply to new pages, copy edits, and visual tweaks.
 
+The legal name is written **Tylilo, LLC**, with a comma. Use `TYLILO_LEGAL_NAME` from `config.php` for the footer, meta text, and JSON-LD. When the name is typed out, keep the comma.
+
 ## Accessibility
 
 - Use semantic HTML: one `h1`, headings in order, and landmarks for `header`, `main`, and `footer`. Add `nav` when a group of links is navigation.
@@ -25,11 +27,15 @@ Every change to this site must meet WCAG 2.2 Level AA and stay easy for search e
 
 ## Arcade
 
-Each game is one folder, `/arcade/<slug>/index.html`. The list on `/arcade/` is the `$games` array in `arcade/index.php`: title, one-line description, path, and thumbnail. Adding a game is one new entry, in the order it should appear. Put the thumbnail in that game’s folder. The card title names the game, so the thumbnail alt text stays empty.
+Each game is one folder, `/arcade/<slug>/index.html`. The list on `/arcade/` is the `$games` array in `arcade/index.php`: title, one-line description, path, and `art`. Adding a game is one new entry, in the order it should appear, plus an `art.svg` in that game’s folder. The tile name is the accessible text, so the artwork stays decorative (`alt=""`).
+
+Every game opens in a new window. The template adds `target="_blank"`, `rel="noopener"`, visually hidden text “(opens in a new window)”, and a decorative window icon. That is the default when `newWindow` is omitted. Do not turn it off for a game. The homepage Arcade tile is the exception: it opens `/arcade/` in the same tab.
+
+A Top scores control, if one is added later, goes in the article under the tile link, not inside the link.
 
 Game files come from their own maintainers. Drop the new `index.html` in unchanged. Do not edit it in this repo. Games may keep settings and high scores in the browser’s local storage and must not load outside resources. When a game stores something new, describe it on `/privacy` under “Saved on your device” and update the effective date if the policy text changes.
 
-The homepage links to `/arcade/` from the section between About and Contact. The footer does too.
+The homepage links to `/arcade/` from the tile between About and Contact. The footer does too.
 
 ## OTRadio
 

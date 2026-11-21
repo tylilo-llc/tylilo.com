@@ -1,6 +1,6 @@
 # tylilo.com
 
-Company and studio site for Tylilo LLC. The first version is a single homepage: a navy hero, a short About section, and a contact form. It is plain HTML, CSS, and JavaScript plus a small PHP contact handler, so HostM can serve it with no build step.
+Company and studio site for Tylilo, LLC. The first version is a single homepage: a navy hero, a short About section, and a contact form. It is plain HTML, CSS, and JavaScript plus a small PHP contact handler, so HostM can serve it with no build step.
 
 The look is the approved “style B, bold playful” design: big navy hero, the round logo as a badge, soft blob shapes, cream cards, and pill-shaped buttons. A Light / Dark / Auto switch remembers the choice in this browser. Auto follows the device setting. The saved choice is applied before the page paints, so it does not flash the wrong theme.
 
@@ -45,7 +45,7 @@ const TYLILO_CONTACT_EMAIL = 'hello@tylilo.com';
 
 That line is in `config.php`, under the heading **CONTACT EMAIL**. The homepage button and the form’s recipient both read it. Create that mailbox in cPanel (or change the constant to a mailbox that already exists) before you rely on the form. Hosting mail filters often drop messages whose From address is not a real mailbox on the account.
 
-The footer reads `© 2026 Tylilo LLC` from `TYLILO_YEAR` and `TYLILO_LEGAL_NAME` in the same file.
+The footer reads `© 2026 Tylilo, LLC` from `TYLILO_YEAR` and `TYLILO_LEGAL_NAME` in the same file.
 
 ## How the contact form works
 
@@ -99,22 +99,26 @@ The full rules and the pre-merge checklist (axe or pa11y, Lighthouse accessibili
 
 ## Arcade
 
-Games live under `arcade/`, one folder per game. The page at `/arcade/` reads a small array at the top of `arcade/index.php`. To add a game, add one entry there (title, description, URL, thumbnail) and put the files in `arcade/<slug>/`:
+Games live under `arcade/`, one folder per game. The page at `/arcade/` reads a small array at the top of `arcade/index.php`. To add a game, add one entry there (title, description, URL, artwork) and put the files in `arcade/<slug>/`:
 
 ```
 arcade/solitaire/index.html   Klondike Solitaire
-arcade/solitaire/thumb.png    Card image
+arcade/solitaire/art.svg      Tile artwork
 arcade/red-rain/index.html    Red Rain
-arcade/red-rain/thumb.png     Card image
+arcade/red-rain/art.svg       Tile artwork
 arcade/pop-spiral/index.html  Pop Spiral
-arcade/pop-spiral/thumb.png   Card image
+arcade/pop-spiral/art.svg     Tile artwork
 ```
+
+The artwork is an SVG. The tile shows it above the game name, and the whole tile is the link. The name is the accessible text, so the image alt stays empty. The one-line description stays in the page for search and screen readers, visually hidden on the tile.
+
+Every game opens in a new window. The template does this for every entry unless `newWindow` is set to false, which it should not be. The link gets `target="_blank"` and `rel="noopener"`, plus the words “(opens in a new window)” for assistive tech and a small window icon that is hidden from them. The homepage Arcade tile is separate: it opens `/arcade/` in the same tab.
 
 `index.html` is the whole game. It is maintained elsewhere and replaced as a unit, so leave the file as it arrives. Do not reformat it or point it at other hosts. The folder is served as `/arcade/<slug>/` with or without the trailing slash. `DirectoryIndex` lists `index.html` after `index.php`, so a game folder is not blocked by the PHP index used on the rest of the site.
 
 Red Rain stores music and mute, difficulty, options, and high scores in the browser’s local storage. Solitaire stores its draw mode under `klondike.draw`, stats under `klondike.stats` (games played and won, streaks, best score and time for each draw mode, and whether a game is in progress; no personal data), and sound on or off under `klondike.muted`. Pop Spiral stores a best score and its settings. None of that is sent to Tylilo, and the games do not load scripts, images, or fonts from another site. `/privacy` says so. If a future game stores something else, or starts loading a third-party file, update that section and its effective date.
 
-The homepage has an Arcade button between About and Contact. The footer links to Arcade as well.
+The homepage has an Arcade tile between About and Contact. It opens this page in the same tab. The footer links to Arcade as well.
 
 ## OTRadio
 

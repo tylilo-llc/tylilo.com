@@ -7,36 +7,33 @@ require __DIR__ . '/../includes/bootstrap.php';
 /**
  * ARCADE GAMES
  * ------------
- * One entry is one card, in the order shown on the page.
+ * One entry is one tile, in the order shown on the page.
+ * Add a game with one entry here plus arcade/<slug>/art.svg.
  * The game file is arcade/<slug>/index.html. Another maintainer owns
  * that file; drop a new version in unchanged. Do not edit it here.
- * Thumbnails live next to the game. Leave alt empty: the card title
- * already names the game.
+ * Artwork is decorative: the tile name is the accessible text.
+ * Games open in a new window. Leave newWindow unset (it defaults to
+ * true). A Top scores control, if added later, goes after the link
+ * inside the article, not inside the link.
  */
 $games = [
     [
         'title' => 'Solitaire',
         'description' => 'Classic Klondike solitaire.',
         'href' => '/arcade/solitaire/',
-        'thumb' => '/arcade/solitaire/thumb.png',
-        'width' => 843,
-        'height' => 321,
+        'art' => '/arcade/solitaire/art.svg',
     ],
     [
         'title' => 'Red Rain',
         'description' => 'A missile-defense arcade game, playable on desktop and touch.',
         'href' => '/arcade/red-rain/',
-        'thumb' => '/arcade/red-rain/thumb.png',
-        'width' => 843,
-        'height' => 321,
+        'art' => '/arcade/red-rain/art.svg',
     ],
     [
         'title' => 'Pop Spiral',
         'description' => 'An original marble-shooter puzzle.',
         'href' => '/arcade/pop-spiral/',
-        'thumb' => '/arcade/pop-spiral/thumb.png',
-        'width' => 843,
-        'height' => 321,
+        'art' => '/arcade/pop-spiral/art.svg',
     ],
 ];
 
@@ -82,13 +79,23 @@ require __DIR__ . '/../includes/head.php';
       </div>
       <div class="arcade-grid">
 <?php foreach ($games as $game): ?>
-        <article class="card game-card">
-          <div class="game-thumb">
-            <img src="<?= tylilo_e($game['thumb']) ?>" alt="" width="<?= (int) $game['width'] ?>" height="<?= (int) $game['height'] ?>">
-          </div>
-          <h2><?= tylilo_e($game['title']) ?></h2>
-          <p><?= tylilo_e($game['description']) ?></p>
-          <a class="btn" href="<?= tylilo_e($game['href']) ?>">Play <?= tylilo_e($game['title']) ?></a>
+<?php $opensNewWindow = ($game['newWindow'] ?? true) !== false; ?>
+        <article class="game-slot">
+          <a class="game-tile" href="<?= tylilo_e($game['href']) ?>"<?php if ($opensNewWindow): ?> target="_blank" rel="noopener"<?php endif; ?>>
+            <span class="game-tile-art">
+              <img src="<?= tylilo_e($game['art']) ?>" alt="" width="200" height="150">
+            </span>
+            <span class="game-tile-name"><?= tylilo_e($game['title']) ?></span>
+<?php if ($opensNewWindow): ?>
+            <svg class="game-tile-out" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="16" height="16">
+              <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 5h5v5M19 5l-8 8"/>
+              <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M10 5H6.5A1.5 1.5 0 0 0 5 6.5v11A1.5 1.5 0 0 0 6.5 19h11a1.5 1.5 0 0 0 1.5-1.5V14"/>
+            </svg>
+            <span class="visually-hidden"><?= tylilo_e($game['description']) ?> (opens in a new window)</span>
+<?php else: ?>
+            <span class="visually-hidden"><?= tylilo_e($game['description']) ?></span>
+<?php endif; ?>
+          </a>
         </article>
 <?php endforeach; ?>
       </div>

@@ -413,21 +413,47 @@ h2 {
 .card > .btn { margin-top: 1.1rem; }
 
 .arcade-home {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   padding-top: 1.75rem;
 }
 
-.arcade-home .btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  min-width: 2.75rem;
-  min-height: 2.75rem;
+.arcade-home-heading {
+  margin: 0 0 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--kicker);
 }
 
-.arcade-home .btn svg {
+.arcade-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 7.5rem;
+  height: 7.5rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.4rem 0.45rem;
+  border-radius: 1.35rem;
+  background: var(--btn2-bg);
+  color: var(--btn2-text);
+  font-weight: 800;
+  font-size: 0.95rem;
+  line-height: 1.1;
+  text-decoration: none;
+  text-align: center;
+}
+
+.arcade-tile svg {
   display: block;
   flex: 0 0 auto;
+  width: 4rem;
+  height: 4rem;
 }
 
 .wrap.wide { max-width: 1040px; }
@@ -436,48 +462,66 @@ h2 {
 
 .arcade-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
   padding: 1.75rem 0 3rem;
 }
 
-.game-card {
+@media (min-width: 900px) {
+  .arcade-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+.game-slot { min-width: 0; }
+
+.game-tile {
+  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  min-width: 0;
-}
-
-.game-card h2 { font-size: 1.35rem; }
-
-.game-card p {
-  color: var(--muted);
-  margin: 0;
-}
-
-.game-thumb {
-  align-self: stretch;
-  display: grid;
-  place-items: center;
-  height: 8.75rem;
-  margin-bottom: 1rem;
-  border-radius: 1.15rem;
-  background: var(--navy);
+  aspect-ratio: 1;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  border-radius: 1.35rem;
+  background: var(--btn2-bg);
+  color: var(--btn2-text);
+  text-decoration: none;
   overflow: hidden;
 }
 
-.game-thumb img {
-  width: auto;
-  max-width: 86%;
-  max-height: 78%;
+.game-tile-art {
+  flex: 1 1 auto;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  margin: 0.45rem 0.45rem 0;
+  border-radius: 0.95rem;
+  background: var(--navy);
+}
+
+.game-tile-art img {
+  width: 92%;
+  height: 92%;
   object-fit: contain;
 }
 
-.game-card .btn {
-  margin-top: auto;
+.game-tile-name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
   min-height: 2.75rem;
-  padding-top: 0.8rem;
-  padding-bottom: 0.8rem;
+  padding: 0.45rem 1.6rem 0.55rem;
+  font-weight: 800;
+  font-size: clamp(0.85rem, 2.4vw, 1.05rem);
+  line-height: 1.15;
+  text-align: center;
+}
+
+.game-tile-out {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.7rem;
+  display: block;
+  color: #FFF6EA;
 }
 
 .solo { padding-bottom: 3rem; }
@@ -605,9 +649,11 @@ textarea:-webkit-autofill {
 .site-footer nav {
   display: flex;
   justify-content: center;
+  align-items: center;
   flex-wrap: wrap;
-  gap: 0.25rem 1rem;
-  margin-bottom: 0.35rem;
+  column-gap: 1.75rem;
+  row-gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .site-footer a {
@@ -615,7 +661,7 @@ textarea:-webkit-autofill {
   align-items: center;
   justify-content: center;
   min-height: 2.75rem;
-  padding: 0.35rem 0.6rem;
+  padding: 0.65rem 0.35rem;
   color: var(--ink);
   font-weight: 800;
   text-decoration: underline;
@@ -689,6 +735,7 @@ textarea:-webkit-autofill {
   .hero-cta,
   .btn,
   .email-btn,
+  .arcade-tile,
   .theme button[aria-pressed="true"] {
     border: 1px solid ButtonText;
   }
