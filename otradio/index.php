@@ -55,7 +55,7 @@ require __DIR__ . '/../includes/head.php';
             <div class="otr-art-wrap">
               <img id="otr-poster" class="otr-poster" alt="">
               <div id="otr-captions" class="otr-captions" aria-live="polite" hidden></div>
-              <video id="otr-media" class="otr-media" playsinline preload="metadata" crossorigin="anonymous" aria-hidden="true"></video>
+              <video id="otr-media" class="otr-media" playsinline preload="metadata" crossorigin="anonymous" aria-hidden="true" tabindex="-1"></video>
             </div>
             <h2 id="otr-episode-title" class="otr-episode-title"></h2>
             <p id="otr-episode-series" class="otr-muted"></p>
@@ -75,13 +75,14 @@ require __DIR__ . '/../includes/head.php';
                     <option value="2">2×</option>
                   </select>
                 </label>
-                <button type="button" id="otr-cc" class="otr-btn" aria-pressed="true" aria-label="CC, captions on">CC</button>
+                <button type="button" id="otr-cc" class="otr-btn" aria-pressed="true" aria-label="CC, captions on" title="CC, captions on">CC</button>
               </div>
               <div class="otr-seek-row">
                 <span id="otr-time" class="otr-time">0:00</span>
-                <input type="range" id="otr-seek" class="otr-seek" min="0" max="0" step="0.1" value="0" aria-label="Seek">
+                <input type="range" id="otr-seek" class="otr-seek" min="0" max="0" step="0.1" value="0" aria-label="Seek" aria-valuetext="0 minutes 0 seconds of 0 minutes 0 seconds">
                 <span id="otr-duration" class="otr-time">0:00</span>
               </div>
+              <p id="otr-caption-status" class="otr-caption-status" hidden role="status"></p>
             </div>
             <p id="otr-player-status" class="otr-visually-hidden" role="status" aria-live="polite"></p>
           </div>
