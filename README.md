@@ -63,6 +63,7 @@ Nothing secret is stored in this repository. The address above is the public con
 ```
 index.php                 Homepage
 accessibility.php         Accessibility statement
+privacy.php               Privacy policy
 404.php                   Missing-page page
 contact.php               Form handler
 config.php                Email, site name, year
@@ -90,7 +91,9 @@ To add another page, copy the top of `index.php` (the bootstrap and head include
 
 Every change should meet WCAG 2.2 Level AA and stay in good shape for search. That means semantic HTML, a unique title, meta description, canonical URL, and Open Graph tags on each page, structured data where it fits, an updated `sitemap.xml` for new public pages, and a valid `robots.txt`. Keep pages fast enough for Core Web Vitals, and follow current indexing guidance from Google, Bing, DuckDuckGo, and Brave.
 
-The full rules and the pre-merge checklist (axe or pa11y, Lighthouse accessibility and SEO, keyboard-only use, both themes, and 200% zoom) are in [AGENTS.md](AGENTS.md).
+A significant change, especially one that touches forms, cookies, storage, analytics, embeds, or another company’s service, must also review `/privacy` and update its effective date.
+
+The full rules and the pre-merge checklist (axe or pa11y, Lighthouse accessibility and SEO, keyboard-only use, both themes, 200% zoom, and a privacy-page check) are in [AGENTS.md](AGENTS.md).
 
 ## OTRadio
 

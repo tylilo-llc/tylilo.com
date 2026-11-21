@@ -13,6 +13,7 @@ Every change to this site must meet WCAG 2.2 Level AA and stay easy for search e
 - Images have useful alt text. The theme switch has an accessible name and a pressed state.
 - Layout reflows at 320px wide and at 200% zoom without sideways scrolling. Tap targets are at least 24×24 CSS pixels, and 44×44 where the control can grow without breaking the layout.
 - `/accessibility` states the WCAG 2.2 AA target and how to report a barrier. Keep that page linked from the footer.
+- Every significant site change must review and update `/privacy`, including its effective date. Do this especially when forms, cookies, storage, analytics, embeds, or third-party services change.
 
 ## SEO
 
@@ -35,3 +36,4 @@ Run this before asking Ryan to merge:
 3. Keyboard only: tab through the page, use the skip link, the theme switch, and the form.
 4. Light theme and dark theme.
 5. 200% zoom and a 320px-wide window, with no sideways scroll.
+6. If the change affects what the site collects or loads, update `/privacy` and its effective date.
