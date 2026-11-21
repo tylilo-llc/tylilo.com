@@ -305,6 +305,14 @@ function tylilo_score_seeds(): array
             'score' => 1011970,
             'at' => 1795280280,
         ],
+        [
+            'id' => 'logan-jungle-rescue-330700',
+            'game' => 'jungle-rescue',
+            'board' => 'default',
+            'name' => 'LOGAN',
+            'score' => 330700,
+            'at' => 1795291500,
+        ],
     ];
 }
 
