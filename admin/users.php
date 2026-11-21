@@ -94,7 +94,7 @@ if ($error !== '') {
     $html .= '<div class="form-status error" role="alert"><p>' . tylilo_e($error) . '</p></div>';
 }
 if ($freshLink !== '') {
-    $html .= '<div class="form-status success" role="status"><p>Copy this invite link now. It is not shown again.</p><p><a href="' . tylilo_e($freshLink) . '">' . tylilo_e($freshLink) . '</a></p></div>';
+    $html .= '<div class="form-status success" role="status"><p>Copy this invite link now. It is not shown again.</p><p class="invite-copy"><label for="invite-link" class="visually-hidden">Invite link</label><input id="invite-link" type="text" readonly value="' . tylilo_e($freshLink) . '" style="flex:1;min-width:0"> <button type="button" class="btn send" id="copy-invite">Copy link</button></p><p id="copy-invite-status" role="status" aria-live="polite"></p></div>';
 }
 $html .= '<button type="button" class="btn send" id="open-invite">Invite someone</button>';
 $html .= '<dialog id="invite-dialog" class="card" aria-labelledby="invite-title">';
@@ -140,5 +140,5 @@ if ($open === 0) {
     $html .= '<p>No open invites.</p>';
 }
 $html .= '</div>';
-$html .= '<script nonce="' . tylilo_e($cspNonce) . '">document.getElementById("open-invite").addEventListener("click",function(){document.getElementById("invite-dialog").showModal();});document.getElementById("close-invite").addEventListener("click",function(){document.getElementById("invite-dialog").close();});</script>';
+$html .= '<script nonce="' . tylilo_e($cspNonce) . '">document.getElementById("open-invite").addEventListener("click",function(){document.getElementById("invite-dialog").showModal();});document.getElementById("close-invite").addEventListener("click",function(){document.getElementById("invite-dialog").close();});(function(){var b=document.getElementById("copy-invite"),i=document.getElementById("invite-link"),st=document.getElementById("copy-invite-status");if(!b||!i){return;}function done(ok){st.textContent=ok?"Copied to the clipboard.":"Could not copy. Select the link and copy it.";if(ok){b.textContent="Copied";setTimeout(function(){b.textContent="Copy link";},2500);}}i.addEventListener("focus",function(){i.select();});b.addEventListener("click",function(){if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(i.value).then(function(){done(true);},function(){i.select();done(document.execCommand&&document.execCommand("copy"));});}else{i.select();done(document.execCommand&&document.execCommand("copy"));}});})();</script>';
 tylilo_admin_layout('Users', $html);

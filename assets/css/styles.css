@@ -955,3 +955,6 @@ main form button.btn {
 
   .hero { border-radius: 0; }
 }
+
+.invite-copy { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+.invite-copy input { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .9rem; }
