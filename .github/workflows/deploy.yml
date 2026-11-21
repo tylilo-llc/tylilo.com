@@ -1,0 +1,98 @@
+# Uploads the site to HostM over explicit FTPS (port 21) after each push to main.
+# If the FTP secrets are not set yet, the job succeeds and skips the upload.
+
+name: Deploy to HostM
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-tylilo
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy site over FTPS
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Check FTP secrets
+        id: ftp
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR }}
+        run: |
+          set -euo pipefail
+          if [ -z "${FTP_SERVER}" ] || [ -z "${FTP_USERNAME}" ] || [ -z "${FTP_PASSWORD}" ]; then
+            echo "FTP secrets are not all set yet (FTP_SERVER, FTP_USERNAME, FTP_PASSWORD)."
+            echo "Skipping deploy. Nothing was uploaded."
+            echo "Add the secrets under Settings, Secrets and variables, Actions, then run this workflow again."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          dir="${FTP_SERVER_DIR:-public_html/}"
+          case "$dir" in
+            *..*)
+              echo "FTP_SERVER_DIR must not contain .."
+              exit 1
+              ;;
+          esac
+          dir="${dir#/}"
+          case "$dir" in
+            */) ;;
+            *) dir="${dir}/" ;;
+          esac
+          if ! printf '%s' "$dir" | grep -Eq '^[A-Za-z0-9._/-]+/$'; then
+            echo "FTP_SERVER_DIR may only contain letters, numbers, dots, underscores, hyphens, and slashes."
+            exit 1
+          fi
+
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+          echo "dir=${dir}" >> "$GITHUB_OUTPUT"
+          echo "FTP secrets found. Deploying into ${dir}"
+
+      - name: Deploy to HostM
+        if: steps.ftp.outputs.ready == 'true'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          port: 21
+          # HostM certificates often do not match the FTP hostname.
+          # The connection is still encrypted. Set this to strict if the
+          # certificate matches the name in FTP_SERVER.
+          security: loose
+          server-dir: ${{ steps.ftp.outputs.dir }}
+          log-level: standard
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.github/**
+            **/README
+            **/README.md
+            **/*.md
+            **/.gitignore
+            **/.gitattributes
+            **/.DS_Store
+            **/Thumbs.db
+            **/.ftp-deploy-sync-state.json
+            **/.env
+            **/.env.*
+            **/node_modules/**
+            **/router.php
+            **/scripts/**
+            **/scripts/**/**
