@@ -1179,3 +1179,79 @@ main form button.btn {
 
 .invite-copy { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
 .invite-copy input { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .9rem; }
+
+.user-card {
+  padding: 0.55rem 1.1rem;
+}
+
+.user-card details {
+  margin: 0;
+}
+
+.user-card summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.85rem;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 2.75rem;
+  padding: 0.45rem 2.1rem 0.45rem 0.4rem;
+  cursor: pointer;
+  list-style: none;
+  position: relative;
+}
+
+.user-card summary::-webkit-details-marker,
+.user-card summary::marker {
+  display: none;
+  content: none;
+}
+
+.user-card summary h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.3;
+}
+
+.user-card .user-status {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.user-card summary::after {
+  content: "";
+  position: absolute;
+  right: 0.55rem;
+  top: 50%;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-right: 2.5px solid currentColor;
+  border-bottom: 2.5px solid currentColor;
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
+
+.user-card details[open] summary::after {
+  transform: translateY(-30%) rotate(225deg);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .user-card summary::after {
+    transition: transform 0.16s ease;
+  }
+}
+
+.user-card-body {
+  display: grid;
+  gap: 0.85rem;
+  padding: 0.15rem 0.4rem 0.95rem;
+}
+
+.user-card-body p:first-child {
+  margin-top: 0;
+}
+
+.user-card-body form {
+  margin: 0;
+}
