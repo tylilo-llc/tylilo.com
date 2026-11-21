@@ -47,6 +47,8 @@
   button.primary:hover:not(:disabled) { background: #ffd966; }
   #autoBtn[hidden] { display: none; }
   #muteBtn { padding-left: 8px; padding-right: 8px; line-height: 0; }
+  #arcadeBtn { display: inline-flex; align-items: center; gap: 3px; padding-left: 7px; }
+  #arcadeBtn svg { width: 15px; height: 15px; flex: 0 0 auto; }
   #muteBtn svg { width: 18px; height: 18px; vertical-align: middle; }
   #muteBtn[aria-pressed="true"] { opacity: .75; }
   .stat { font-variant-numeric: tabular-nums; background: rgba(0,0,0,.22); border-radius: 6px; padding: 5px 10px; font-size: 14px; white-space: nowrap; }
@@ -154,7 +156,7 @@
   #statsDlg th:first-child, #statsDlg td:first-child { text-align: left; opacity: .85; }
   #statsDlg thead th { color: #f2c94c; }
   #statsDlg .note { font-size: 12px; opacity: .7; margin: 0 0 12px; }
-  #statsDlg .row, #newsDlg .row { display: flex; gap: 8px; justify-content: center; }
+  #statsDlg .row, #newsDlg .row, #win .row { display: flex; gap: 8px; justify-content: center; }
   #newsDlg { top: 6%; z-index: 8500; width: min(520px, calc(100vw - 16px)); padding: 16px 18px; text-align: left; }
   #newsDlg h2 { text-align: center; }
   #newsBody { max-height: min(60vh, 520px); overflow-y: auto; margin-bottom: 12px; padding-right: 4px; }
@@ -176,8 +178,12 @@
   @media (max-width: 600px) {
     header { padding: 6px 6px; gap: 4px 6px; }
     .title { display: none; }
-    button { font-size: 13px; padding: 5px 8px; }
-    #muteBtn { padding: 5px 6px; }
+    button { font-size: 13px; padding: 5px 7px; }
+    .controls { gap: 4px; }
+    #muteBtn { padding: 5px 5px; }
+    /* Phone: the arcade button shrinks to its arrow icon (its accessible name stays "Back to Arcade"). */
+    #arcadeBtn { padding: 5px 5px; }
+    #arcadeBtn .lbl { display: none; }
     #statsDlg th, #statsDlg td { padding: 5px 8px; }
     .stat { font-size: 13px; padding: 4px 7px; }
     .stat b { font-size: 10px; }
@@ -189,6 +195,7 @@
 <header>
   <div class="controls">
     <span class="title">&#9824; Klondike</span>
+    <button id="arcadeBtn" type="button" aria-label="Back to Arcade" title="Back to the tylilo.com arcade"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M15 5l-7 7 7 7"/></svg><span class="lbl">Back to Arcade</span></button>
     <button id="newBtn" type="button" title="Deal a new game">New Game</button>
     <button id="undoBtn" type="button" title="Undo (Ctrl+Z)">Undo</button>
     <button id="drawBtn" type="button" title="Toggle Draw 1 / Draw 3 (starts a new game)">Draw 1</button>
@@ -208,14 +215,15 @@
   <span id="copyright">&copy; <span id="copyYear">2026</span> Tylilo, LLC</span>
   <span class="right">
     <button id="newsBtn" type="button" title="See what changed in each version">What's New</button>
-    <span id="version">v1.1.3</span>
+    <span id="version">v1.1.4</span>
   </span>
 </footer>
 <canvas id="fx"></canvas>
 <div id="win" role="dialog" aria-live="polite">
   <h2>You won!</h2>
   <p id="winText"></p>
-  <button id="againBtn" type="button" class="primary">Play again</button>
+  <div class="row"><button id="againBtn" type="button" class="primary">Play again</button>
+  <button id="winArcadeBtn" type="button" aria-label="Back to Arcade">Back to Arcade</button></div>
 </div>
 <div id="statsDlg" role="dialog" aria-modal="true" aria-labelledby="statsTitle" style="display:none">
   <h2 id="statsTitle">Statistics</h2>
@@ -235,7 +243,7 @@
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
-/* Klondike Solitaire v1.1.3 - single-file, no dependencies. */
+/* Klondike Solitaire v1.1.4 - single-file, no dependencies. */
 'use strict';
 
 /* ======================= Core rules engine (DOM-free) ======================= */
@@ -582,10 +590,15 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Engine;
 
 /* ============================ Browser UI layer ============================ */
 if (typeof document !== 'undefined') (function () {
-  const VERSION = '1.1.3';
+  const VERSION = '1.1.4';
+  const ARCADE_URL = '/arcade/';
   // In-game "What's New" notes, newest first. Plain-language version of CHANGELOG.md - update every release.
   // Shown only when the player opens it (footer button); it never opens by itself.
   const RELEASE_NOTES = [
+    { v: '1.1.4', date: '2026-11-21', items: [
+      'New "Back to Arcade" button at the top left takes you back to the tylilo.com arcade in the same tab. On phones it shows as a back arrow.',
+      'If you are in the middle of a game, it asks first, because leaving counts as a loss in Stats. Otherwise it goes straight there.'
+    ] },
     { v: '1.1.3', date: '2026-11-21', items: [
       'New "What\'s New" button at the bottom of the screen opens this list of changes. It only opens when you click it.',
       'The browser tab and phone home-screen icon now show the UDLR card back.',
@@ -614,7 +627,7 @@ if (typeof document !== 'undefined') (function () {
     fx: $('fx'), win: $('win'), winText: $('winText'), againBtn: $('againBtn'), toast: $('toast'),
     hintBtn: $('hintBtn'), statsBtn: $('statsBtn'), muteBtn: $('muteBtn'),
     statsDlg: $('statsDlg'), statsBody: $('statsBody'), resetStatsBtn: $('resetStatsBtn'), closeStatsBtn: $('closeStatsBtn'),
-    newsBtn: $('newsBtn'), newsDlg: $('newsDlg'), newsBody: $('newsBody'), closeNewsBtn: $('closeNewsBtn')
+    arcadeBtn: $('arcadeBtn'), newsBtn: $('newsBtn'), newsDlg: $('newsDlg'), newsBody: $('newsBody'), closeNewsBtn: $('closeNewsBtn')
   };
   const year = String(Math.max(2026, new Date().getFullYear()));
   document.querySelectorAll('#copyYear, .copyYear').forEach(el => { el.textContent = year; });
@@ -1024,6 +1037,17 @@ if (typeof document !== 'undefined') (function () {
     ui.closeStatsBtn.focus();
   }
 
+  /* ---------- Back to Arcade ---------- */
+  // A game is in progress once a move has been made and it has not been won; leaving it counts as a loss.
+  const gameInProgress = () => gameCounted && !won;
+  function backToArcade() {
+    if (gameInProgress()) {
+      if (!confirm('Leave this game and go back to the arcade? It will count as a loss in Stats.')) return;
+      Engine.statsLose(stats); saveStats(); gameCounted = false;
+    }
+    window.location.href = ARCADE_URL;
+  }
+
   /* ---------- What's New (opened only by the player) ---------- */
   const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   function showNews() {
@@ -1261,6 +1285,8 @@ if (typeof document !== 'undefined') (function () {
   ui.statsBtn.addEventListener('click', showStats);
   ui.closeStatsBtn.addEventListener('click', hideStats);
   ui.newsBtn.addEventListener('click', showNews);
+  ui.arcadeBtn.addEventListener('click', backToArcade);
+  $('winArcadeBtn').addEventListener('click', backToArcade);
   ui.closeNewsBtn.addEventListener('click', hideNews);
   ui.resetStatsBtn.addEventListener('click', resetStats);
   ui.muteBtn.addEventListener('click', () => {
@@ -1285,7 +1311,7 @@ if (typeof document !== 'undefined') (function () {
   // Test hook (handy for automated checks; harmless for players).
   window.__klondike = {
     get state() { return state; }, set state(s) { state = s; history = []; render({ instant: true }); },
-    render, Engine, version: VERSION, releaseNotes: RELEASE_NOTES, sound: Sound, get stats() { return stats; }, keys: KEYS
+    render, Engine, version: VERSION, releaseNotes: RELEASE_NOTES, arcadeUrl: ARCADE_URL, get inProgress() { return gameInProgress(); }, sound: Sound, get stats() { return stats; }, keys: KEYS
   };
 
   computeLayout();
