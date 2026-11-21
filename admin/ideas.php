@@ -167,11 +167,13 @@ foreach (array_reverse($data['ideas']) as $raw) {
 if ($shown === 0) {
     $html .= '<div class="card"><p>No ideas match these filters.</p></div>';
 }
+$html .= '<script src="' . tylilo_e(tylilo_asset('/assets/js/idea-help.js')) . '" defer></script>';
 tylilo_admin_layout('Ideas', $html);
 
 function tylilo_idea_select(string $name, string $id, string $label, array $options, string $value): string
 {
-    $html = '<label for="' . tylilo_e($id) . '">' . tylilo_e($label) . '</label><select id="' . tylilo_e($id) . '" name="' . tylilo_e($name) . '">';
+    $html = tylilo_idea_info($id, $label, $name);
+    $html .= '<select id="' . tylilo_e($id) . '" name="' . tylilo_e($name) . '" aria-describedby="' . tylilo_e($id) . '-help">';
     $html .= '<option value="">Choose</option>';
     foreach ($options as $key => $text) {
         $html .= '<option value="' . tylilo_e($key) . '"' . ($value === $key ? ' selected' : '') . '>' . tylilo_e($text) . '</option>';
@@ -182,7 +184,9 @@ function tylilo_idea_select(string $name, string $id, string $label, array $opti
 
 function tylilo_idea_checks(string $legend, string $name, array $options, array $selected, string $prefix): string
 {
-    $html = '<fieldset><legend>' . tylilo_e($legend) . '</legend>';
+    $helpId = $prefix . '-help';
+    $html = '<fieldset aria-describedby="' . tylilo_e($helpId) . '"><legend><span class="idea-label">' . tylilo_e($legend) . tylilo_idea_info_button($helpId, $legend) . '</span></legend>';
+    $html .= tylilo_idea_info_panel($helpId, $name);
     foreach ($options as $key => $text) {
         $id = $prefix . '-' . $key;
         $html .= '<label for="' . tylilo_e($id) . '"><input type="checkbox" id="' . tylilo_e($id) . '" name="' . tylilo_e($name) . '[]" value="' . tylilo_e($key) . '"' . (in_array($key, $selected, true) ? ' checked' : '') . '> ' . tylilo_e($text) . '</label>';
@@ -198,18 +202,22 @@ function tylilo_idea_form(array $idea, string $action, int $id, bool $owner): st
     $suffix = $id > 0 ? '-' . $id : '';
     $html = '<form class="idea-form" method="post" action="/admin/ideas.php" enctype="multipart/form-data">';
     $html .= '<input type="hidden" name="csrf" value="' . tylilo_e(tylilo_admin_csrf()) . '"><input type="hidden" name="action" value="' . tylilo_e($action) . '"><input type="hidden" name="id" value="' . $id . '">';
-    $html .= '<label for="title' . $suffix . '">Working title</label><input id="title' . $suffix . '" name="title" required maxlength="80" value="' . tylilo_e($idea['title']) . '">';
-    $html .= '<label for="pitch' . $suffix . '">One-line pitch</label><input id="pitch' . $suffix . '" name="pitch" required maxlength="180" value="' . tylilo_e($idea['pitch']) . '">';
+    $html .= tylilo_idea_info('title' . $suffix, 'Working title', 'title');
+    $html .= '<input id="title' . $suffix . '" name="title" required maxlength="80" aria-describedby="title' . $suffix . '-help" value="' . tylilo_e($idea['title']) . '">';
+    $html .= tylilo_idea_info('pitch' . $suffix, 'One-line pitch', 'pitch');
+    $html .= '<input id="pitch' . $suffix . '" name="pitch" required maxlength="180" aria-describedby="pitch' . $suffix . '-help" value="' . tylilo_e($idea['pitch']) . '">';
     $html .= tylilo_idea_select('genre', 'genre' . $suffix, 'Genre', $choices['genre'], $idea['genre']);
     $html .= tylilo_idea_select('style', 'style' . $suffix, 'Visual style', $choices['style'], $idea['style']);
-    $html .= '<label for="inspired' . $suffix . '">Inspired by</label><input id="inspired' . $suffix . '" name="inspired" maxlength="120" value="' . tylilo_e($idea['inspired']) . '">';
+    $html .= tylilo_idea_info('inspired' . $suffix, 'Inspired by', 'inspired');
+    $html .= '<input id="inspired' . $suffix . '" name="inspired" maxlength="120" aria-describedby="inspired' . $suffix . '-help" value="' . tylilo_e($idea['inspired']) . '">';
     $html .= tylilo_idea_checks('Controls', 'controls', $choices['controls'], $idea['controls'], 'controls' . $suffix);
     $html .= tylilo_idea_checks('Devices', 'devices', $choices['devices'], $idea['devices'], 'devices' . $suffix);
     $html .= tylilo_idea_select('session', 'session' . $suffix, 'Session length', $choices['session'], $idea['session']);
     $html .= tylilo_idea_select('players', 'players' . $suffix, 'Players', $choices['players'], $idea['players']);
     $html .= tylilo_idea_select('difficulty', 'difficulty' . $suffix, 'Difficulty', $choices['difficulty'], $idea['difficulty']);
     $html .= tylilo_idea_select('scoring', 'scoring' . $suffix, 'Scoring', $choices['scoring'], $idea['scoring']);
-    $html .= '<label for="leaderboard' . $suffix . '"><input type="checkbox" id="leaderboard' . $suffix . '" name="leaderboard" value="1"' . ($idea['leaderboard'] === 1 ? ' checked' : '') . '> Leaderboard</label>';
+    $html .= '<span class="idea-label"><label for="leaderboard' . $suffix . '"><input type="checkbox" id="leaderboard' . $suffix . '" name="leaderboard" value="1" aria-describedby="leaderboard' . $suffix . '-help"' . ($idea['leaderboard'] === 1 ? ' checked' : '') . '> Leaderboard</label>' . tylilo_idea_info_button('leaderboard' . $suffix . '-help', 'Leaderboard') . '</span>';
+    $html .= tylilo_idea_info_panel('leaderboard' . $suffix . '-help', 'leaderboard');
     $html .= tylilo_idea_select('audience', 'audience' . $suffix, 'Audience', $choices['audience'], $idea['audience']);
     $html .= tylilo_idea_select('effort', 'effort' . $suffix, 'Effort', $choices['effort'], $idea['effort']);
     if ($owner) {
@@ -220,8 +228,11 @@ function tylilo_idea_form(array $idea, string $action, int $id, bool $owner): st
     } else {
         $html .= '<p>Status: ' . tylilo_e(tylilo_idea_choice('status', $idea['status'])) . '</p>';
     }
-    $html .= '<label for="notes' . $suffix . '">Notes</label><textarea id="notes' . $suffix . '" name="notes">' . tylilo_e($idea['notes']) . '</textarea>';
-    $html .= '<label for="image' . $suffix . '">' . ($action === 'edit' ? 'Replace sketch, optional' : 'Sketch or reference, optional') . '</label><input id="image' . $suffix . '" name="image" type="file" accept="image/jpeg,image/png,image/webp,image/gif">';
+    $html .= tylilo_idea_info('notes' . $suffix, 'Notes', 'notes');
+    $html .= '<textarea id="notes' . $suffix . '" name="notes" aria-describedby="notes' . $suffix . '-help">' . tylilo_e($idea['notes']) . '</textarea>';
+    $imageLabel = $action === 'edit' ? 'Replace sketch, optional' : 'Sketch or reference, optional';
+    $html .= tylilo_idea_info('image' . $suffix, $imageLabel, 'image');
+    $html .= '<input id="image' . $suffix . '" name="image" type="file" accept="image/jpeg,image/png,image/webp,image/gif" aria-describedby="image' . $suffix . '-help">';
     $html .= '<button class="btn send" type="submit">' . ($action === 'edit' ? 'Save changes' : 'Share idea') . '</button></form>';
 
     return $html;
