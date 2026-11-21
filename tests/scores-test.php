@@ -144,6 +144,52 @@ check(($missing['status'] ?? 0) === 404, 'unknown games are rejected');
 $public = json_encode($list);
 check(is_string($public) && !str_contains($public, 'hash') && !str_contains($public, '203.0.113'), 'public scores omit network data');
 
+$versionServer = $server;
+$versionServer['REMOTE_ADDR'] = '203.0.113.60';
+$versionStart = tylilo_score_handle('POST', [], json_encode(['op' => 'start', 'game' => 'pop-spiral', 'board' => 'default']), $versionServer, $now);
+$withVersion = tylilo_score_handle('POST', [], json_encode([
+    'op' => 'submit', 'game' => 'pop-spiral', 'board' => 'default',
+    'name' => 'Ver', 'score' => 40, 'playedMs' => 30000, 'version' => '0.2.1', 'token' => $versionStart['token'],
+]), $versionServer, $now + 30);
+$versionBody = json_encode($withVersion);
+check(($withVersion['ok'] ?? false) === true && is_string($versionBody) && !str_contains($versionBody, '0.2.1'), 'a successful submit does not return the version');
+$versionList = tylilo_score_handle('GET', ['game' => 'pop-spiral', 'board' => 'default'], '', [], $now + 31);
+$versionPublic = json_encode($versionList);
+check(is_string($versionPublic) && !str_contains($versionPublic, 'version') && !str_contains($versionPublic, '0.2.1'), 'public scores omit the version');
+$adminRows = tylilo_score_admin_rows('pop-spiral', 'default');
+$foundVersion = false;
+foreach ($adminRows as $row) {
+    if ($row['name'] === 'Ver' && $row['version'] === '0.2.1') {
+        $foundVersion = true;
+    }
+}
+check($foundVersion, 'the admin list keeps the version');
+
+$plainStart = tylilo_score_handle('POST', [], json_encode(['op' => 'start', 'game' => 'pop-spiral', 'board' => 'default']), $versionServer, $now + 32);
+$plain = tylilo_score_handle('POST', [], json_encode([
+    'op' => 'submit', 'game' => 'pop-spiral', 'board' => 'default',
+    'name' => 'Old', 'score' => 30, 'playedMs' => 30000, 'token' => $plainStart['token'],
+]), $versionServer, $now + 62);
+check(($plain['ok'] ?? false) === true, 'a submit without version still saves');
+$oldVersion = null;
+foreach (tylilo_score_admin_rows('pop-spiral', 'default') as $row) {
+    if ($row['name'] === 'Old') {
+        $oldVersion = $row['version'];
+    }
+}
+check($oldVersion === null, 'a missing version is stored as null');
+
+$badVersionStart = tylilo_score_handle('POST', [], json_encode(['op' => 'start', 'game' => 'pop-spiral', 'board' => 'default']), $versionServer, $now + 63);
+$badVersion = tylilo_score_handle('POST', [], json_encode([
+    'op' => 'submit', 'game' => 'pop-spiral', 'board' => 'default',
+    'name' => 'Nope', 'score' => 20, 'playedMs' => 30000, 'version' => '1.1.6 build', 'token' => $badVersionStart['token'],
+]), $versionServer, $now + 93);
+check(($badVersion['status'] ?? 0) === 400, 'a version with a space is rejected');
+
+tylilo_score_clear_board('pop-spiral', 'default');
+check(tylilo_score_admin_rows('pop-spiral', 'default') === [], 'clearing a board removes only that board');
+check(tylilo_score_admin_rows('jungle-rescue', 'default') !== [], 'clearing one board leaves the others');
+
 $both = tylilo_score_handle('GET', ['game' => 'solitaire'], '', [], $now);
 $boardIds = array_map(static fn (array $row): string => (string) ($row['board'] ?? ''), $both['boards'] ?? []);
 check($boardIds === ['draw-1', 'draw-3'], 'omitting board returns every solitaire board');

@@ -78,8 +78,10 @@ The token is `<base64url payload>.<hex hmac-sha256>`. It is tied to that game an
 Save the score after the run has lasted at least that long in real time:
 
 ```json
-{"op":"submit","game":"solitaire","board":"draw-1","name":"Ada","score":1500,"playedMs":45000,"token":"<signed>"}
+{"op":"submit","game":"solitaire","board":"draw-1","name":"Ada","score":1500,"playedMs":45000,"version":"1.1.6","token":"<signed>"}
 ```
+
+`version` is optional. Omit it, or send `null` or `""`, and the score is stored with no version. When present it is a string of 1–16 characters from `0-9`, `A-Z`, `a-z`, `.`, `_`, and `-` only. Anything else is HTTP 400. The public `GET`, and the `scores` array in a successful submit, never include `version`. Older rows stay null. The private admin Games page shows it and can clear one board.
 
 `score` and `playedMs` are whole numbers. `playedMs` must be at least `minPlayedMs`, must not be longer than the token’s age plus 15 seconds, and the token itself must already be at least `minPlayedMs` old. `name` is 1–12 characters: letters, numbers, spaces, and `. ' - ! ? ,`. A fixed word list rejects names after a leetspeak fold (`0`→o, `1`→i, `3`→e, `4`→a, `5`→s, `@`→a, `$`→s, symbols removed, repeated letters collapsed). The check is on the whole name and on each word, not on a substring, so ordinary words that merely contain a fragment still pass. If `board` is omitted on submit it defaults to `default`, which Solitaire and Red Rain do not have.
 

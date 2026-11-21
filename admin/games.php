@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require __DIR__ . '/_init.php';
+require dirname(__DIR__) . '/includes/scores.php';
 $user = tylilo_admin_guard();
 if (!tylilo_admin_is_owner($user)) {
     tylilo_admin_forbid();
@@ -12,6 +13,16 @@ $error = '';
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     if (!tylilo_admin_csrf_ok(tylilo_admin_field('csrf'))) {
         $error = 'That request was not accepted. Please try again.';
+    } elseif (tylilo_admin_field('action') === 'clear') {
+        $game = tylilo_admin_field('game');
+        $board = tylilo_admin_field('board');
+        if (tylilo_score_board($game, $board) === null) {
+            $error = 'That board does not exist.';
+        } else {
+            tylilo_score_clear_board($game, $board);
+            header('Location: /admin/games.php?game=' . rawurlencode($game), true, 303);
+            exit;
+        }
     } else {
         $id = (int) tylilo_admin_field('id');
         $slug = tylilo_admin_field('slug');
@@ -118,5 +129,27 @@ foreach ($rows as $row) {
         $html .= '<p>' . tylilo_e((string) $row['notes']) . '</p>';
     }
     $html .= '<p><a href="/admin/games.php?id=' . (int) $row['id'] . '">Edit</a></p></article>';
+}
+$catalog = tylilo_score_games();
+if (isset($catalog[$current]['boards']) && is_array($catalog[$current]['boards'])) {
+    $html .= '<div class="card"><h2>Leaderboard</h2>';
+    $html .= '<p>Each new score can store a game version. The public Arcade page does not show it. Older scores have no version.</p>';
+    foreach ($catalog[$current]['boards'] as $boardId => $spec) {
+        $html .= '<h3>' . tylilo_e((string) $spec['label']) . '</h3>';
+        $scoreRows = tylilo_score_admin_rows($current, (string) $boardId);
+        if ($scoreRows === []) {
+            $html .= '<p>No scores.</p>';
+        } else {
+            $html .= '<ul>';
+            foreach ($scoreRows as $score) {
+                $ver = $score['version'] === null ? 'no version' : $score['version'];
+                $html .= '<li>' . tylilo_e($score['name']) . ', ' . tylilo_e((string) $score['score']) . ', ' . tylilo_e(gmdate('Y-m-d', $score['at'])) . ', ' . tylilo_e($ver) . '</li>';
+            }
+            $html .= '</ul>';
+        }
+        $html .= '<form method="post" action="/admin/games.php"><input type="hidden" name="csrf" value="' . tylilo_e(tylilo_admin_csrf()) . '"><input type="hidden" name="action" value="clear"><input type="hidden" name="game" value="' . tylilo_e($current) . '"><input type="hidden" name="board" value="' . tylilo_e((string) $boardId) . '">';
+        $html .= '<button type="submit">Clear ' . tylilo_e((string) $spec['label']) . ' scores</button></form>';
+    }
+    $html .= '</div>';
 }
 tylilo_admin_layout('Games', $html);

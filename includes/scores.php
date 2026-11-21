@@ -394,7 +394,11 @@ function tylilo_scores_pdo(): PDO
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
     $pdo->exec('PRAGMA busy_timeout = 5000');
-    $pdo->exec('CREATE TABLE IF NOT EXISTS scores (game TEXT, board TEXT, name TEXT, score INTEGER, at INTEGER)');
+    $pdo->exec('CREATE TABLE IF NOT EXISTS scores (game TEXT, board TEXT, name TEXT, score INTEGER, at INTEGER, version TEXT)');
+    $columns = array_column($pdo->query('PRAGMA table_info(scores)')->fetchAll(), 'name');
+    if (!in_array('version', $columns, true)) {
+        $pdo->exec('ALTER TABLE scores ADD COLUMN version TEXT');
+    }
     $pdo->exec('CREATE TABLE IF NOT EXISTS rates (hash TEXT, at INTEGER)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS used_tokens (hash TEXT PRIMARY KEY, exp INTEGER)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS seeds (id TEXT PRIMARY KEY)');
@@ -408,14 +412,15 @@ function tylilo_scores_with_sqlite(callable $change): array
     $pdo->beginTransaction();
     try {
         $data = tylilo_scores_blank();
-        foreach ($pdo->query('SELECT game, board, name, score, at FROM scores') as $row) {
-            $data['scores'][] = [
+        foreach ($pdo->query('SELECT game, board, name, score, at, version FROM scores') as $row) {
+            $data['scores'][] = tylilo_score_normalize_row([
                 'game' => (string) $row['game'],
                 'board' => (string) $row['board'],
                 'name' => (string) $row['name'],
                 'score' => (int) $row['score'],
                 'at' => (int) $row['at'],
-            ];
+                'version' => $row['version'],
+            ]);
         }
         foreach ($pdo->query('SELECT hash, at FROM rates') as $row) {
             $data['rates'][] = ['hash' => (string) $row['hash'], 'at' => (int) $row['at']];
@@ -431,9 +436,10 @@ function tylilo_scores_with_sqlite(callable $change): array
         $pdo->exec('DELETE FROM rates');
         $pdo->exec('DELETE FROM used_tokens');
         $pdo->exec('DELETE FROM seeds');
-        $scoreStmt = $pdo->prepare('INSERT INTO scores (game, board, name, score, at) VALUES (?, ?, ?, ?, ?)');
+        $scoreStmt = $pdo->prepare('INSERT INTO scores (game, board, name, score, at, version) VALUES (?, ?, ?, ?, ?, ?)');
         foreach ($data['scores'] as $row) {
-            $scoreStmt->execute([$row['game'], $row['board'], $row['name'], $row['score'], $row['at']]);
+            $row = tylilo_score_normalize_row($row);
+            $scoreStmt->execute([$row['game'], $row['board'], $row['name'], $row['score'], $row['at'], $row['version']]);
         }
         $rateStmt = $pdo->prepare('INSERT INTO rates (hash, at) VALUES (?, ?)');
         foreach ($data['rates'] as $row) {
@@ -473,6 +479,38 @@ function tylilo_score_sort(array $rows, string $order): array
     });
 
     return $rows;
+}
+
+function tylilo_score_normalize_row(array $row): array
+{
+    $version = $row['version'] ?? null;
+    if (!is_string($version) || $version === '') {
+        $version = null;
+    }
+
+    return [
+        'game' => (string) ($row['game'] ?? ''),
+        'board' => (string) ($row['board'] ?? ''),
+        'name' => (string) ($row['name'] ?? ''),
+        'score' => (int) ($row['score'] ?? 0),
+        'at' => (int) ($row['at'] ?? 0),
+        'version' => $version,
+    ];
+}
+
+/**
+ * @return array{ok: bool, version: ?string, error: string}
+ */
+function tylilo_score_clean_version(mixed $value): array
+{
+    if ($value === null || $value === '') {
+        return ['ok' => true, 'version' => null, 'error' => ''];
+    }
+    if (!is_string($value) || preg_match('/^[0-9A-Za-z._-]{1,16}$/', $value) !== 1) {
+        return ['ok' => false, 'version' => null, 'error' => 'Use a version of up to 16 letters, numbers, dots, underscores, or hyphens.'];
+    }
+
+    return ['ok' => true, 'version' => $value, 'error' => ''];
 }
 
 function tylilo_score_public_rows(array $data, string $game, string $board, string $order, int $limit): array
@@ -595,6 +633,10 @@ function tylilo_score_submit(array $input, string $ip, int $now): array
         return ['ok' => false, 'status' => 400, 'error' => 'That score does not look like a real game.'];
     }
     $playedMs = tylilo_score_whole_number($input['playedMs'] ?? null);
+    $version = tylilo_score_clean_version($input['version'] ?? null);
+    if (!$version['ok']) {
+        return ['ok' => false, 'status' => 400, 'error' => $version['error']];
+    }
     $token = is_string($input['token'] ?? null) ? $input['token'] : '';
     $parsed = $token !== '' ? tylilo_score_read_token($token, $now) : null;
     if ($parsed === null || $parsed['game'] !== $game || $parsed['board'] !== $board) {
@@ -608,7 +650,8 @@ function tylilo_score_submit(array $input, string $ip, int $now): array
     $tokenHash = hash('sha256', $token);
     $ipHash = tylilo_score_ip_hash($ip);
     $result = ['ok' => true, 'status' => 200];
-    tylilo_scores_with(static function (array $data) use ($spec, $game, $board, $name, $score, $now, $tokenHash, $ipHash, &$result): array {
+    $storedVersion = $version['version'];
+    tylilo_scores_with(static function (array $data) use ($spec, $game, $board, $name, $score, $now, $tokenHash, $ipHash, $storedVersion, &$result): array {
         $data['rates'] = array_values(array_filter(
             $data['rates'],
             static fn (array $row): bool => $row['at'] >= $now - TYLILO_SCORE_RATE_WINDOW
@@ -643,6 +686,7 @@ function tylilo_score_submit(array $input, string $ip, int $now): array
             'name' => $name['name'],
             'score' => $score,
             'at' => $now,
+            'version' => $storedVersion,
         ];
         $kept = [];
         $grouped = [];
@@ -677,6 +721,34 @@ function tylilo_score_submit(array $input, string $ip, int $now): array
     });
 
     return $result;
+}
+
+/**
+ * Scores for the private admin page, including the game version.
+ *
+ * @return list<array{name: string, score: int, at: int, version: ?string}>
+ */
+function tylilo_score_admin_rows(string $game, string $board): array
+{
+    $spec = tylilo_score_board($game, $board);
+    if ($spec === null) {
+        return [];
+    }
+    $data = tylilo_scores_with(static fn (array $stored): array => $stored);
+    $rows = [];
+    foreach ($data['scores'] as $row) {
+        $row = tylilo_score_normalize_row($row);
+        if ($row['game'] === $game && $row['board'] === $board) {
+            $rows[] = [
+                'name' => $row['name'],
+                'score' => $row['score'],
+                'at' => $row['at'],
+                'version' => $row['version'],
+            ];
+        }
+    }
+
+    return tylilo_score_sort($rows, $spec['order']);
 }
 
 function tylilo_score_clear_board(string $game, string $board): void
