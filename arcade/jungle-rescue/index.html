@@ -2,6 +2,27 @@
 <!--
   JUNGLE RESCUE - CHANGELOG
 
+  v2.18
+  - Leaderboards are split by difficulty. Points go to easy, normal or expert;
+    a full-campaign clear time goes to easy-time, normal-time or expert-time
+    (lower wins). The difficulty is the one the run started on. Every submit
+    still sends version and the stage reached as level. op:start uses the same
+    board the submit will use; each board has its own token.
+  - The Top 10 menu shows the boards for one difficulty at a time (it opens on
+    the current setting; left/right or a tap switches). The save prompt names
+    the difficulty.
+  - Old kept saves in jungleRescueLbQueue are sent to the stored difficulty's
+    board, or to easy / easy-time if no difficulty was stored. They are never
+    sent to the old default or time boards.
+  - A run that used a helping cheat code (BOOGER MODE) at any point, or the
+    debug invincibility flag, is never submitted or queued. The game-over,
+    victory and credits screens say CHEAT RUNS AREN'T SAVED TO THE LEADERBOARD.
+    Quitting from pause does not offer a save. Cosmetic codes (TYLER, KEN) and
+    CLEAR do not count. If a cheat run somehow reaches a submit, the payload
+    includes cheat: true (the field is left off when the run is clean) so the
+    server can reject it; a 400 for that is dropped, not queued or retried.
+  - No new localStorage keys.
+
   v2.17
   - Leaderboard submits now send the game version (the VERSION string) and the
     stage the run ended on or reached (a whole number from 1 to 20, as `level`).
@@ -525,7 +546,7 @@
   v1.0  - Initial release: single-file Canvas run-and-gun, jungle stage, enemies, power-ups, boss,
           responsive layout with touch controls (portrait/landscape), keyboard + gamepad, WebAudio sound.
 -->
-<html lang="en"><head><meta charset="utf-8"><title>Jungle Rescue v2.17</title><meta name="version" content="2.17">
+<html lang="en"><head><meta charset="utf-8"><title>Jungle Rescue v2.18</title><meta name="version" content="2.18">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="theme-color" content="#000000">
@@ -892,7 +913,7 @@ window.JR_SPLASH={on:true,done:null,t0:Date.now(),t1:0};
 <script>
 'use strict';
 (function(){
-const VERSION='2.17';
+const VERSION='2.18';
 const W=320,H=180,STEP=1000/60,GRAV=0.25;
 const cv=document.getElementById('c'),ctx0=cv.getContext('2d');let ctx=ctx0;
 const NOCACHE=!!window.__JR_NOCACHE; /* test hook: draw everything directly (the v2.8 caches must be pixel-identical to this) */
@@ -1189,7 +1210,7 @@ const CODES={ // add more codes here: key = lower-case code, fx() returns the ef
   tyler:{fx(){bald=!bald;return bald?'BALD MODE':'BALD MODE OFF';},off(){bald=false;}},
   ken:{fx(){ken=!ken;return ken?'KEN MODE':'KEN MODE OFF';},off(){ken=false;}}, // v2.6 cosmetic: long-haired female commando, cartoon-huge rear end
   clear:{fx(){for(const k in CODES)if(CODES[k].off)CODES[k].off();return'ALL CODES CLEARED';}}};
-function enterCode(str){const c=CODES[String(str||'').trim().toLowerCase()];if(!c){sfx('clink');return{ok:false,msg:'INVALID CODE'};}const m=c.fx();sfx('power');return{ok:true,msg:'CODE ACCEPTED: '+m};}
+function enterCode(str){const c=CODES[String(str||'').trim().toLowerCase()];if(!c){sfx('clink');return{ok:false,msg:'INVALID CODE'};}const m=c.fx();if(booger||cheat)lbMarkCheat();sfx('power');return{ok:true,msg:'CODE ACCEPTED: '+m};}
 const inWater=(x,y)=>{for(let $i=0,$a=WATER,w;$i<$a.length&&(w=$a[$i],true);$i++)if(x>=w[0]&&x<=w[1]&&y>w[2])return true;return false;};
 function surfacesAt(x){return SURF.filter(s=>x>=s.x1+4&&x<=s.x2-4&&s.y>40);}
 
@@ -4914,6 +4935,7 @@ function drawCopyright(cands){const col='#7f8c78',tw=CPR_TEXT.length*4-1,w=7+3+t
   textS(CPR_TEXT,x0+10,y,col,1);cprLast={x:x0,y:y-1,w:w+1,h:8,state,t:performance.now()};}
 /* built from the changelog above (newest first) - player-facing summary, one entry per release */
 const WHATS_NEW=[
+['2.18',["SEPARATE EASY, NORMAL AND EXPERT LEADERBOARDS","CHEAT-CODE RUNS ARE NOT SAVED TO THE LEADERBOARD"]],
 ['2.17',["SAVED SCORES NOW RECORD THE GAME VERSION AND THE STAGE YOU REACHED"]],
 ['2.16',["NEW UDLR LAUNCH SPLASH - PRESS ANY KEY, BUTTON OR TAP TO SKIP IT"]],
 ['2.15',["LEADERBOARD FIX: IF THE LEADERBOARD CAN'T BE REACHED WHEN A RUN STARTS, THE GAME KEEPS TRYING AND THE SAVE PROMPT ALWAYS SHOWS (WITH TRY AGAIN)","WITH YOUR NAME ALREADY FILLED IN, ENTER / A / TAP SAVES YOUR SCORE - IT USED TO SKIP IT","QUITTING A RUN FROM PAUSE NOW OFFERS TO SAVE YOUR SCORE FIRST","IF THE LEADERBOARD IS BUSY OR YOU ARE OFFLINE, YOUR SCORE IS KEPT AND SENT LATER BY ITSELF"]],
@@ -5008,8 +5030,10 @@ function drawScanlines(){if(!OPT.scan)return;ctx.globalAlpha=0.22;if(NOCACHE){fo
 /* Only when served over https from tylilo.com or www.tylilo.com, using the same-origin relative URL /api/scores.php.
    Anywhere else (file://, localhost, other hosts, http) the game makes no requests and shows no leaderboard UI.
    Every request has a 5 s timeout and fails silently; nothing here can block or stall play.
-   Boards: 'default' = final score (points), 'time' = full-campaign clear time in seconds (runs started at stage 1 that beat the game).
-   playedMs = real play time (rAF time while a run is playing; pause, menus, the rotate screen and hidden tabs don't count). */
+   Boards (v2.18): points go to easy / normal / expert; a full-campaign clear time goes to easy-time / normal-time / expert-time
+   (lower wins, 1-7200 s), only for runs started at stage 1 that beat the game. The difficulty is captured when the run starts.
+   op:start and op:submit use the same board; tokens are bound to that board, so a run that can save both points and time
+   starts a token for each. playedMs = real play time (rAF time while a run is playing; pause, menus, the rotate screen and hidden tabs don't count). */
 const LB_ON=(()=>{try{return location.protocol==='https:'&&/^(www\.)?tylilo\.com$/i.test(location.hostname)&&typeof fetch==='function';}catch(e){return false;}})();
 const LB_API='/api/scores.php',LB_GAME='jungle-rescue',LB_MIN_MS=20000,LB_MAX_SCORE=5000000,LB_TMIN=1,LB_TMAX=7200,LB_NAME_KEY='jungleRescueName',LB_TIMEOUT=5000,LB_GUARD=700;
 let lbReqs=0,lbSavedName='';
@@ -5018,12 +5042,27 @@ const lbClean=(v,partial)=>{let s=String(v||'').toUpperCase().replace(/[^A-Z0-9 
 /* v2.17: every op:submit sends version (VERSION, 1-16 [A-Za-z0-9._-]) and level (JSON integer 1-999:
    the 1-indexed stage the run ended on or reached; a campaign clear is 20). Older queued saves
    without them still send: version falls back to the current VERSION; a missing level is left out
-   (the API treats both as optional - never send 0, a string or a float). */
+   (the API treats both as optional - never send 0, a string or a float).
+   v2.18: board is the difficulty slug (easy/normal/expert or *-time). Old queued 'default' / 'time'
+   (or a missing board) map to the entry's stored difficulty, or to easy / easy-time if none was stored.
+   cheat: true is attached only when the run's cheat flag is set (left off when clean); the server
+   rejects it with HTTP 400, which drops the save. */
+const LB_DIFF=['easy','normal','expert'];
+function lbDiffOf(n){return clamp(n|0,0,2);}
+function lbPtsBoard(d){return LB_DIFF[lbDiffOf(d)];}
+function lbTimBoard(d){return LB_DIFF[lbDiffOf(d)]+'-time';}
+function lbIsTimeBoard(b){return typeof b==='string'&&/-time$/.test(b);}
+function lbIsCurBoard(b){return b==='easy'||b==='normal'||b==='expert'||b==='easy-time'||b==='normal-time'||b==='expert-time';}
+function lbQueueBoard(src){const b=src&&src.board,stored=(src&&(src.diff===0||src.diff===1||src.diff===2))?src.diff:null;
+  if(lbIsCurBoard(b))return b;const d=stored!=null?stored:0;return(b==='time'||lbIsTimeBoard(b))?lbTimBoard(d):lbPtsBoard(d);}
+function lbCheatActive(){return !!(booger||cheat);}
+function lbMarkCheat(){if(lbRun)lbRun.cheated=true;}
 function lbClampLevel(v){let n=v;if(typeof n==='string'&&n.trim()!=='')n=+n;if(typeof n!=='number'||!Number.isFinite(n))return null;n=Math.floor(n);return(n>=1&&n<=999)?n:null;}
 function lbRunLevel(){const i=(G&&Number.isFinite(+G.lvi))?+G.lvi:(lbRun&&Number.isFinite(+lbRun.stage)?+lbRun.stage:0);return lbClampLevel(i+1)||1;}
-function lbSubmitBody(src){const body={};for(const k in src)if(k!=='level'&&k!=='version')body[k]=src[k];
+function lbSubmitBody(src){const body={};for(const k in src)if(k!=='level'&&k!=='version'&&k!=='cheat'&&k!=='diff'&&k!=='board')body[k]=src[k];
+  body.board=lbQueueBoard(src);
   body.version=(typeof src.version==='string'&&/^[A-Za-z0-9._-]{1,16}$/.test(src.version))?src.version:VERSION;
-  const lv=lbClampLevel(src.level);if(lv!=null)body.level=lv;return body;}
+  const lv=lbClampLevel(src.level);if(lv!=null)body.level=lv;if(src.cheat===true)body.cheat=true;return body;}
 try{lbSavedName=lbClean(localStorage.getItem(LB_NAME_KEY));}catch(e){}
 function lbFetch(url,opt){if(!LB_ON)return Promise.reject(new Error('leaderboard off'));lbReqs++;
   const ac=typeof AbortController==='function'?new AbortController():null;let tm=0;
@@ -5050,26 +5089,28 @@ function lbStartTry(b){if(!LB_ON||!b||b.token||b.used||b.st==='none')return Prom
 let lbRun=null,lbOffer=null,lbUI=null;
 /* a run begins: START / LEVEL SELECT (not CONTINUE, which keeps the same run) */
 function lbStartRun(stage){lbRun=null;lbOffer=null;if(!LB_ON)return;
-  lbRun={stage,ms:0,live:true,booger:!!booger,cheat:!!cheat,def:lbBoardStart('default',0),time:stage===0?lbBoardStart('time',0):null};}
-function lbTick(dt){const r=lbRun;if(!r||!r.live||!G)return;if(state==='play'||state==='intro'||state==='clear'||state==='ending'){r.ms+=dt;if(booger)r.booger=true;if(cheat)r.cheat=true;}}
+  const diff=lbDiffOf(diffSet);
+  lbRun={stage,ms:0,live:true,diff,cheated:lbCheatActive(),def:lbBoardStart(lbPtsBoard(diff),0),time:stage===0?lbBoardStart(lbTimBoard(diff),0):null};}
+function lbTick(dt){const r=lbRun;if(!r||!r.live||!G)return;if(state==='play'||state==='intro'||state==='clear'||state==='ending'){r.ms+=dt;if(lbCheatActive())r.cheated=true;}}
 /* CONTINUE keeps the run (same stage again, no stages skipped); a score already saved needs a fresh token */
 function lbOnContinue(){const r=lbRun;if(!r)return;r.live=true;lbOffer=null;
-  if(r.def.used)r.def=lbBoardStart('default',r.ms); /* a score already saved (or being sent) needs a fresh token; it gets the same retries */
+  if(r.def.used)r.def=lbBoardStart(lbPtsBoard(r.diff),r.ms); /* a score already saved (or being sent) needs a fresh token; it gets the same retries */
   else if(!r.def.token)lbStartTry(r.def);
   if(r.time){if(r.time.used)r.time=null;else if(!r.time.token)lbStartTry(r.time);}}
 /* v2.15: a board with no token yet still qualifies; the prompt fetches one (TRY AGAIN) instead of being skipped */
 const lbOk=b=>b&&b.st!=='none'&&!b.used;
-function lbMakeOffer(kind,beat){const r=lbRun;lbOffer=null;if(!r||!G)return null;r.live=false;const d=r.def,dMin=Math.max(LB_MIN_MS,d.minMs);
+function lbMakeOffer(kind,beat){const r=lbRun;lbOffer=null;if(!r||!G)return null;r.live=false;if(lbCheatActive()||r.booger||r.cheat)r.cheated=true;const d=r.def,dMin=Math.max(LB_MIN_MS,d.minMs);
+  const meta={kind,diff:r.diff,diffName:DIFF_NAMES[lbDiffOf(r.diff)]};
   if(!d||d.st==='none')return null;
-  if(d.used)return lbOffer={kind,boards:[],note:'THIS RUN\'S SCORE IS ALREADY SAVED'};
-  if(r.booger||r.cheat)return lbOffer={kind,boards:[],note:'BOOGER MODE RUNS STAY OFF THE ARCADE LEADERBOARD'};
+  if(d.used)return lbOffer=Object.assign({boards:[],note:'THIS RUN\'S SCORE IS ALREADY SAVED'},meta);
+  if(r.cheated)return lbOffer=Object.assign({boards:[],note:'CHEAT RUNS AREN\'T SAVED TO THE LEADERBOARD'},meta);
   const boards=[],dPm=Math.round(r.ms-d.ms0);
   const lv=lbRunLevel();
-  if(dPm>=dMin)boards.push({b:d,label:'SCORE',score:clamp(Math.round(G.score||0),0,LB_MAX_SCORE),pm:dPm,done:false,rank:0,level:lv});
-  const t=r.time;if(beat&&r.stage===0&&lbOk(t)){const pm=Math.round(r.ms-t.ms0);if(pm>=Math.max(LB_MIN_MS,t.minMs))boards.push({b:t,label:'TIME',score:clamp(Math.round(pm/1000),LB_TMIN,LB_TMAX),pm,done:false,rank:0,level:lv});}
-  if(!boards.length)return lbOffer={kind,boards:[],note:'RUNS UNDER '+Math.round(dMin/1000)+' SECONDS CAN\'T GO ON THE ARCADE LEADERBOARD'};
+  if(dPm>=dMin)boards.push({b:d,label:'SCORE',score:clamp(Math.round(G.score||0),0,LB_MAX_SCORE),pm:dPm,done:false,rank:0,level:lv,cheat:!!r.cheated});
+  const t=r.time;if(beat&&r.stage===0&&lbOk(t)){const pm=Math.round(r.ms-t.ms0);if(pm>=Math.max(LB_MIN_MS,t.minMs))boards.push({b:t,label:'TIME',score:clamp(Math.round(pm/1000),LB_TMIN,LB_TMAX),pm,done:false,rank:0,level:lv,cheat:!!r.cheated});}
+  if(!boards.length)return lbOffer=Object.assign({boards:[],note:'RUNS UNDER '+Math.round(dMin/1000)+' SECONDS CAN\'T GO ON THE ARCADE LEADERBOARD'},meta);
   for(const x of boards)if(!x.b.token)lbStartTry(x.b); /* one more try right at game over / victory / the ending */
-  return lbOffer={kind,boards};}
+  return lbOffer=Object.assign({boards},meta);}
 function lbDrawNote(){if(lbOffer&&lbOffer.note&&!lbOffer.boards.length)textS(lbOffer.note,W/2,172,'#889',1,'c');}
 const lbNoTok=bd=>!bd.done&&!bd.b.token&&!bd.b.trying&&bd.b.fails>0;
 const LB_NOREACH="COULDN'T REACH THE LEADERBOARD";
@@ -5079,7 +5120,7 @@ function lbBtn(k,nb){const w=nb>2?92:100,tot=nb*w+(nb-1)*8,x=(W-tot)/2+k*(w+8);r
 const lbFirstSave=U=>{const k=U.boards.findIndex(b=>!b.done);return LB_CELLS+(k<0?U.boards.length:k);};
 function lbLabel(U,s){if(s<LB_CELLS){const c=LB_KEYS[s];return c==='SP'?'Space':c==='DEL'?'Delete':c;}const k=s-LB_CELLS,b=U.boards[k];return b?(b.done?(b.queued?'Queued':'Saved'):lbNoTok(b)?'Try again':b.label==='TIME'?'Save time':'Save score'):(U.boards.some(x=>x.done)?'Done':'Skip');}
 function lbOpen(next){const o=lbOffer;if(!o||!o.boards.length||!LB_ON)return false;lbOffer=null;
-  lbUI={next,boards:o.boards,name:lbSavedName,sel:0,msg:'',msgCol:'#fff',busy:false,t0:performance.now()};
+  lbUI={next,boards:o.boards,name:lbSavedName,sel:0,msg:'',msgCol:'#fff',busy:false,t0:performance.now(),diff:o.diff,diffName:o.diffName||DIFF_NAMES[lbDiffOf(diffSet)]};
   /* v2.15: with a remembered name the first press saves (v2.14 kept SKIP selected, so the usual Enter / A quietly skipped a returning player's score); a first-time player still starts on SKIP */
   lbUI.sel=lbUI.name?lbFirstSave(lbUI):LB_CELLS+lbUI.boards.length;
   state='lbsave';for(const k in keys)keys[k]=false;MS.fire=false;sfx('pause');
@@ -5105,11 +5146,13 @@ async function lbSend(bd,name,U){const b=bd.b;const live=()=>!U||lbUI===U;
   while((left=need-(performance.now()-b.tokenAt))>0){if(!live())return{ok:false,cancel:true};if(U)U.msg='SAVING... '+Math.ceil(left/1000);await new Promise(r=>setTimeout(r,Math.min(250,left)));}
   if(!live())return{ok:false,cancel:true};if(U)U.msg='SAVING...';
   const pm=Math.max(0,Math.round(Math.min(bd.pm,performance.now()-b.tokenAt+10000))); /* never more than the token's age (+10 s of the server's 15 s allowance) */
-  const body=lbSubmitBody({op:'submit',game:LB_GAME,board:b.board,name,score:bd.score,playedMs:pm,token:b.token,version:VERSION,level:Number.isInteger(bd.level)?bd.level:lbRunLevel()});
+  const body=lbSubmitBody({op:'submit',game:LB_GAME,board:b.board,name,score:bd.score,playedMs:pm,token:b.token,version:VERSION,level:Number.isInteger(bd.level)?bd.level:lbRunLevel(),cheat:!!((lbRun&&lbRun.cheated)||bd.cheat),diff:lbRun?lbRun.diff:undefined});
   /* v2.15: a 429 or a network failure no longer loses the score: the save is kept (memory + localStorage) and re-sent by itself until the token expires */
-  const keep=(msg,delay)=>{lbQAdd(body,b.tokenWall||Date.now(),delay);return{ok:false,queued:true,msg};};
+  /* v2.18: a cheat payload is never queued or retried; a 400 for cheat:true drops the save */
+  const keep=(msg,delay)=>{if(body.cheat)return{ok:false,msg:'CHEAT RUNS AREN\'T SAVED TO THE LEADERBOARD'};lbQAdd(body,b.tokenWall||Date.now(),delay);return{ok:false,queued:true,msg};};
   const tok=b.token;b.token=null;b.used=true; /* v2.15: the token belongs to this save from now on, so a CONTINUE while it is in flight fetches a fresh one */
-  let r=null;for(let a=0;a<2&&!r;a++){try{r=await lbPost(body);}catch(e){r=null;if(!a)await new Promise(z=>setTimeout(z,1500));}} /* one quick retry with the same token: a submit that never arrived didn't use it */
+  let r=null;const tries=body.cheat?1:2;for(let a=0;a<tries&&!r;a++){try{r=await lbPost(body);}catch(e){r=null;if(!a&&!body.cheat)await new Promise(z=>setTimeout(z,1500));}} /* one quick retry with the same token: a submit that never arrived didn't use it */
+  if(body.cheat&&(!r||!r.ok)){return{ok:false,msg:'CHEAT RUNS AREN\'T SAVED TO THE LEADERBOARD'};}
   if(!r){return keep("COULDN'T REACH THE LEADERBOARD - YOUR SCORE IS KEPT AND WILL BE SENT BY ITSELF",30000);}
   if(r.ok)return{ok:true,rank:Number(r.data&&r.data.rank)||0};
   if(r.status===429)return keep('TRY AGAIN LATER - YOUR SCORE IS KEPT AND WILL BE SENT BY ITSELF IN A FEW MINUTES',LB_Q_429);
@@ -5122,13 +5165,14 @@ async function lbSubmit(k){const U=lbUI,bd=U&&U.boards[k];if(!bd||bd.done||U.bus
   U.busy=true;U.msg='SAVING...';U.msgCol='#ccc';
   let r;try{r=await lbSend(bd,name,U);}catch(e){r={ok:false,msg:"COULDN'T SAVE - TRY AGAIN LATER"};}
   U.busy=false;if(lbUI!==U||r.cancel)return; /* the player already moved on */
-  if(r.ok){bd.done=true;bd.rank=r.rank;U.msg=(bd.label==='TIME'?'CLEAR TIME':'SCORE')+' SAVED'+(r.rank?' - RANK '+r.rank:'')+'!';U.msgCol='#7f7';U.sel=lbFirstSave(U);sfx('power');lbLoadTop();}
+  if(r.ok){bd.done=true;bd.rank=r.rank;U.msg=(U.diffName?U.diffName+' ':'')+(bd.label==='TIME'?'CLEAR TIME':'SCORE')+' SAVED'+(r.rank?' - RANK '+r.rank:'')+'!';U.msgCol='#7f7';U.sel=lbFirstSave(U);sfx('power');lbLoadTop();}
   else if(r.queued){bd.done=true;bd.queued=true;U.msg=r.msg;U.msgCol='#fc6';U.sel=lbFirstSave(U);sfx('hit');}
   else{U.msg=r.msg;U.msgCol='#f88';sfx('clink');}
   a11ySay(U.msg);}
 /* v2.15: saves waiting to be re-sent (429 rate limit shared by every Arcade game on the network, offline, server busy).
-   localStorage jungleRescueLbQueue: [{body:{op,game,board,name,score,playedMs,version,level,token},exp,next}] - dropped once sent, rejected (400) or past the token's 6 h.
-   v2.17: body also keeps version and level when queued; an older entry without them is filled in on resend (version = VERSION, level omitted if unknown). */
+   localStorage jungleRescueLbQueue: [{body:{op,game,board,name,score,playedMs,version,level,token,cheat?},exp,next}] - dropped once sent, rejected (400) or past the token's 6 h.
+   v2.17: body also keeps version and level when queued; an older entry without them is filled in on resend (version = VERSION, level omitted if unknown).
+   v2.18: body.board is remapped on resend (default/time or a missing board -> stored difficulty, else easy / easy-time). A queued cheat:true entry is dropped without a submit. */
 const LB_Q_KEY='jungleRescueLbQueue',LB_Q_429=120000;let lbQ=[],lbQT=0,lbQBusy=false,lbQSent=0;
 try{const v=JSON.parse(localStorage.getItem(LB_Q_KEY)||'[]');if(Array.isArray(v))lbQ=v.filter(x=>x&&x.body&&typeof x.body.token==='string'&&x.exp>Date.now()).slice(0,20);}catch(e){}
 function lbQSave(){try{if(lbQ.length)localStorage.setItem(LB_Q_KEY,JSON.stringify(lbQ));else localStorage.removeItem(LB_Q_KEY);}catch(e){}}
@@ -5136,11 +5180,11 @@ function lbQAdd(body,tokenWall,delay){lbQ.push({body,exp:tokenWall+21600000-1200
 function lbQKick(){clearTimeout(lbQT);if(!LB_ON||!lbQ.length)return;const t=Math.max(1000,Math.min(...lbQ.map(x=>x.next))-Date.now());lbQT=setTimeout(lbQRun,t);}
 async function lbQRun(){if(lbQBusy||!LB_ON)return;lbQBusy=true;
   try{lbQ=lbQ.filter(x=>x.exp>Date.now());
-    for(const it of lbQ.slice()){if(it.next>Date.now())continue;let r=null;try{r=await lbPost(lbSubmitBody(it.body));}catch(e){r=null;}
+    for(const it of lbQ.slice()){if(it.next>Date.now())continue;const body=lbSubmitBody(it.body);if(body.cheat){lbQ.splice(lbQ.indexOf(it),1);continue;}let r=null;try{r=await lbPost(body);}catch(e){r=null;}
       if(r&&r.ok){lbQ.splice(lbQ.indexOf(it),1);lbQSent++;lbLoadTop();}
       else if(r&&r.status===429){it.next=Date.now()+LB_Q_429;break;}
       else if(!r||r.status>=500){it.next=Date.now()+60000;}
-      else lbQ.splice(lbQ.indexOf(it),1);}}  /* any other answer (used token, name, play time) won't change on a retry */
+      else lbQ.splice(lbQ.indexOf(it),1);}}  /* any other answer (used token, name, play time, cheat 400) won't change on a retry */
   finally{lbQBusy=false;lbQSave();lbQKick();}}
 addEventListener('online',()=>{for(const it of lbQ)it.next=Math.min(it.next,Date.now()+1000);lbQKick();});
 function updateLbSave(I){titleT++;camBG+=0.4;const U=lbUI;if(!U){state='title';return;}
@@ -5165,6 +5209,7 @@ const lbFmtTime=s=>{s=Math.max(0,Math.round(s));const h=Math.floor(s/3600),m=Mat
 function lbWrap(s,n){const out=[];let line='';for(const w of String(s).split(' ')){if((line+' '+w).trim().length>n){if(line)out.push(line);line=w;}else line=(line+' '+w).trim();}if(line)out.push(line);return out.slice(0,2);}
 function drawLbSave(){const U=lbUI;if(!U)return;dim(0.8);
   textS('ARCADE LEADERBOARD',W/2,6,'#ffd040',2,'c','#801808');
+  if(U.diffName)textS(U.diffName,W/2,16,DIFF_COL[lbDiffOf(U.diff)]||'#9cf',1,'c');
   textS(U.boards.map(b=>b.label==='TIME'?'CLEAR TIME '+lbFmtTime(b.score):'SCORE '+pad(b.score,7)).join('     '),W/2,24,'#fff',1,'c');
   const fx=LB_FX,fy=LB_FY,on=U.sel<LB_CELLS||!U.busy;rect(fx,fy,LB_FW,17,'#000');rect(fx,fy,LB_FW,1,'#ffd040');rect(fx,fy+16,LB_FW,1,'#ffd040');rect(fx,fy,1,17,'#ffd040');rect(fx+LB_FW-1,fy,1,17,'#ffd040');
   textS('NAME',fx-5,fy+6,'#ccc',1,'r');
@@ -5196,26 +5241,28 @@ addEventListener('keydown',e=>{if(state!=='lbsave'||!lbUI||lbNameOn())return;if(
   if(k==='Backspace'){hit=true;if(lbGuardOK())lbSetName(lbUI.name.slice(0,-1),true);}
   else if(k&&k.length===1&&/[a-z0-9 \-]/i.test(k)){hit=true;if(lbGuardOK()&&lbUI.name.length<12)lbSetName(lbUI.name+k,true);}
   if(hit){e.preventDefault();e.stopImmediatePropagation();}},true);
-/* TOP 10 (title menu item; only added once the board has loaded) */
-let lbTop={default:null,time:null},lbTopOK=false,lbTopLoading=false;
-async function lbLoadTop(){if(!LB_ON||lbTopLoading)return;lbTopLoading=true;
+/* TOP 10 (title menu item; only added once the board has loaded). v2.18: shows one difficulty at a time (opens on the current setting; left/right or a tap switches). */
+let lbTop={pts:null,time:null,default:null},lbTopOK=false,lbTopLoading=false,lbTopDiff=1,lbTopGen=0;
+async function lbLoadTop(diff){if(!LB_ON)return;if(diff!=null)lbTopDiff=lbDiffOf(diff);const gen=++lbTopGen,want=lbTopDiff,pts=lbPtsBoard(want),tim=lbTimBoard(want);
+  lbTopLoading=true;
   const one=async b=>{try{const r=await lbFetch(LB_API+'?game='+LB_GAME+'&board='+b+'&limit=10',{method:'GET'});if(!r.ok||!r.data||!Array.isArray(r.data.boards))return null;
     const bd=r.data.boards.find(x=>x&&x.board===b)||(r.data.boards.length===1?r.data.boards[0]:null);return bd&&Array.isArray(bd.scores)?bd:null;}catch(e){return null;}};
-  let d=null,t=null;try{[d,t]=await Promise.all([one('default'),one('time')]);}catch(e){}lbTopLoading=false;
-  if(d)lbTop.default=d;if(t)lbTop.time=t;
+  let d=null,t=null;try{[d,t]=await Promise.all([one(pts),one(tim)]);}catch(e){}if(gen!==lbTopGen)return;lbTopLoading=false;
+  if(d){lbTop.pts=d;lbTop.default=d;}if(t)lbTop.time=t;
   if((d||t)&&!lbTopOK){lbTopOK=true;if(!TMENU.includes('LEADERBOARD')){const cur=TMENU[titleSel];TMENU.splice(TMENU.indexOf("WHAT'S NEW"),0,'LEADERBOARD');if(state==='title'||state==='whatsnew'||state==='cards')titleSel=Math.max(0,TMENU.indexOf(cur));}}}
-function openLbTop(){state='lbtop';sfx('pause');lbLoadTop();a11ySay('Arcade leaderboard top 10');}
+function lbTopSetDiff(d){d=((d|0)%3+3)%3;if(d===lbTopDiff&&(lbTop.pts||lbTop.time||lbTopLoading))return;lbTopDiff=d;lbTop={pts:null,time:null,default:null};sfx('hit');a11ySay(DIFF_NAMES[d]+' leaderboard top 10');lbLoadTop(d);}
+function openLbTop(){lbTopDiff=lbDiffOf(diffSet);lbTop={pts:null,time:null,default:null};state='lbtop';sfx('pause');lbLoadTop(lbTopDiff);a11ySay(DIFF_NAMES[lbTopDiff]+' Arcade leaderboard top 10. Left or right to change difficulty.');}
 function closeLbTop(){state='title';titleSel=Math.max(0,TMENU.indexOf('LEADERBOARD'));sfx('pause');}
-function updateLbTop(I){titleT++;camBG+=0.6;if(I.pauseP||I.startP||I.jumpP)closeLbTop();}
-function lbTopPointer(ix,iy,click){if(click&&iy>=146)closeLbTop();return true;}
-function drawLbTop(){dim(0.72);textS('TOP 10',W/2,5,'#ffd040',2,'c','#801808');textS('TYLILO ARCADE LEADERBOARD',W/2,22,'#9cf',1,'c');
+function updateLbTop(I){titleT++;camBG+=0.6;if(I.leftP)lbTopSetDiff(lbTopDiff+2);else if(I.rightP)lbTopSetDiff(lbTopDiff+1);else if(I.pauseP||I.startP||I.jumpP)closeLbTop();}
+function lbTopPointer(ix,iy,click){if(click&&iy>=16&&iy<32){if(ix<W/2)lbTopSetDiff(lbTopDiff+2);else lbTopSetDiff(lbTopDiff+1);return true;}if(click&&iy>=146)closeLbTop();return true;}
+function drawLbTop(){dim(0.72);textS('TOP 10',W/2,5,'#ffd040',2,'c','#801808');textS('<  '+DIFF_NAMES[lbTopDiff]+'  >',W/2,22,DIFF_COL[lbTopDiff],1,'c');
   const col=(bd,x,title,fmt)=>{textS(title,x+70,33,'#fc6',1,'c');rect(x+4,40,132,1,'#4a6a3a');
     if(!bd){textS(lbTopLoading?'LOADING...':'NOT AVAILABLE',x+70,60,'#889',1,'c');return;}
     const s=bd.scores.slice(0,10);if(!s.length){textS('NO SCORES YET',x+70,60,'#889',1,'c');return;}
     s.forEach((e,i)=>{const y=45+i*10,c=i<3?'#ffd040':'#aab';const nm=lbFontStr(e&&e.name).trim().slice(0,12)||'?';
       textS((i+1)+'.',x+16,y,c,1,'r');textS(nm,x+20,y,'#fff');textS(fmt(Number(e&&e.score)||0),x+136,y,i<3?'#ffd040':'#cfc',1,'r');});};
-  col(lbTop.default,10,'POINTS',v=>pad(v,7));col(lbTop.time,170,'FASTEST CAMPAIGN',lbFmtTime);
-  menuBar(156,true,64);menuItem('BACK',156,true);textS(isTouch?'TAP BACK':'ESC / ENTER: BACK',W/2,170,'#778',1,'c');}
+  col(lbTop.pts,10,'POINTS',v=>pad(v,7));col(lbTop.time,170,'FASTEST CAMPAIGN',lbFmtTime);
+  menuBar(156,true,64);menuItem('BACK',156,true);textS(isTouch?'TAP < > TO CHANGE DIFFICULTY - TAP BACK':'LEFT/RIGHT: DIFFICULTY   ESC / ENTER: BACK',W/2,170,'#778',1,'c');}
 function lbBoot(){if(LB_ON)setTimeout(lbLoadTop,0);
 if(LB_ON&&lbQ.length){for(const it of lbQ)it.next=0;setTimeout(lbQRun,1500);}} /* v2.15: saves kept from an earlier visit are tried again soon after the page opens; v2.16: both start once the splash is done */
 
@@ -5288,11 +5335,11 @@ JR_SPLASH.done=splashDone;if(!JR_SPLASH.on)splashDone();
 requestAnimationFrame(frame);
 
 // small debug/test hook (harmless for players)
-window.JR={get state(){return state;},get splashOn(){return splashOn();},get splashDoneAt(){return splashDoneAt;},LB_ON,LB_NAME_KEY,get lbRun(){return lbRun;},get lbOffer(){return lbOffer;},get lbUI(){return lbUI;},get lbReqs(){return lbReqs;},get lbTop(){return lbTop;},get lbTopOK(){return lbTopOK;},lbNameOn,lbCell,lbBtn,LB_FX,LB_FY,LB_CELLS,LB_GUARD,gameOver,lbMakeOffer,get lbTopLoading(){return lbTopLoading;},get lbQ(){return lbQ;},get lbQSent(){return lbQSent;},lbQRun,get rotateOn(){return rotateOn;},get rotShows(){return rotShows;},checkRotate,get orientLocks(){return orientLocks;},ARCADE_URL,get arcadeLeaving(){return arcadeLeaving;},get confirmKind(){return confirmKind;},get confirmSel(){return confirmSel;},get hi(){return hi;},WHATS_NEW,WN_LINES,get WN_MAX(){return WN_MAX;},get wnScroll(){return wnScroll;},get wnFrom(){return wnFrom;},get wnOpens(){return wnOpens;},openWhatsNew,closeWhatsNew,get cprLast(){return cprLast;},get TOUCH_BLOCK(){return TOUCH_BLOCK;},CPR_TEXT,PM_ITEMS,PM_Y,get pauseSel(){return pauseSel;},get pauseConfirm(){return pauseConfirm;},FONT,VERSION,get G(){return G;},setCheat(v){cheat=!!v;},
+window.JR={get state(){return state;},get splashOn(){return splashOn();},get splashDoneAt(){return splashDoneAt;},LB_ON,LB_NAME_KEY,get lbRun(){return lbRun;},get lbOffer(){return lbOffer;},get lbUI(){return lbUI;},get lbReqs(){return lbReqs;},get lbTop(){return lbTop;},get lbTopOK(){return lbTopOK;},get lbTopDiff(){return lbTopDiff;},lbSubmitBody,lbQueueBoard,lbPtsBoard,lbTimBoard,openLbTop,lbNameOn,lbCell,lbBtn,LB_FX,LB_FY,LB_CELLS,LB_GUARD,gameOver,lbMakeOffer,get lbTopLoading(){return lbTopLoading;},get lbQ(){return lbQ;},get lbQSent(){return lbQSent;},lbQRun,get rotateOn(){return rotateOn;},get rotShows(){return rotShows;},checkRotate,get orientLocks(){return orientLocks;},ARCADE_URL,get arcadeLeaving(){return arcadeLeaving;},get confirmKind(){return confirmKind;},get confirmSel(){return confirmSel;},get hi(){return hi;},WHATS_NEW,WN_LINES,get WN_MAX(){return WN_MAX;},get wnScroll(){return wnScroll;},get wnFrom(){return wnFrom;},get wnOpens(){return wnOpens;},openWhatsNew,closeWhatsNew,get cprLast(){return cprLast;},get TOUCH_BLOCK(){return TOUCH_BLOCK;},CPR_TEXT,PM_ITEMS,PM_Y,get pauseSel(){return pauseSel;},get pauseConfirm(){return pauseConfirm;},FONT,VERSION,get G(){return G;},setCheat(v){cheat=!!v;if(cheat)lbMarkCheat();},
   warp(x){if(!G)return;const p=G.player;if(p.chute){p.chute=null;G.chuteWait=false;}p.x=x;p.y=0;p.vy=0;G.camX=clamp(x-130,0,CAM_MAX);},
   step(n){for(let i=0;i<n;i++)update();render();},surfAt(x){return surfacesAt(x).length>0;},
   start(n,cine){ensureAudio();cineOK=!!cine;newRun(n-1);},get cine(){return G?G.cine:null;},cineSeen,CINE,startCine,endCine,wantCine,set cineOK(v){cineOK=!!v;},get cineOK(){return cineOK;},setIntros(v){OPT.intro=v?1:0;},hasSec,swapWpn,secLetter,rollKO,navEdge,navSim,toEdgeHold,get OPT(){return OPT;},killPlayer,hurtPlayer,setTouch,get swapVis(){return swapVis;},get isTouch(){return isTouch;},get lvl(){return LVI+1;},get LEVELS(){return LEVELS;},get unlocked(){return unlocked;},get ARENA_X(){return ARENA_X;},get LEVEL_END(){return LEVEL_END;},
-  get boss(){return G&&G.boss?G.boss.e:null;},BS,enterCode,get booger(){return booger;},get ken(){return ken;},spawnBoa,boaOK,boaTree,BOA_P,BOA_SQ,get CARDS(){return CARDS;},FIELD,BOSS_CARD,TIERS,openCards,cardScan,unlockField,unlockBoss,cardPortrait,cardDef,fieldIds,wipeProgress,get cardTab(){return cardTab;},get cardSel(){return cardSel;},get cardOpen(){return cardOpen;},get cardRow(){return cardRow;},get cardSwipes(){return cardSwipes;},get unlocked(){return unlocked;},GREN_MAX,GREN_R,GREN_FUSE,grenGain,throwGrenade,grenBlast,MSTUN_T,rollHits,VEST_HP,armorChance,MEL_E,KNIFE_P,PAL_KN,soldierMelee,FROG_COL,BOA_HANG,BOA_REACH,BOA_GRAB,boaDist,playerBox,BOA_GAIN,BOA_DECAY,BOA_MOD,BOA_HP,setNoBoa(v){G.noBoa=!!v;},placeFrogs,mkFrog,FROG_P,spawnPara,paraOK,paraLandOK,paraTarget,PARA_P,setNoPara(v){G.noPara=!!v;},flameChance,pickBeh,setBeh,BEH_W,spawnRunner,boaGrab,boaGain,applyUp,POISON_T,STAGGER_T,get trees(){return TREES;},placeSpiders,mkSpider,SPIDER_P,collect,WPN_TIME,continueRun,setNoChute(v){noChute=!!v;},playStage,endIntro,setNoIntro(v){noIntro=!!v;},get introT(){return introT;},set introT(v){introT=v;},get introStats(){return{skips:introSkips,done:introDone};},INTRO_LEN,ROLL_SPD,FLAME_SPD,STOMP_T,skipChute(){const p=G&&G.player;if(p&&p.chute){p.chute.fast=true;}},kbSafe,ropeBump,addRunner,FLAME_P,kbSafe,enemyLOS,losClear,HEAT_MAX,beamGeom,ropeKickBox,canProgress,progressSpawn,placeGators,mkGator,gatorHP,get codeToast(){return codeToast;},get bald(){return bald;},setBald(v){bald=!!v;},setBooger(v){booger=!!v;},get diff(){return diffSet;},setDiff,DIFF,openCodes,closeCodes,get howSel(){return howSel;},get infoPage(){return infoPage;},get ctlTab(){return ctlTab;},get titleSel(){return titleSel;},TMY,HTY,TMENU,get CODES(){return CODES;},OPT,OPT_ROWS,OPY,openOptions,sfx,musicTick,get muted(){return muted;},get optSel(){return optSel;},set optSel(v){optSel=v;},get optFrom(){return optFrom;},get optDrag(){return optDrag;},geo(){return{GROUND,PLATS,WATER,BRIDGE_DEF,ENTS,DIST_END};},
+  get boss(){return G&&G.boss?G.boss.e:null;},BS,enterCode,get booger(){return booger;},get ken(){return ken;},spawnBoa,boaOK,boaTree,BOA_P,BOA_SQ,get CARDS(){return CARDS;},FIELD,BOSS_CARD,TIERS,openCards,cardScan,unlockField,unlockBoss,cardPortrait,cardDef,fieldIds,wipeProgress,get cardTab(){return cardTab;},get cardSel(){return cardSel;},get cardOpen(){return cardOpen;},get cardRow(){return cardRow;},get cardSwipes(){return cardSwipes;},get unlocked(){return unlocked;},GREN_MAX,GREN_R,GREN_FUSE,grenGain,throwGrenade,grenBlast,MSTUN_T,rollHits,VEST_HP,armorChance,MEL_E,KNIFE_P,PAL_KN,soldierMelee,FROG_COL,BOA_HANG,BOA_REACH,BOA_GRAB,boaDist,playerBox,BOA_GAIN,BOA_DECAY,BOA_MOD,BOA_HP,setNoBoa(v){G.noBoa=!!v;},placeFrogs,mkFrog,FROG_P,spawnPara,paraOK,paraLandOK,paraTarget,PARA_P,setNoPara(v){G.noPara=!!v;},flameChance,pickBeh,setBeh,BEH_W,spawnRunner,boaGrab,boaGain,applyUp,POISON_T,STAGGER_T,get trees(){return TREES;},placeSpiders,mkSpider,SPIDER_P,collect,WPN_TIME,continueRun,setNoChute(v){noChute=!!v;},playStage,endIntro,setNoIntro(v){noIntro=!!v;},get introT(){return introT;},set introT(v){introT=v;},get introStats(){return{skips:introSkips,done:introDone};},INTRO_LEN,ROLL_SPD,FLAME_SPD,STOMP_T,skipChute(){const p=G&&G.player;if(p&&p.chute){p.chute.fast=true;}},kbSafe,ropeBump,addRunner,FLAME_P,kbSafe,enemyLOS,losClear,HEAT_MAX,beamGeom,ropeKickBox,canProgress,progressSpawn,placeGators,mkGator,gatorHP,get codeToast(){return codeToast;},get bald(){return bald;},setBald(v){bald=!!v;},setBooger(v){booger=!!v;if(booger)lbMarkCheat();},get diff(){return diffSet;},setDiff,DIFF,openCodes,closeCodes,get howSel(){return howSel;},get infoPage(){return infoPage;},get ctlTab(){return ctlTab;},get titleSel(){return titleSel;},TMY,HTY,TMENU,get CODES(){return CODES;},OPT,OPT_ROWS,OPY,openOptions,sfx,musicTick,get muted(){return muted;},get optSel(){return optSel;},set optSel(v){optSel=v;},get optFrom(){return optFrom;},get optDrag(){return optDrag;},geo(){return{GROUND,PLATS,WATER,BRIDGE_DEF,ENTS,DIST_END};},
   hurt(e,d,info){dmgInfo=info||null;damage(e,d);dmgInfo=null;},safeAt,safeSpawn,respawn,bossFloor,spawnHeli,heliPlan,setHeliOff(v){heliOff=!!v;if(heliOff&&G){G.heliPlan=null;G.heli=null;}},heliLandX,pBlast,pxPerM,get heli(){return G.heli;},distM:x=>distM(x),startEnding,victory,get beatMask(){return beatMask;},setBeat(v){beatMask=v;},isFinalStage,mkDrone,toBoss(){const p=G.player;if(p.chute){p.chute=null;G.chuteWait=false;}G.camX=CAM_MAX;G.intro=0;p.x=ARENA_X+60;p.y=100;p.vy=0;for(let i=0;i<40;i++)update();G.en=G.en.filter(e=>['boss','cover','tower','vine','nest','gen','filter','prop'].includes(e.k));G.eb=[];}};
 })();
 
