@@ -11,6 +11,8 @@ $pageTitle = $pageTitle ?? TYLILO_SITE_NAME;
 $pageDescription = $pageDescription ?? 'Tylilo, LLC. Placeholder homepage for a company and studio site.';
 $pageRobots = $pageRobots ?? 'index, follow';
 $pageCanonical = $pageCanonical ?? '';
+$pageImage = $pageImage ?? '/assets/img/og.png';
+$pageImageAlt = $pageImageAlt ?? 'Tylilo logo on a navy background';
 $nonce = tylilo_e($cspNonce);
 ?>
 <!DOCTYPE html>
@@ -32,14 +34,14 @@ $nonce = tylilo_e($cspNonce);
   <meta property="og:site_name" content="<?= tylilo_e(TYLILO_SITE_NAME) ?>">
   <meta property="og:title" content="<?= tylilo_e($pageTitle) ?>">
   <meta property="og:description" content="<?= tylilo_e($pageDescription) ?>">
-  <meta property="og:image" content="<?= tylilo_e(TYLILO_URL) ?>/assets/img/og.png">
+  <meta property="og:image" content="<?= tylilo_e(TYLILO_URL . $pageImage) ?>">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Tylilo logo on a navy background">
+  <meta property="og:image:alt" content="<?= tylilo_e($pageImageAlt) ?>">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="<?= tylilo_e($pageTitle) ?>">
   <meta name="twitter:description" content="<?= tylilo_e($pageDescription) ?>">
-  <meta name="twitter:image" content="<?= tylilo_e(TYLILO_URL) ?>/assets/img/og.png">
+  <meta name="twitter:image" content="<?= tylilo_e(TYLILO_URL . $pageImage) ?>">
   <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">

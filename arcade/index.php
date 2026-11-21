@@ -52,6 +52,8 @@ $games = [
 $pageTitle = 'Arcade — Tylilo';
 $pageDescription = 'Browser games from Tylilo, including Solitaire, Red Rain, Pop Spiral, and Jungle Rescue.';
 $pageCanonical = TYLILO_URL . '/arcade/';
+$pageImage = '/assets/img/og-arcade.jpg';
+$pageImageAlt = 'Tylilo Arcade: a neon ARCADE sign over a montage of Solitaire, Red Rain, Pop Spiral, and Jungle Rescue box art';
 $pageRobots = 'index, follow';
 
 $gameParts = [];
@@ -124,6 +126,7 @@ require __DIR__ . '/../includes/head.php';
         'name' => 'Arcade',
         'url' => TYLILO_URL . '/arcade/',
         'description' => $pageDescription,
+        'image' => TYLILO_URL . $pageImage,
         'isPartOf' => [
             '@type' => 'WebSite',
             'name' => TYLILO_SITE_NAME,
