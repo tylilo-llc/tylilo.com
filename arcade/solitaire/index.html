@@ -229,7 +229,7 @@
   <span id="copyright">&copy; <span id="copyYear">2026</span> Tylilo, LLC</span>
   <span class="right">
     <button id="newsBtn" type="button" title="See what changed in each version">What's New</button>
-    <span id="version">v1.1.5</span>
+    <span id="version">v1.1.6</span>
   </span>
 </footer>
 <canvas id="fx"></canvas>
@@ -266,7 +266,7 @@
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
-/* Klondike Solitaire v1.1.5 - single-file, no dependencies. */
+/* Klondike Solitaire v1.1.6 - single-file, no dependencies. */
 'use strict';
 
 /* ======================= Core rules engine (DOM-free) ======================= */
@@ -600,6 +600,12 @@ const Engine = (function () {
   const lbScore = v => Math.min(LEADERBOARD.maxScore, Math.max(LEADERBOARD.minScore, Math.round(Number(v) || 0)));
   const lbEligible = (playedMs, minMs) => Number(playedMs) >= Math.max(LEADERBOARD.minPlayedMs, Number(minMs) || 0);
   const lbName = n => String(n == null ? '' : n).replace(/\s+/g, ' ').trim().slice(0, LEADERBOARD.nameMax);
+  // Retry delay after the n-th failed start request: 2 s, 4 s, 8 s ... capped at 30 s.
+  const lbBackoff = (n, base, max) => Math.min(max || 30000, (base || 2000) * Math.pow(2, Math.max(0, n - 1)));
+  // playedMs sent to the server can never exceed the token's real age (the server checks it against the token).
+  const lbPlayedMs = (actualMs, tokenAgeMs) => Math.max(0, Math.round(Math.min(Number(actualMs) || 0, Number(tokenAgeMs) || 0)));
+  // How long until a token is old enough to save with (server minPlayedMs, default 20 s).
+  const lbWaitMs = (tokenAgeMs, minMs) => Math.max(0, Math.ceil((Number(minMs) > 0 ? Number(minMs) : LEADERBOARD.minPlayedMs) - (Number(tokenAgeMs) || 0)));
   function lbSubmitBody(board, name, score, playedMs, token) {
     return { op: 'submit', game: LEADERBOARD.game, board, name: lbName(name), score: lbScore(score), playedMs: Math.max(0, Math.round(playedMs)), token };
   }
@@ -616,7 +622,7 @@ const Engine = (function () {
     getPile, isValidRun, canPick, canMove, move, draw, foundationTarget, autoTarget,
     isWon, allTableauUp, clone, foundationStep, autoStep, canAutoComplete, totalCards,
     findHint, emptyStats, normStats, statsStart, statsLose, statsWin, winRate,
-    LEADERBOARD, lbBoard, lbScore, lbEligible, lbName, lbSubmitBody
+    LEADERBOARD, lbBoard, lbScore, lbEligible, lbName, lbSubmitBody, lbBackoff, lbPlayedMs, lbWaitMs
   };
 })();
 
@@ -624,13 +630,18 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Engine;
 
 /* ============================ Browser UI layer ============================ */
 if (typeof document !== 'undefined') (function () {
-  const VERSION = '1.1.5';
+  const VERSION = '1.1.6';
   const ARCADE_URL = '/arcade/';
   // The only network traffic in the game: the tylilo.com Arcade leaderboard (same origin, relative URL).
   const LB_API = '/api/scores.php';
   // In-game "What's New" notes, newest first. Plain-language version of CHANGELOG.md - update every release.
   // Shown only when the player opens it (footer button); it never opens by itself.
   const RELEASE_NOTES = [
+    { v: '1.1.6', date: '2026-11-21', items: [
+      'Leaderboard fix: if the game could not reach the leaderboard when your game started, it now keeps trying in the background (and again on the win screen), so a good score is no longer lost.',
+      'While it is still trying, the win screen says "Couldn\'t reach the leaderboard - retrying..." and Save turns on as soon as the connection is back. Skip always works and sends nothing.',
+      'If you win very quickly after the connection comes back, Save shows a short countdown ("Saving in 5s...") and then saves.'
+    ] },
     { v: '1.1.5', date: '2026-11-21', items: [
       'Arcade leaderboard: after a win you can type a name and save your score to the tylilo.com leaderboard (Draw 1 and Draw 3 have separate boards). It is optional - press Skip and nothing is sent.',
       'Wins under 20 seconds are not eligible, and the game remembers the last name you saved with.',
@@ -702,47 +713,80 @@ if (typeof document !== 'undefined') (function () {
   // Spec: /workspace/arcade-handoff/LEADERBOARD-API.md. A run token is requested when a game starts (first move);
   // a score is submitted only when the player presses "Save score" after a win. Any failure just shows a message.
   const LB = (function () {
+    // Timings (tests shorten them through the window.__klondike.lb hook).
+    const cfg = { timeoutMs: 8000, backoffMs: 2000, maxBackoffMs: 30000 };
     const available = () => /^https?:$/.test(location.protocol) && typeof fetch === 'function';
     let run = null;
-    async function post(body) {
-      const res = await fetch(LB_API, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
-        credentials: 'same-origin', cache: 'no-store'
-      });
-      let data = null;
-      try { data = await res.json(); } catch (e) { /* not JSON */ }
-      return { status: res.status, ok: res.ok && !(data && data.ok === false), data };
+    async function post(body, timeoutMs) {
+      const ctl = typeof AbortController === 'function' ? new AbortController() : null;
+      let timer = null;
+      const timeout = new Promise((_, rej) => { timer = setTimeout(() => { if (ctl) ctl.abort(); rej(new Error('timeout')); }, timeoutMs || cfg.timeoutMs); });
+      try {
+        const res = await Promise.race([fetch(LB_API, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+          credentials: 'same-origin', cache: 'no-store', signal: ctl ? ctl.signal : undefined
+        }), timeout]);
+        let data = null;
+        try { data = await Promise.race([res.json(), timeout]); } catch (e) { /* not JSON */ }
+        return { status: res.status, ok: res.ok && !(data && data.ok === false), data };
+      } finally { clearTimeout(timer); }
+    }
+    // A run asks for a token when a game starts; if that fails or times out it keeps retrying with backoff
+    // until a token arrives or the run is stopped (new deal, Skip, leaving the win screen).
+    function newRun(dc) {
+      const r = { board: Engine.lbBoard(dc), token: null, tokenAt: 0, minPlayedMs: Engine.LEADERBOARD.minPlayedMs,
+        active: true, inflight: false, failures: 0, timer: null, onchange: null };
+      r.attempt = () => {
+        clearTimeout(r.timer); r.timer = null;
+        if (!r.active || r.token || r.inflight) return;
+        r.inflight = true;
+        post({ op: 'start', game: Engine.LEADERBOARD.game, board: r.board })
+          .then(res => {
+            if (res.ok && res.data && typeof res.data.token === 'string' && res.data.token) return res.data;
+            throw new Error('no token');
+          })
+          .then(data => {
+            r.inflight = false;
+            if (!r.active) return;
+            r.token = data.token; r.tokenAt = Date.now();
+            if (Number(data.minPlayedMs) > 0) r.minPlayedMs = Number(data.minPlayedMs);
+            if (r.onchange) r.onchange();
+          })
+          .catch(() => {
+            r.inflight = false;
+            if (!r.active) return;
+            r.failures++;
+            r.timer = setTimeout(r.attempt, Engine.lbBackoff(r.failures, cfg.backoffMs, cfg.maxBackoffMs));
+            if (r.onchange) r.onchange();
+          });
+      };
+      r.stop = () => { r.active = false; clearTimeout(r.timer); r.timer = null; r.onchange = null; };
+      // Win screen with no token yet: try again right away and restart the backoff.
+      r.retryNow = () => { if (!r.active || r.token) return; r.failures = 0; if (!r.inflight) r.attempt(); };
+      return r;
     }
     function startRun(dc) {
+      if (run) run.stop();
       run = null;
       if (!available()) return;
-      const r = { board: Engine.lbBoard(dc), token: null, minPlayedMs: Engine.LEADERBOARD.minPlayedMs };
-      r.ready = post({ op: 'start', game: Engine.LEADERBOARD.game, board: r.board })
-        .then(res => {
-          if (res.ok && res.data && typeof res.data.token === 'string' && res.data.token) {
-            r.token = res.data.token;
-            if (Number(res.data.minPlayedMs) > 0) r.minPlayedMs = Number(res.data.minPlayedMs);
-          }
-        })
-        .catch(() => { /* offline: the game carries on; saving will explain */ });
-      run = r;
+      run = newRun(dc);
+      run.attempt();
     }
     function takeRun() { const r = run; run = null; return r; }
-    function cancelRun() { run = null; }
-    async function submit(r, name, score, playedMs) {
+    function cancelRun() { if (run) run.stop(); run = null; }
+    async function submit(r, name, score, actualMs) {
       if (!available()) return { ok: false, msg: 'The leaderboard works when you play on tylilo.com.' };
-      if (!r) return { ok: false, msg: "Couldn't reach the leaderboard. Your game is fine." };
-      try { await r.ready; } catch (e) { /* handled below */ }
-      if (!r.token) return { ok: false, retry: false, msg: "Couldn't reach the leaderboard for this game. Your game is fine." };
+      if (!r || !r.token) return { ok: false, retry: true, msg: "Couldn't reach the leaderboard - retrying..." };
+      const playedMs = Engine.lbPlayedMs(actualMs, Date.now() - r.tokenAt);
       let res;
       try { res = await post(Engine.lbSubmitBody(r.board, name, score, playedMs, r.token)); }
       catch (e) { return { ok: false, retry: true, msg: "Couldn't reach the leaderboard. Check your connection and try again." }; }
-      if (res.ok) return { ok: true, msg: 'Score saved to the Arcade leaderboard!' };
+      if (res.ok) { r.stop(); return { ok: true, msg: 'Score saved to the Arcade leaderboard!' }; }
       if (res.status === 429) return { ok: false, retry: true, msg: 'Try again later.' };
       const serverMsg = res.data && (res.data.error || res.data.message);
       return { ok: false, retry: true, msg: serverMsg ? String(serverMsg).slice(0, 160) : "The leaderboard couldn't save this score." };
     }
-    return { available, startRun, takeRun, cancelRun, submit };
+    return { cfg, available, startRun, newRun, takeRun, cancelRun, submit, get run() { return run; } };
   })();
 
   /* ---------- Sound (Web Audio, generated; starts only after a user gesture) ---------- */
@@ -1308,36 +1352,68 @@ if (typeof document !== 'undefined') (function () {
   }
 
   /* ---------- Leaderboard name entry on the win screen ---------- */
-  let lbPending = null;
+  // The name box is always shown for an eligible win (never hidden silently). With no token yet, Save waits and a
+  // note says we're retrying; a token younger than the server minimum makes Save count down, then send.
+  let lbPending = null, lbTick = null;
   const lbUi = { form: $('lbForm'), input: $('lbNameInput'), save: $('lbSaveBtn'), skip: $('lbSkipBtn'), msg: $('lbMsg') };
-  function hideLeaderboard() { lbPending = null; lbUi.form.hidden = true; lbUi.msg.textContent = ''; }
+  const NO_TOKEN_MSG = "Couldn't reach the leaderboard - retrying...";
+  function hideLeaderboard() {
+    if (lbPending && lbPending.run) lbPending.run.stop();
+    lbPending = null; clearInterval(lbTick); lbTick = null;
+    lbUi.form.hidden = true; lbUi.msg.textContent = '';
+  }
+  function lbRefresh() {
+    const p = lbPending;
+    if (!p || p.busy) return;
+    const ready = !!(p.run && p.run.token);
+    lbUi.save.disabled = !ready;
+    if (!ready) lbUi.msg.textContent = NO_TOKEN_MSG;
+    else if (lbUi.msg.textContent === NO_TOKEN_MSG) lbUi.msg.textContent = '';
+  }
   function showLeaderboard(run, score, playedMs) {
     hideLeaderboard();
-    if (!LB.available()) { lbUi.msg.textContent = 'Leaderboard saving works when you play on tylilo.com.'; return; }
-    const minMs = run ? run.minPlayedMs : Engine.LEADERBOARD.minPlayedMs;
-    if (!Engine.lbEligible(playedMs, minMs)) {
-      lbUi.msg.textContent = 'Wins under ' + Math.round(Math.max(minMs, Engine.LEADERBOARD.minPlayedMs) / 1000) + ' seconds can\'t go on the leaderboard.';
+    if (!LB.available()) { if (run) run.stop(); lbUi.msg.textContent = 'Leaderboard saving works when you play on tylilo.com.'; return; }
+    if (!Engine.lbEligible(playedMs, run ? run.minPlayedMs : 0)) {
+      if (run) run.stop();
+      const minMs = Math.max(run ? run.minPlayedMs : 0, Engine.LEADERBOARD.minPlayedMs);
+      lbUi.msg.textContent = 'Wins under ' + Math.round(minMs / 1000) + ' seconds can\'t go on the leaderboard.';
       return;
     }
-    lbPending = { run, score: Engine.lbScore(score), playedMs };
+    if (!run) { run = LB.newRun(state.drawCount); }
+    lbPending = { run, score: Engine.lbScore(score), playedMs, busy: false };
+    run.onchange = lbRefresh;
+    run.retryNow();
     lbUi.input.value = store.get(KEYS.lbName) || '';
-    lbUi.save.disabled = false; lbUi.skip.disabled = false; lbUi.input.disabled = false;
+    lbUi.skip.disabled = false; lbUi.input.disabled = false;
     lbUi.form.hidden = false;
+    lbRefresh();
   }
+  const lbSleep = ms => new Promise(r => setTimeout(r, ms));
   lbUi.form.addEventListener('submit', async e => {
     e.preventDefault();
-    if (!lbPending || lbUi.save.disabled) return;
+    const p = lbPending;
+    if (!p || p.busy || lbUi.save.disabled) return;
     const name = Engine.lbName(lbUi.input.value);
     if (!name) { lbUi.msg.textContent = 'Type a name (1-12 characters) or press Skip.'; lbUi.input.focus(); return; }
-    const p = lbPending;
-    lbUi.save.disabled = true; lbUi.skip.disabled = true; lbUi.input.disabled = true;
+    p.busy = true;
+    lbUi.save.disabled = true; lbUi.input.disabled = true;
+    // Token too young for the server's minimum: count down instead of failing. Skip still works meanwhile.
+    let wait = Engine.lbWaitMs(Date.now() - p.run.tokenAt, p.run.minPlayedMs);
+    while (wait > 0) {
+      lbUi.msg.textContent = 'Saving in ' + Math.ceil(wait / 1000) + 's...';
+      await lbSleep(Math.min(wait, 1000) + 5);
+      if (lbPending !== p) return; // skipped or a new game started
+      wait = Engine.lbWaitMs(Date.now() - p.run.tokenAt, p.run.minPlayedMs);
+    }
+    lbUi.skip.disabled = true;
     lbUi.msg.textContent = 'Saving...';
     const r = await LB.submit(p.run, name, p.score, p.playedMs);
-    if (lbPending !== p) return; // a new game started meanwhile
+    if (lbPending !== p) return;
+    p.busy = false;
     lbUi.msg.textContent = r.msg;
     if (r.ok) { store.set(KEYS.lbName, name); lbPending = null; lbUi.form.hidden = true; return; }
-    if (r.retry) { lbUi.save.disabled = false; lbUi.skip.disabled = false; lbUi.input.disabled = false; }
-    else { lbPending = null; lbUi.form.hidden = true; }
+    lbUi.skip.disabled = false; lbUi.input.disabled = false;
+    lbUi.save.disabled = !(p.run && p.run.token);
   });
   lbUi.skip.addEventListener('click', () => { hideLeaderboard(); ui.againBtn.focus(); });
 
@@ -1441,7 +1517,7 @@ if (typeof document !== 'undefined') (function () {
   // Test hook (handy for automated checks; harmless for players).
   window.__klondike = {
     get state() { return state; }, set state(s) { state = s; history = []; render({ instant: true }); },
-    render, Engine, version: VERSION, releaseNotes: RELEASE_NOTES, arcadeUrl: ARCADE_URL, get inProgress() { return gameInProgress(); }, backdate(ms) { if (startTime) startTime -= ms; }, sound: Sound, get stats() { return stats; }, keys: KEYS
+    render, Engine, version: VERSION, releaseNotes: RELEASE_NOTES, arcadeUrl: ARCADE_URL, get inProgress() { return gameInProgress(); }, backdate(ms) { if (startTime) startTime -= ms; }, lb: LB, sound: Sound, get stats() { return stats; }, keys: KEYS
   };
 
   computeLayout();
