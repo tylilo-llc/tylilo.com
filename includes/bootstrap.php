@@ -56,6 +56,24 @@ function tylilo_e(string $value): string
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
+/**
+ * Local asset URL with a file-mtime query so a changed file is a new URL.
+ * Covers stylesheets, scripts, and images such as the arcade tile art.
+ * Returning visitors otherwise keep the old file for days.
+ */
+function tylilo_asset(string $webPath): string
+{
+    $path = '/' . ltrim($webPath, '/');
+    if (str_contains($path, '..') || str_contains($path, "\0")) {
+        return $path;
+    }
+
+    $file = dirname(__DIR__) . $path;
+    $version = is_file($file) ? (string) filemtime($file) : '0';
+
+    return $path . '?v=' . rawurlencode($version);
+}
+
 function tylilo_session_start(): void
 {
     if (session_status() === PHP_SESSION_ACTIVE) {

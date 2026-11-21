@@ -107,7 +107,7 @@ require __DIR__ . '/../includes/head.php';
       <p>Test catalog for OTRadio. Rights notes are a research starting point, not a legal verdict. Captions are first-pass auto transcripts and will need a human pass for production.</p>
     </div>
   </div>
-  <script src="/otradio/player.js" defer></script>
+  <script src="<?= tylilo_e(tylilo_asset('/otradio/player.js')) ?>" defer></script>
   <script type="application/ld+json" nonce="<?= tylilo_e($cspNonce) ?>">
     <?= json_encode([
         '@context' => 'https://schema.org',

@@ -64,7 +64,7 @@ require __DIR__ . '/includes/head.php';
       </section>
 
       <section class="arcade-home" aria-labelledby="arcade-home-heading">
-        <h2 id="arcade-home-heading" class="arcade-home-heading">Arcade</h2>
+        <h2 id="arcade-home-heading" class="visually-hidden">Arcade</h2>
         <a class="arcade-tile" href="/arcade/">
           <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="64" height="64">
             <path fill="currentColor" d="M8 7.4h8c2.55 0 4.35 1.85 4.15 4.35l-.35 2.7c-.28 1.7-1.75 2.95-3.45 2.95-1.05 0-2.05-.5-2.65-1.35L12.9 15h-1.8l-.8 1.05c-.6.85-1.6 1.35-2.65 1.35-1.7 0-3.17-1.25-3.45-2.95l-.35-2.7C3.65 9.25 5.45 7.4 8 7.4z"/>

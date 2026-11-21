@@ -18,7 +18,7 @@ if (!defined('TYLILO_BOOTSTRAPPED')) {
     </nav>
     <p>© <?= tylilo_e(TYLILO_YEAR) ?> <?= tylilo_e(TYLILO_LEGAL_NAME) ?></p>
   </footer>
-  <script src="/assets/js/theme.js"></script>
-  <script src="/assets/js/form.js"></script>
+  <script src="<?= tylilo_e(tylilo_asset('/assets/js/theme.js')) ?>"></script>
+  <script src="<?= tylilo_e(tylilo_asset('/assets/js/form.js')) ?>"></script>
 </body>
 </html>
