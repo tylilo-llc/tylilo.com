@@ -274,7 +274,64 @@ function tylilo_score_read_token(string $token, int $now): ?array
 
 function tylilo_scores_blank(): array
 {
-    return ['scores' => [], 'rates' => [], 'used' => []];
+    return ['scores' => [], 'rates' => [], 'used' => [], 'seeds' => []];
+}
+
+/**
+ * One recorded score that the game never submitted. Applied once, then remembered
+ * so later deploys do not insert it again. Safe to delete this list after it has run.
+ *
+ * @return list<array{id: string, game: string, board: string, name: string, score: int, at: int}>
+ */
+function tylilo_score_seeds(): array
+{
+    return [
+        [
+            'id' => 'logan-jungle-rescue-187100',
+            'game' => 'jungle-rescue',
+            'board' => 'default',
+            'name' => 'LOGAN',
+            'score' => 187100,
+            'at' => 1795271100,
+        ],
+    ];
+}
+
+function tylilo_score_ensure_seeds(): void
+{
+    static $done = false;
+    if ($done) {
+        return;
+    }
+    $done = true;
+    tylilo_scores_with(static function (array $data): array {
+        $applied = is_array($data['seeds'] ?? null) ? $data['seeds'] : [];
+        foreach (tylilo_score_seeds() as $seed) {
+            if (in_array($seed['id'], $applied, true)) {
+                continue;
+            }
+            $present = false;
+            foreach ($data['scores'] as $row) {
+                if ($row['game'] === $seed['game'] && $row['board'] === $seed['board'] && $row['name'] === $seed['name'] && (int) $row['score'] === $seed['score']) {
+                    $present = true;
+                    break;
+                }
+            }
+            if (!$present) {
+                $data['scores'][] = [
+                    'game' => $seed['game'],
+                    'board' => $seed['board'],
+                    'name' => $seed['name'],
+                    'score' => $seed['score'],
+                    'at' => $seed['at'],
+                ];
+            }
+            $applied[] = $seed['id'];
+        }
+        $data['seeds'] = $applied;
+
+        return $data;
+    });
 }
 
 function tylilo_scores_with(callable $change): array
@@ -340,6 +397,7 @@ function tylilo_scores_pdo(): PDO
     $pdo->exec('CREATE TABLE IF NOT EXISTS scores (game TEXT, board TEXT, name TEXT, score INTEGER, at INTEGER)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS rates (hash TEXT, at INTEGER)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS used_tokens (hash TEXT PRIMARY KEY, exp INTEGER)');
+    $pdo->exec('CREATE TABLE IF NOT EXISTS seeds (id TEXT PRIMARY KEY)');
 
     return $pdo;
 }
@@ -365,10 +423,14 @@ function tylilo_scores_with_sqlite(callable $change): array
         foreach ($pdo->query('SELECT hash, exp FROM used_tokens') as $row) {
             $data['used'][] = ['hash' => (string) $row['hash'], 'exp' => (int) $row['exp']];
         }
+        foreach ($pdo->query('SELECT id FROM seeds') as $row) {
+            $data['seeds'][] = (string) $row['id'];
+        }
         $data = $change($data);
         $pdo->exec('DELETE FROM scores');
         $pdo->exec('DELETE FROM rates');
         $pdo->exec('DELETE FROM used_tokens');
+        $pdo->exec('DELETE FROM seeds');
         $scoreStmt = $pdo->prepare('INSERT INTO scores (game, board, name, score, at) VALUES (?, ?, ?, ?, ?)');
         foreach ($data['scores'] as $row) {
             $scoreStmt->execute([$row['game'], $row['board'], $row['name'], $row['score'], $row['at']]);
@@ -380,6 +442,12 @@ function tylilo_scores_with_sqlite(callable $change): array
         $usedStmt = $pdo->prepare('INSERT INTO used_tokens (hash, exp) VALUES (?, ?)');
         foreach ($data['used'] as $row) {
             $usedStmt->execute([$row['hash'], $row['exp']]);
+        }
+        $seedStmt = $pdo->prepare('INSERT INTO seeds (id) VALUES (?)');
+        foreach ($data['seeds'] ?? [] as $id) {
+            if (is_string($id) && $id !== '') {
+                $seedStmt->execute([$id]);
+            }
         }
         $pdo->commit();
     } catch (Throwable $error) {
@@ -613,6 +681,7 @@ function tylilo_score_submit(array $input, string $ip, int $now): array
 
 function tylilo_score_handle(string $method, array $query, string $body, array $server, ?int $now = null): array
 {
+    tylilo_score_ensure_seeds();
     $now ??= tylilo_score_now();
     $method = strtoupper($method);
     if ($method === 'GET') {
