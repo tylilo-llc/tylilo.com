@@ -21,7 +21,8 @@ require_once __DIR__ . '/../config.php';
 $cspNonce = bin2hex(random_bytes(16));
 
 header('Content-Type: text/html; charset=UTF-8');
-header('Cache-Control: no-store, private');
+// no-cache still revalidates, and unlike no-store it can enter the back/forward cache.
+header('Cache-Control: no-cache, private');
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: strict-origin-when-cross-origin');
 header('X-Frame-Options: SAMEORIGIN');
@@ -46,7 +47,7 @@ header(
     . "object-src 'none'; "
     . "img-src {$imgSrc}; "
     . "font-src 'self'; "
-    . "style-src 'self'; "
+    . "style-src 'self' 'nonce-{$cspNonce}'; "
     . "script-src 'self' 'nonce-{$cspNonce}'"
     . $otradioSrc
 );
@@ -74,11 +75,40 @@ function tylilo_asset(string $webPath): string
     return $path . '?v=' . rawurlencode($version);
 }
 
+/**
+ * Stylesheet contents for inlining. Font URLs are root-absolute so they
+ * still resolve when the CSS is not served from /assets/css/.
+ */
+function tylilo_inline_css(string $webPath): string
+{
+    $path = '/' . ltrim($webPath, '/');
+    if (str_contains($path, '..') || str_contains($path, "\0")) {
+        return '';
+    }
+
+    $file = dirname(__DIR__) . $path;
+    if (!is_file($file)) {
+        return '';
+    }
+
+    $css = file_get_contents($file);
+    if (!is_string($css) || $css === '') {
+        return '';
+    }
+
+    $css = str_replace(['url("../fonts/', "url('../fonts/"], ['url("/assets/fonts/', "url('/assets/fonts/"], $css);
+
+    return str_replace('</', '<\\/', $css);
+}
+
 function tylilo_session_start(): void
 {
     if (session_status() === PHP_SESSION_ACTIVE) {
         return;
     }
+
+    // PHP's default "nocache" limiter sends Expires in 1981 and Pragma: no-cache.
+    session_cache_limiter('');
 
     $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
         || ((int) ($_SERVER['SERVER_PORT'] ?? 0) === 443);
