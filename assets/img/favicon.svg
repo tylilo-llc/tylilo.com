@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- T outline traced from the painted wordmark in assets/img/logo.svg -->
+  <rect width="64" height="64" rx="14.08" fill="#0A3161"/>
+  <path fill="#FFFFFF" d="M53.51 9.03L54.45 9.12L54.93 9.40L55.59 10.44L55.49 11.57L54.64 12.52L24.64 20.44L26.91 52.90L26.62 54.03L25.68 54.78L24.74 54.88L24.17 54.69L23.60 54.22L23.23 53.37L21.06 21.48L20.40 21.48L10.68 24.12L9.64 24.12L8.89 23.75L8.41 23.08L8.32 21.95L8.60 21.29L9.64 20.54L53.42 9.12Z"/>
+</svg>

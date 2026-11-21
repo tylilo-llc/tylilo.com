@@ -40,6 +40,7 @@ $nonce = tylilo_e($cspNonce);
   <meta name="twitter:title" content="<?= tylilo_e($pageTitle) ?>">
   <meta name="twitter:description" content="<?= tylilo_e($pageDescription) ?>">
   <meta name="twitter:image" content="<?= tylilo_e(TYLILO_URL) ?>/assets/img/og.png">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16.png">

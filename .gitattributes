@@ -3,4 +3,5 @@
 *.webp binary
 *.ico binary
 *.woff2 binary
-*.svg binary
+*.svg text eol=lf
+assets/img/logo.svg binary
