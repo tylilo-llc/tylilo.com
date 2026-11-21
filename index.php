@@ -13,7 +13,7 @@ require __DIR__ . '/includes/bootstrap.php';
  * That address is not shown on the page.
  */
 $pageTitle = 'Tylilo';
-$tagline = 'Under Construction';
+$tagline = 'Welcome!';
 $aboutHeading = 'A friendly little studio.';
 $aboutBody = 'A short description of Tylilo will live here — who you are, what you make, and why it matters. This is placeholder copy for a company or studio homepage.';
 
