@@ -554,7 +554,7 @@ window.__solitaireLaunch = { done: false, boot: null };
   <span id="copyright">&copy; <span id="copyYear">2026</span> Tylilo, LLC</span>
   <span class="right">
     <button id="newsBtn" type="button" title="See what changed in each version">What's New</button>
-    <span id="version">v1.1.7</span>
+    <span id="version">v1.1.8</span>
   </span>
 </footer>
 <canvas id="fx"></canvas>
@@ -591,7 +591,7 @@ window.__solitaireLaunch = { done: false, boot: null };
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
-/* Klondike Solitaire v1.1.7 - single-file, no dependencies. */
+/* Klondike Solitaire v1.1.8 - single-file, no dependencies. */
 'use strict';
 
 /* ======================= Core rules engine (DOM-free) ======================= */
@@ -931,8 +931,15 @@ const Engine = (function () {
   const lbPlayedMs = (actualMs, tokenAgeMs) => Math.max(0, Math.round(Math.min(Number(actualMs) || 0, Number(tokenAgeMs) || 0)));
   // How long until a token is old enough to save with (server minPlayedMs, default 20 s).
   const lbWaitMs = (tokenAgeMs, minMs) => Math.max(0, Math.ceil((Number(minMs) > 0 ? Number(minMs) : LEADERBOARD.minPlayedMs) - (Number(tokenAgeMs) || 0)));
-  function lbSubmitBody(board, name, score, playedMs, token) {
-    return { op: 'submit', game: LEADERBOARD.game, board, name: lbName(name), score: lbScore(score), playedMs: Math.max(0, Math.round(playedMs)), token };
+  // Game version sent with each submit (stored privately by the site): 1-16 chars of A-Z a-z 0-9 . _ -
+  // Anything else gives null, and the field is left out so the save still works. Solitaire never sends `level`.
+  const lbVersion = v => (typeof v === 'string' && /^[A-Za-z0-9._-]{1,16}$/.test(v) ? v : null);
+  function lbSubmitBody(board, name, score, playedMs, token, version) {
+    const body = { op: 'submit', game: LEADERBOARD.game, board, name: lbName(name), score: lbScore(score), playedMs: Math.max(0, Math.round(playedMs)) };
+    const v = lbVersion(version);
+    if (v) body.version = v;
+    body.token = token;
+    return body;
   }
 
   function totalCards(s) {
@@ -947,7 +954,7 @@ const Engine = (function () {
     getPile, isValidRun, canPick, canMove, move, draw, foundationTarget, autoTarget,
     isWon, allTableauUp, clone, foundationStep, autoStep, canAutoComplete, totalCards,
     findHint, emptyStats, normStats, statsStart, statsLose, statsWin, winRate,
-    LEADERBOARD, lbBoard, lbScore, lbEligible, lbName, lbSubmitBody, lbBackoff, lbPlayedMs, lbWaitMs
+    LEADERBOARD, lbBoard, lbScore, lbEligible, lbName, lbVersion, lbSubmitBody, lbBackoff, lbPlayedMs, lbWaitMs
   };
 })();
 
@@ -955,13 +962,16 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Engine;
 
 /* ============================ Browser UI layer ============================ */
 if (typeof document !== 'undefined') (function () {
-  const VERSION = '1.1.7';
+  const VERSION = '1.1.8';
   const ARCADE_URL = '/arcade/';
   // The only network traffic in the game: the tylilo.com Arcade leaderboard (same origin, relative URL).
   const LB_API = '/api/scores.php';
   // In-game "What's New" notes, newest first. Plain-language version of CHANGELOG.md - update every release.
   // Shown only when the player opens it (footer button); it never opens by itself.
   const RELEASE_NOTES = [
+    { v: '1.1.8', date: '2026-11-21', items: [
+      'Leaderboard: saved scores now also record which version of Solitaire you were playing, so the Arcade can tell scores from different versions apart. It is stored privately and never shown on the leaderboard. Nothing else about saving changes.'
+    ] },
     { v: '1.1.7', date: '2026-11-21', items: [
       'New UDLR launch splash each time the game opens: the letters fly in one at a time the way their arrows point - R from the left, L from the right, D from the top, then U from the bottom - and then the cards are dealt.',
       'Press any key, click or tap to skip it. Nothing starts underneath: no deal, timer, sounds or leaderboard until it is done.',
@@ -1109,7 +1119,7 @@ if (typeof document !== 'undefined') (function () {
       if (!r || !r.token) return { ok: false, retry: true, msg: "Couldn't reach the leaderboard - retrying..." };
       const playedMs = Engine.lbPlayedMs(actualMs, Date.now() - r.tokenAt);
       let res;
-      try { res = await post(Engine.lbSubmitBody(r.board, name, score, playedMs, r.token)); }
+      try { res = await post(Engine.lbSubmitBody(r.board, name, score, playedMs, r.token, VERSION)); }
       catch (e) { return { ok: false, retry: true, msg: "Couldn't reach the leaderboard. Check your connection and try again." }; }
       if (res.ok) { r.stop(); return { ok: true, msg: 'Score saved to the Arcade leaderboard!' }; }
       if (res.status === 429) return { ok: false, retry: true, msg: 'Try again later.' };
