@@ -9,6 +9,7 @@ if (!defined('TYLILO_BOOTSTRAPPED')) {
 
 require_once __DIR__ . '/turnstile.php';
 require_once __DIR__ . '/admin-access.php';
+require_once __DIR__ . '/beta.php';
 
 function tylilo_admin_boot(): void
 {

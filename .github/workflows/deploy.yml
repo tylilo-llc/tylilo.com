@@ -175,6 +175,51 @@ jobs:
           rm -rf "$work"
           echo "The setup code was not printed."
 
+      - name: Upload beta games to private storage
+        if: steps.ftp.outputs.ready == 'true'
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_SERVER_DIR: ${{ steps.ftp.outputs.dir }}
+        run: |
+          set -euo pipefail
+          if [ ! -d beta ]; then
+            echo "No beta directory. Nothing private to upload."
+            exit 0
+          fi
+          web="${FTP_SERVER_DIR%/}"
+          parent=$(dirname "$web")
+          if [ "$parent" = "." ] || [ "$parent" = "/" ]; then
+            sibling="tylilo-data/beta"
+          else
+            sibling="${parent}/tylilo-data/beta"
+          fi
+          dests=(
+            "$sibling"
+            "${FTP_SERVER_DIR}tylilo-data/beta"
+            "${FTP_SERVER_DIR}data/beta"
+          )
+          stored=0
+          while IFS= read -r -d '' file; do
+            rel="${file#beta/}"
+            for dest in "${dests[@]}"; do
+              if curl --silent --show-error --ftp-ssl --ssl-reqd --ftp-pasv --ftp-create-dirs \
+                --user "${FTP_USERNAME}:${FTP_PASSWORD}" \
+                -T "$file" \
+                "ftp://${FTP_SERVER}/${dest}/${rel}"; then
+                stored=$((stored + 1))
+              else
+                echo "Could not store beta/${rel} at ${dest}."
+              fi
+            done
+          done < <(find beta -type f -print0)
+          if [ "$stored" -eq 0 ]; then
+            echo "Beta games were not stored in private storage."
+            exit 1
+          fi
+          echo "Stored beta games in private storage. They are not part of the public upload."
+
       - name: Deploy to HostM
         if: steps.ftp.outputs.ready == 'true'
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -214,3 +259,5 @@ jobs:
             **/admin-ip.salt
             **/admin-setup.php
             **/tests/**
+            beta/**
+            beta/**/**

@@ -87,7 +87,13 @@ foreach ($data['versions'] as $row) {
     }
 }
 usort($rows, static fn (array $a, array $b): int => strcmp((string) $b['released_on'], (string) $a['released_on']));
-$html = '<nav class="admin-nav" aria-label="Games">';
+$html = '<div class="card"><h2>Beta games</h2><p>A beta build is not in the Arcade. Publishing it is a separate site change, not a button here.</p></div>';
+foreach (tylilo_beta_games() as $beta) {
+    $html .= '<article class="card"><p class="kicker">Beta</p><h2>' . tylilo_e($beta['title']) . '</h2>';
+    $html .= '<p>Version ' . tylilo_e($beta['version'] !== '' ? $beta['version'] : 'unknown') . '</p>';
+    $html .= '<p><a class="btn" href="/admin/beta/g/' . rawurlencode($beta['slug']) . '/">Play</a></p></article>';
+}
+$html .= '<nav class="admin-nav" aria-label="Games">';
 foreach ($slugs as $slug) {
     $html .= '<a href="/admin/games.php?game=' . rawurlencode($slug) . '"' . ($slug === $current ? ' aria-current="page"' : '') . '>' . tylilo_e($slug) . '</a>';
 }

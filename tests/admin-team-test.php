@@ -26,7 +26,7 @@ function check(bool $ok, string $label): void
 }
 
 $defaults = tylilo_admin_default_permissions();
-check($defaults['notes'] === 1 && $defaults['feedback'] === 1 && $defaults['ideas'] === 1 && $defaults['leaderboards'] === 0, 'new invites default to notes, feedback, and ideas');
+check($defaults['notes'] === 1 && $defaults['feedback'] === 1 && $defaults['ideas'] === 1 && $defaults['leaderboards'] === 0 && $defaults['beta'] === 0, 'new invites default to notes, feedback, and ideas');
 
 tylilo_admin_with(static function (array $data): array {
     $data['users'][] = [
@@ -72,7 +72,14 @@ tylilo_admin_with(static function (array $data): array {
 $owner = tylilo_admin_user_by_name('ryan');
 $member = tylilo_admin_user_by_name('sam');
 check(is_array($owner) && tylilo_admin_is_owner($owner), 'an admin account is the owner');
-check(is_array($member) && tylilo_admin_can($member, 'feedback') && !tylilo_admin_can($member, 'leaderboards'), 'a member has the default permissions');
+check(is_array($member) && tylilo_admin_can($member, 'feedback') && !tylilo_admin_can($member, 'leaderboards') && !tylilo_admin_can($member, 'beta'), 'a member has the default permissions');
+$sample = tylilo_beta_game('sample');
+check(is_array($sample) && $sample['title'] === 'Sample Beta' && $sample['version'] === '0.1.0', 'the sample beta game keeps its title and version');
+check(tylilo_beta_file('sample', 'index.html') !== null && tylilo_beta_file('sample', '../.htaccess') === null && tylilo_beta_file('sample', 'index.php') === null, 'a beta file stays inside that game folder');
+check(is_array($owner) && tylilo_admin_can($owner, 'beta'), 'the owner can play beta games');
+$arcadePage = (string) file_get_contents($root . '/arcade/index.php');
+$sitemap = (string) file_get_contents($root . '/sitemap.xml');
+check(!str_contains($arcadePage, '/beta/') && !str_contains($sitemap, '/beta/'), 'beta games are not on the Arcade or the sitemap');
 check(is_array($member) && !tylilo_admin_is_owner($member), 'a member is not the owner');
 
 $data = tylilo_admin_with(static fn (array $stored): array => $stored);

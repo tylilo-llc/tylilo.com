@@ -36,6 +36,9 @@ function tylilo_admin_layout(string $title, string $main): void
         if (tylilo_admin_can($user, 'ideas')) {
             $links['/admin/ideas.php'] = 'Ideas';
         }
+        if (tylilo_admin_can($user, 'beta')) {
+            $links['/admin/beta/'] = 'Beta';
+        }
         if (tylilo_admin_is_owner($user)) {
             $links['/admin/games.php'] = 'Games';
             $links['/admin/users.php'] = 'Users';

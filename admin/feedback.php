@@ -20,14 +20,24 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             $type = tylilo_admin_field('type');
             $text = is_string($_POST['text'] ?? null) ? trim($_POST['text']) : '';
             $rating = tylilo_admin_field('rating');
-            if (!in_array($type, ['bug', 'idea', 'other'], true) || $text === '' || !in_array($game, tylilo_admin_game_slugs(), true)) {
+            $betaSlug = str_starts_with($game, 'beta:') ? substr($game, 5) : '';
+            $betaGame = $betaSlug !== '' ? tylilo_beta_game($betaSlug) : null;
+            $published = in_array($game, tylilo_admin_game_slugs(), true);
+            if (!in_array($type, ['bug', 'idea', 'other'], true) || $text === '' || (!$published && $betaGame === null)) {
+                $error = 'Choose a game and a type, and write the feedback.';
+            } elseif ($betaGame !== null && !tylilo_admin_can($me, 'beta')) {
                 $error = 'Choose a game and a type, and write the feedback.';
             } else {
                 $score = $rating === '' ? null : (int) $rating;
                 if ($score !== null && ($score < 1 || $score > 5)) {
                     $score = null;
                 }
-                $version = tylilo_admin_current_game_version($game);
+                if ($betaGame !== null) {
+                    $game = 'beta/' . $betaGame['slug'];
+                    $version = $betaGame['version'];
+                } else {
+                    $version = tylilo_admin_current_game_version($game);
+                }
                 tylilo_admin_with(static function (array $data) use ($me, $game, $type, $text, $score, $version): array {
                     $data['feedback'][] = [
                         'id' => tylilo_admin_next_id($data['feedback']),
@@ -89,6 +99,11 @@ if (!$owner) {
     $html .= '<label for="game">Game</label><select id="game" name="game">';
     foreach (tylilo_admin_game_slugs() as $slug) {
         $html .= '<option value="' . tylilo_e($slug) . '">' . tylilo_e($slug) . '</option>';
+    }
+    if (tylilo_admin_can($me, 'beta')) {
+        foreach (tylilo_beta_games() as $beta) {
+            $html .= '<option value="beta:' . tylilo_e($beta['slug']) . '">' . tylilo_e($beta['title']) . ' (beta)</option>';
+        }
     }
     $html .= '</select><label for="type">Type</label><select id="type" name="type"><option value="bug">Bug</option><option value="idea">Idea</option><option value="other">Other</option></select>';
     $html .= '<label for="text">Feedback</label><textarea id="text" name="text" required></textarea>';

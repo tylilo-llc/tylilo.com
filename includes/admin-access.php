@@ -17,6 +17,7 @@ function tylilo_admin_default_permissions(bool $leaderboards = false): array
         'feedback' => 1,
         'ideas' => 1,
         'leaderboards' => $leaderboards ? 1 : 0,
+        'beta' => 0,
     ];
 }
 
@@ -27,6 +28,7 @@ function tylilo_admin_permissions_from_post(): array
         'feedback' => isset($_POST['perm_feedback']) ? 1 : 0,
         'ideas' => isset($_POST['perm_ideas']) ? 1 : 0,
         'leaderboards' => isset($_POST['perm_leaderboards']) ? 1 : 0,
+        'beta' => isset($_POST['perm_beta']) ? 1 : 0,
     ];
 }
 
