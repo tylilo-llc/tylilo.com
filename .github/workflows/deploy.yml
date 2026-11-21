@@ -63,6 +63,44 @@ jobs:
           echo "dir=${dir}" >> "$GITHUB_OUTPUT"
           echo "FTP secrets found. Deploying into ${dir}"
 
+      - name: Upload the Turnstile secret
+        if: steps.ftp.outputs.ready == 'true'
+        env:
+          TURNSTILE_SECRET: ${{ secrets.TURNSTILE_SECRET }}
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_SERVER_DIR: ${{ steps.ftp.outputs.dir }}
+        run: |
+          set -euo pipefail
+          if [ -z "${TURNSTILE_SECRET}" ]; then
+            echo "TURNSTILE_SECRET is not set."
+            echo "The contact form will reject messages until that repository secret exists."
+            echo "The secret value was not printed."
+            exit 0
+          fi
+          umask 077
+          work=$(mktemp -d)
+          php -r 'file_put_contents($argv[1], "<?php\n\ndeclare(strict_types=1);\n\nreturn ".var_export(getenv("TURNSTILE_SECRET"), true).";\n");' "$work/turnstile.php"
+          upload() {
+            local dest="$1"
+            curl --silent --show-error --ftp-ssl --ssl-reqd --ftp-pasv --ftp-create-dirs \
+              --user "${FTP_USERNAME}:${FTP_PASSWORD}" \
+              -T "$work/turnstile.php" \
+              "ftp://${FTP_SERVER}/${dest}"
+          }
+          outside="tylilo-data/turnstile.php"
+          inside="${FTP_SERVER_DIR}data/turnstile.php"
+          if upload "$outside"; then
+            echo "Stored the Turnstile secret outside the web root."
+          else
+            echo "Could not store the secret beside the site. Trying the blocked data directory."
+            upload "$inside"
+            echo "Stored the Turnstile secret in the blocked data directory."
+          fi
+          rm -rf "$work"
+          echo "The secret value was not printed."
+
       - name: Deploy to HostM
         if: steps.ftp.outputs.ready == 'true'
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5

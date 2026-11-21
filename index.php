@@ -8,9 +8,8 @@ require __DIR__ . '/includes/bootstrap.php';
  * HOMEPAGE COPY
  * -------------
  * The tagline is set. The About heading and paragraph below are still
- * placeholders. The contact email is not here — change
- * TYLILO_CONTACT_EMAIL in config.php. That one constant updates the
- * email button and the form together.
+ * placeholders. Messages are sent to TYLILO_CONTACT_EMAIL in config.php.
+ * That address is not shown on the page.
  */
 $pageTitle = 'Tylilo';
 $tagline = 'Under Construction';
@@ -33,7 +32,8 @@ $oldName = is_string($old['name'] ?? null) ? $old['name'] : '';
 $oldEmail = is_string($old['email'] ?? null) ? $old['email'] : '';
 $oldMessage = is_string($old['message'] ?? null) ? $old['message'] : '';
 $csrf = tylilo_csrf_token();
-$contactEmail = TYLILO_CONTACT_EMAIL;
+require_once __DIR__ . '/includes/turnstile.php';
+$turnstileSitekey = tylilo_turnstile_sitekey();
 
 require __DIR__ . '/includes/head.php';
 ?>
@@ -82,8 +82,7 @@ require __DIR__ . '/includes/head.php';
         <div class="card">
           <p class="kicker">Contact</p>
           <h2 id="contact-heading">Drop us a line.</h2>
-          <!-- Address comes from TYLILO_CONTACT_EMAIL in config.php -->
-          <a class="email-btn" href="mailto:<?= tylilo_e($contactEmail) ?>"><?= tylilo_e($contactEmail) ?></a>
+          <p class="muted">Send a message with the form. We read it and reply by email.</p>
 
 <?php if ($success): ?>
           <div class="form-status success" id="form-status" tabindex="-1" role="status" aria-live="polite" aria-atomic="true">
@@ -95,7 +94,7 @@ require __DIR__ . '/includes/head.php';
           </div>
 <?php elseif ($errors !== []): ?>
           <div class="form-status error" id="form-status" tabindex="-1" role="alert" aria-live="assertive" aria-atomic="true">
-            <p>Please fix the highlighted fields and try again. You can also use the email button above.</p>
+            <p>Please fix the highlighted fields and try again.</p>
           </div>
 <?php endif; ?>
 
@@ -115,7 +114,7 @@ require __DIR__ . '/includes/head.php';
               </div>
               <div>
                 <label for="email">Email <span class="visually-hidden">(required)</span></label>
-                <input id="email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" required maxlength="254" value="<?= tylilo_e($oldEmail) ?>"<?php if (isset($errors['email'])): ?> aria-invalid="true" aria-describedby="email-error"<?php endif; ?>>
+                <input id="email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="Your email" required maxlength="254" value="<?= tylilo_e($oldEmail) ?>"<?php if (isset($errors['email'])): ?> aria-invalid="true" aria-describedby="email-error"<?php endif; ?>>
 <?php if (isset($errors['email'])): ?>
                 <p class="field-error" id="email-error"><?= tylilo_e((string) $errors['email']) ?></p>
 <?php endif; ?>
@@ -127,6 +126,9 @@ require __DIR__ . '/includes/head.php';
 <?php if (isset($errors['message'])): ?>
               <p class="field-error" id="message-error"><?= tylilo_e((string) $errors['message']) ?></p>
 <?php endif; ?>
+            </div>
+            <div class="turnstile-slot">
+              <div class="cf-turnstile" data-sitekey="<?= tylilo_e($turnstileSitekey) ?>" data-action="contact" data-theme="auto"></div>
             </div>
             <button class="btn send" type="submit">Send message</button>
           </form>
@@ -141,7 +143,7 @@ require __DIR__ . '/includes/head.php';
         'name' => TYLILO_LEGAL_NAME,
         'url' => TYLILO_URL . '/',
         'logo' => TYLILO_URL . '/assets/img/logo-round.webp',
-        'email' => $contactEmail,
     ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_THROW_ON_ERROR) ?>
   </script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <?php require __DIR__ . '/includes/footer.php'; ?>

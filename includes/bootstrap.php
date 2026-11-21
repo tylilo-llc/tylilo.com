@@ -30,13 +30,23 @@ header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
 // OTRadio (/otradio/) loads a public catalog, JPEG artwork, AAC audio, and
 // WebVTT captions from one R2 bucket. Other pages keep the original policy.
 $imgSrc = "'self'";
-$otradioSrc = '';
 $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 $requestPath = is_string($requestPath) ? $requestPath : '/';
+$scriptSrc = "'self' 'nonce-{$cspNonce}'";
+$frameSrc = "'self'";
+$connectSrc = "'self'";
+$mediaSrc = '';
+$home = $requestPath === '/' || $requestPath === '/index.php';
+if ($home) {
+    $scriptSrc .= ' https://challenges.cloudflare.com';
+    $frameSrc .= ' https://challenges.cloudflare.com';
+    $connectSrc .= ' https://challenges.cloudflare.com';
+}
 if ($requestPath === '/otradio' || str_starts_with($requestPath, '/otradio/')) {
     $otradioOrigin = 'https://pub-a3eee908554d4a948d807c160caa454e.r2.dev';
     $imgSrc .= ' ' . $otradioOrigin;
-    $otradioSrc = "; connect-src 'self' {$otradioOrigin}; media-src 'self' {$otradioOrigin}";
+    $connectSrc .= ' ' . $otradioOrigin;
+    $mediaSrc = "; media-src 'self' {$otradioOrigin}";
 }
 
 header(
@@ -44,12 +54,14 @@ header(
     . "base-uri 'self'; "
     . "form-action 'self'; "
     . "frame-ancestors 'self'; "
+    . "frame-src {$frameSrc}; "
     . "object-src 'none'; "
     . "img-src {$imgSrc}; "
     . "font-src 'self'; "
     . "style-src 'self' 'nonce-{$cspNonce}'; "
-    . "script-src 'self' 'nonce-{$cspNonce}'"
-    . $otradioSrc
+    . "script-src {$scriptSrc}; "
+    . "connect-src {$connectSrc}"
+    . $mediaSrc
 );
 
 function tylilo_e(string $value): string

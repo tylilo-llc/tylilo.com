@@ -8,7 +8,6 @@ $pageTitle = 'Accessibility — Tylilo';
 $pageDescription = 'Tylilo, LLC aims to meet WCAG 2.2 Level AA on tylilo.com. Report a barrier through the contact form or by email.';
 $pageCanonical = TYLILO_URL . '/accessibility';
 $pageRobots = 'index, follow';
-$contactEmail = TYLILO_CONTACT_EMAIL;
 
 require __DIR__ . '/includes/head.php';
 ?>
@@ -35,7 +34,7 @@ require __DIR__ . '/includes/head.php';
         <h1>Accessibility</h1>
         <p>Tylilo, LLC wants tylilo.com to work for everyone. We aim to meet the <a href="https://www.w3.org/TR/WCAG22/">Web Content Accessibility Guidelines (WCAG) 2.2</a>, Level AA.</p>
         <h2>Report a problem</h2>
-        <p>If a page, form, or control gets in your way, please tell us. Use the <a href="/#contact">contact form</a> on the homepage, or email <a href="mailto:<?= tylilo_e($contactEmail) ?>"><?= tylilo_e($contactEmail) ?></a>.</p>
+        <p>If a page, form, or control gets in your way, please tell us. Use the <a href="/#contact">contact form</a> on the homepage.</p>
         <h2>What we pay attention to</h2>
         <ul>
           <li>Pages can be reached and used with a keyboard.</li>
@@ -61,7 +60,6 @@ require __DIR__ . '/includes/head.php';
         'publisher' => [
             '@type' => 'Organization',
             'name' => TYLILO_LEGAL_NAME,
-            'email' => $contactEmail,
         ],
     ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_THROW_ON_ERROR) ?>
   </script>
