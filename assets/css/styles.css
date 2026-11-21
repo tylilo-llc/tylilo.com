@@ -554,6 +554,25 @@ h2 {
 
 .score-board:first-child { margin-top: 0; }
 
+.score-group + .score-group {
+  margin-top: 0.8rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--muted);
+}
+
+.score-group-title {
+  margin: 0 0 0.1rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.score-group .score-board {
+  margin-top: 0.45rem;
+  font-size: 0.8rem;
+}
+
+.score-group .score-group-title + .score-board { margin-top: 0.15rem; }
+
 .score-status {
   margin: 0;
   color: var(--muted);

@@ -33,24 +33,52 @@
       return;
     }
     var any = false;
+    var groupName = null;
+    var groupBox = null;
+    var groupTitleId = "";
     boards.forEach(function (board) {
+      var target = results;
+      var labelledBy = "";
+      var text = String(board.label || board.board || "Scores");
+      if (board.group) {
+        if (board.group !== groupName) {
+          groupName = board.group;
+          groupBox = document.createElement("div");
+          groupBox.className = "score-group";
+          groupBox.setAttribute("role", "group");
+          var groupTitle = document.createElement("p");
+          groupTitle.className = "score-group-title";
+          groupTitleId = "score-group-" + game + "-" + String(groupName).toLowerCase().replace(/[^a-z0-9]+/g, "-");
+          groupTitle.id = groupTitleId;
+          groupTitle.textContent = String(groupName);
+          groupBox.setAttribute("aria-labelledby", groupTitleId);
+          groupBox.appendChild(groupTitle);
+          results.appendChild(groupBox);
+        }
+        target = groupBox;
+        labelledBy = groupTitleId + " ";
+        text = String(board.short || text);
+      } else {
+        groupName = null;
+        groupBox = null;
+      }
       var title = document.createElement("p");
       title.className = "score-board";
       title.id = "score-label-" + game + "-" + String(board.board || "board");
-      title.textContent = String(board.label || board.board || "Scores");
-      results.appendChild(title);
+      title.textContent = text;
+      target.appendChild(title);
       var scores = board.scores || [];
       if (!scores.length) {
         var none = document.createElement("p");
         none.className = "score-status";
         none.textContent = "No scores yet.";
-        results.appendChild(none);
+        target.appendChild(none);
         return;
       }
       any = true;
       var list = document.createElement("ol");
       list.className = "score-list";
-      list.setAttribute("aria-labelledby", title.id);
+      list.setAttribute("aria-labelledby", labelledBy + title.id);
       scores.forEach(function (row, i) {
         var item = document.createElement("li");
         item.className = "score-row";
@@ -86,7 +114,7 @@
         item.append(rank, name, meta);
         list.appendChild(item);
       });
-      results.appendChild(list);
+      target.appendChild(list);
     });
     if (status) status.textContent = any ? "Showing top scores." : "No scores yet.";
   }
