@@ -7,8 +7,9 @@ require __DIR__ . '/includes/bootstrap.php';
 /**
  * HOMEPAGE COPY
  * -------------
- * The tagline is set. The About heading and paragraph below are still
- * placeholders. Messages are sent to TYLILO_CONTACT_EMAIL in config.php.
+ * The tagline is set. The About section is hidden until its copy is
+ * written (Ryan asked to take it down on 2026-11-21; revisit Dec 10).
+ * Set $showAbout to true to bring it back. Messages are sent to TYLILO_CONTACT_EMAIL in config.php.
  * That address is not shown on the page.
  */
 $pageTitle = 'Tylilo';
@@ -16,7 +17,9 @@ $tagline = 'Under Construction';
 $aboutHeading = 'A friendly little studio.';
 $aboutBody = 'A short description of Tylilo will live here — who you are, what you make, and why it matters. This is placeholder copy for a company or studio homepage.';
 
-$pageDescription = $aboutBody;
+$showAbout = false;
+
+$pageDescription = 'Tylilo, LLC makes UDLR games. Play free browser games in the Tylilo Arcade, or send us a message.';
 $pageCanonical = TYLILO_URL . '/';
 
 tylilo_session_start();
@@ -57,11 +60,13 @@ require __DIR__ . '/includes/head.php';
 
   <main id="main" tabindex="-1">
     <div class="wrap">
+<?php if ($showAbout): ?>
       <section class="card about-card" id="about" aria-labelledby="about-heading">
         <p class="kicker">About</p>
         <h2 id="about-heading"><?= tylilo_e($aboutHeading) ?></h2>
         <p class="muted"><?= tylilo_e($aboutBody) ?></p>
       </section>
+<?php endif; ?>
 
       <section class="arcade-home" aria-labelledby="arcade-home-heading">
         <h2 id="arcade-home-heading" class="visually-hidden">Arcade</h2>
