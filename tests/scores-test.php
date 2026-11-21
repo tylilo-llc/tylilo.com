@@ -122,6 +122,22 @@ $times = tylilo_score_handle('GET', ['game' => 'jungle-rescue', 'board' => 'time
 check(($times['boards'][0]['scores'][0]['name'] ?? '') === 'Fast', 'lower times rank first');
 check(($times['boards'][0]['order'] ?? '') === 'asc', 'time boards are ascending');
 
+$logan = tylilo_score_handle('GET', ['game' => 'jungle-rescue', 'board' => 'default', 'limit' => '10'], '', [], $now);
+$loganScores = array_map(static fn (array $row): int => (int) ($row['score'] ?? 0), $logan['boards'][0]['scores'] ?? []);
+check(count(array_filter($loganScores, static fn (int $score): bool => $score === 187100)) === 1, 'seeds Logan 187100 on jungle-rescue once');
+$loganAgain = tylilo_score_handle('GET', ['game' => 'jungle-rescue', 'board' => 'default', 'limit' => '10'], '', [], $now);
+$loganAgainScores = array_map(static fn (array $row): int => (int) ($row['score'] ?? 0), $loganAgain['boards'][0]['scores'] ?? []);
+check(count(array_filter($loganAgainScores, static fn (int $score): bool => $score === 187100)) === 1, 'reading the board does not seed Logan twice');
+
+$bigServer = $server;
+$bigServer['REMOTE_ADDR'] = '203.0.113.40';
+$bigStart = tylilo_score_handle('POST', [], json_encode(['op' => 'start', 'game' => 'jungle-rescue', 'board' => 'default']), $bigServer, $now);
+$bigSave = tylilo_score_handle('POST', [], json_encode([
+    'op' => 'submit', 'game' => 'jungle-rescue', 'board' => 'default',
+    'name' => 'LOGAN', 'score' => 187100, 'playedMs' => 120000, 'token' => $bigStart['token'],
+]), $bigServer, $now + 120);
+check(($bigSave['ok'] ?? false) === true, 'a two-minute run of 187100 is accepted');
+
 $missing = tylilo_score_handle('GET', ['game' => 'not-a-game'], '', [], $now);
 check(($missing['status'] ?? 0) === 404, 'unknown games are rejected');
 
