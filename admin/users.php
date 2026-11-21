@@ -11,12 +11,15 @@ if (!tylilo_admin_is_owner($me)) {
 
 $error = '';
 $freshLink = '';
+$openId = 0;
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     if (!tylilo_admin_csrf_ok(tylilo_admin_field('csrf'))) {
         $error = 'That request was not accepted. Please try again.';
+        $openId = (int) tylilo_admin_field('id');
     } else {
         $action = tylilo_admin_field('action');
         $id = (int) tylilo_admin_field('id');
+        $openId = $id;
         if ($action === 'invite') {
             $token = bin2hex(random_bytes(16));
             $permissions = tylilo_admin_permissions_from_post();
@@ -103,7 +106,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             }
         }
         if ($freshLink === '' && $error === '') {
-            header('Location: /admin/users.php', true, 303);
+            $to = '/admin/users.php';
+            if ($action !== 'invite' && $action !== 'remove' && $id > 0) {
+                $to .= '#user-' . $id;
+            }
+            header('Location: ' . $to, true, 303);
             exit;
         }
     }
@@ -130,24 +137,31 @@ $html .= '<button class="btn send" type="submit">Create invite link</button> ';
 $html .= '<button type="button" id="close-invite">Cancel</button></form></dialog></div>';
 
 foreach ($data['users'] as $user) {
-    $html .= '<article class="card"><h2>' . tylilo_e((string) $user['username']) . '</h2>';
-    $html .= '<p>' . (tylilo_admin_is_owner($user) ? 'Owner' : 'Team member') . ((int) ($user['disabled'] ?? 0) === 1 ? ' · turned off' : '') . '</p>';
-    $html .= '<form method="post" action="/admin/users.php"><input type="hidden" name="csrf" value="' . tylilo_e(tylilo_admin_csrf()) . '"><input type="hidden" name="action" value="signout"><input type="hidden" name="id" value="' . (int) $user['id'] . '"><button type="submit">Sign out everywhere</button></form>';
+    $uid = (int) $user['id'];
+    $role = tylilo_admin_is_owner($user) ? 'Owner' : 'Team member';
+    $off = (int) ($user['disabled'] ?? 0) === 1;
+    $status = $role . ($off ? ' · turned off' : '');
+    $html .= '<article class="card user-card" id="user-' . $uid . '">';
+    $html .= '<details' . ($openId === $uid ? ' open' : '') . '>';
+    $html .= '<summary><h2>' . tylilo_e((string) $user['username']) . '</h2>';
+    $html .= '<span class="user-status">' . tylilo_e($status) . '</span></summary>';
+    $html .= '<div class="user-card-body">';
+    $html .= '<form method="post" action="/admin/users.php#user-' . $uid . '"><input type="hidden" name="csrf" value="' . tylilo_e(tylilo_admin_csrf()) . '"><input type="hidden" name="action" value="signout"><input type="hidden" name="id" value="' . $uid . '"><button type="submit">Sign out everywhere</button></form>';
     if (!tylilo_admin_is_owner($user)) {
-        $html .= '<p><a href="/admin/notes.php?user=' . (int) $user['id'] . '">View notes</a> · <a href="/admin/todos.php?user=' . (int) $user['id'] . '">View to-dos</a></p>';
+        $html .= '<p><a href="/admin/notes.php?user=' . $uid . '">View notes</a> · <a href="/admin/todos.php?user=' . $uid . '">View to-dos</a></p>';
         $perms = is_array($user['permissions'] ?? null) ? $user['permissions'] : [];
-        $html .= '<form method="post" action="/admin/users.php"><input type="hidden" name="csrf" value="' . tylilo_e(tylilo_admin_csrf()) . '"><input type="hidden" name="action" value="permissions"><input type="hidden" name="id" value="' . (int) $user['id'] . '">';
+        $html .= '<form method="post" action="/admin/users.php#user-' . $uid . '"><input type="hidden" name="csrf" value="' . tylilo_e(tylilo_admin_csrf()) . '"><input type="hidden" name="action" value="permissions"><input type="hidden" name="id" value="' . $uid . '">';
         foreach (['perm_notes' => 'Notes', 'perm_feedback' => 'Feedback', 'perm_ideas' => 'Ideas', 'perm_leaderboards' => 'Leaderboards', 'perm_beta' => 'Beta games'] as $name => $label) {
             $key = str_replace('perm_', '', $name);
             $checked = !empty($perms[$key]) ? ' checked' : '';
             $html .= '<label><input type="checkbox" name="' . $name . '"' . $checked . '> ' . tylilo_e($label) . '</label>';
         }
         $html .= '<button type="submit">Save permissions</button></form>';
-        $toggle = (int) ($user['disabled'] ?? 0) === 1 ? 'enable' : 'disable';
-        $html .= '<form method="post" action="/admin/users.php"><input type="hidden" name="csrf" value="' . tylilo_e(tylilo_admin_csrf()) . '"><input type="hidden" name="action" value="' . $toggle . '"><input type="hidden" name="id" value="' . (int) $user['id'] . '"><button type="submit">' . ($toggle === 'enable' ? 'Turn on' : 'Turn off') . '</button></form>';
-        $html .= '<form method="post" action="/admin/users.php"><input type="hidden" name="csrf" value="' . tylilo_e(tylilo_admin_csrf()) . '"><input type="hidden" name="action" value="remove"><input type="hidden" name="id" value="' . (int) $user['id'] . '"><button type="submit">Remove</button></form>';
+        $toggle = $off ? 'enable' : 'disable';
+        $html .= '<form method="post" action="/admin/users.php#user-' . $uid . '"><input type="hidden" name="csrf" value="' . tylilo_e(tylilo_admin_csrf()) . '"><input type="hidden" name="action" value="' . $toggle . '"><input type="hidden" name="id" value="' . $uid . '"><button type="submit">' . ($toggle === 'enable' ? 'Turn on' : 'Turn off') . '</button></form>';
+        $html .= '<form method="post" action="/admin/users.php#user-' . $uid . '"><input type="hidden" name="csrf" value="' . tylilo_e(tylilo_admin_csrf()) . '"><input type="hidden" name="action" value="remove"><input type="hidden" name="id" value="' . $uid . '"><button type="submit">Remove</button></form>';
     }
-    $html .= '</article>';
+    $html .= '</div></details></article>';
 }
 $html .= '<div class="card"><h2>Open invites</h2>';
 $open = 0;
@@ -163,5 +177,5 @@ if ($open === 0) {
     $html .= '<p>No open invites.</p>';
 }
 $html .= '</div>';
-$html .= '<script nonce="' . tylilo_e($cspNonce) . '">document.getElementById("open-invite").addEventListener("click",function(){document.getElementById("invite-dialog").showModal();});document.getElementById("close-invite").addEventListener("click",function(){document.getElementById("invite-dialog").close();});(function(){var b=document.getElementById("copy-invite"),i=document.getElementById("invite-link"),st=document.getElementById("copy-invite-status");if(!b||!i){return;}function done(ok){st.textContent=ok?"Copied to the clipboard.":"Could not copy. Select the link and copy it.";if(ok){b.textContent="Copied";setTimeout(function(){b.textContent="Copy link";},2500);}}i.addEventListener("focus",function(){i.select();});b.addEventListener("click",function(){if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(i.value).then(function(){done(true);},function(){i.select();done(document.execCommand&&document.execCommand("copy"));});}else{i.select();done(document.execCommand&&document.execCommand("copy"));}});})();</script>';
+$html .= '<script nonce="' . tylilo_e($cspNonce) . '">document.getElementById("open-invite").addEventListener("click",function(){document.getElementById("invite-dialog").showModal();});document.getElementById("close-invite").addEventListener("click",function(){document.getElementById("invite-dialog").close();});(function(){var b=document.getElementById("copy-invite"),i=document.getElementById("invite-link"),st=document.getElementById("copy-invite-status");if(!b||!i){return;}function done(ok){st.textContent=ok?"Copied to the clipboard.":"Could not copy. Select the link and copy it.";if(ok){b.textContent="Copied";setTimeout(function(){b.textContent="Copy link";},2500);}}i.addEventListener("focus",function(){i.select();});b.addEventListener("click",function(){if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(i.value).then(function(){done(true);},function(){i.select();done(document.execCommand&&document.execCommand("copy"));});}else{i.select();done(document.execCommand&&document.execCommand("copy"));}});})();(function(){var id=location.hash;if(!id||id.indexOf("#user-")!==0){return;}var card=document.getElementById(id.slice(1));var panel=card&&card.querySelector("details");if(!panel){return;}panel.open=true;var summary=panel.querySelector("summary");if(summary){summary.focus();}})();</script>';
 tylilo_admin_layout('Users', $html);
