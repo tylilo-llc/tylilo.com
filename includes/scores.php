@@ -38,6 +38,7 @@ function tylilo_score_games(): array
         ],
         'red-rain' => [
             'title' => 'Red Rain',
+            'levels' => true,
             'boards' => [
                 'easy' => $points('Easy', 5000000, 30000),
                 'normal' => $points('Normal', 5000000, 30000),

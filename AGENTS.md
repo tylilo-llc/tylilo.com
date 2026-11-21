@@ -49,7 +49,7 @@ Slugs and boards:
 | Jungle Rescue | `jungle-rescue` | `default` | higher wins | points | 0–5000000 | 20 seconds |
 | Jungle Rescue | `jungle-rescue` | `time` | lower wins | seconds | 1–7200 | 20 seconds |
 
-`default` on Jungle Rescue is the all-time score. `time` is a completion time in whole seconds. Pop Spiral and Jungle Rescue report a level (`'levels' => true` in the game config). Their boards are the ones that show it. Solitaire and Red Rain do not.
+`default` on Jungle Rescue is the all-time score. `time` is a completion time in whole seconds. Pop Spiral, Jungle Rescue, and Red Rain report a level (`'levels' => true` in the game config). Their boards are the ones that show it. Solitaire does not.
 
 Read the top scores:
 
