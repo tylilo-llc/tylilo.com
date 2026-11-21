@@ -63,7 +63,27 @@
         var value = document.createElement("span");
         value.className = "score-value";
         value.textContent = format(row.score, board.unit);
-        item.append(rank, name, value);
+        var meta = document.createElement("span");
+        meta.className = "score-meta";
+        meta.append(value);
+        if (board.levels) {
+          var level = document.createElement("span");
+          level.className = "score-level";
+          var hidden = document.createElement("span");
+          hidden.className = "visually-hidden";
+          var shown = document.createElement("span");
+          shown.setAttribute("aria-hidden", "true");
+          if (row.level == null) {
+            hidden.textContent = "No level";
+            shown.textContent = "\u2013";
+          } else {
+            hidden.textContent = "Level " + String(row.level);
+            shown.textContent = "Lv " + String(row.level);
+          }
+          level.append(hidden, shown);
+          meta.append(level);
+        }
+        item.append(rank, name, meta);
         list.appendChild(item);
       });
       results.appendChild(list);

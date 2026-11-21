@@ -590,10 +590,27 @@ h2 {
   overflow-wrap: break-word;
 }
 
-.score-value {
+.score-meta {
   grid-column: 2;
   grid-row: 2;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.4rem;
+  align-items: baseline;
+  min-width: 0;
+  font-size: 0.85rem;
+}
+
+.score-value {
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.score-level {
+  position: relative;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 @container (min-width: 16rem) {
@@ -606,9 +623,11 @@ h2 {
 
   .score-name { grid-row: 1; }
 
-  .score-value {
+  .score-meta {
     grid-column: 3;
     grid-row: 1;
+    gap: 0.65rem;
+    font-size: 1rem;
   }
 }
 

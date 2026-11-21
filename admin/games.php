@@ -133,7 +133,7 @@ foreach ($rows as $row) {
 $catalog = tylilo_score_games();
 if (isset($catalog[$current]['boards']) && is_array($catalog[$current]['boards'])) {
     $html .= '<div class="card"><h2>Leaderboard</h2>';
-    $html .= '<p>Each new score can store a game version. The public Arcade page does not show it. Older scores have no version.</p>';
+    $html .= '<p>Each new score can store a game version. The public Arcade page does not show it. Older scores have no version. Games that report a level store that too, and the Arcade shows it.</p>';
     foreach ($catalog[$current]['boards'] as $boardId => $spec) {
         $html .= '<h3>' . tylilo_e((string) $spec['label']) . '</h3>';
         $scoreRows = tylilo_score_admin_rows($current, (string) $boardId);
@@ -143,7 +143,12 @@ if (isset($catalog[$current]['boards']) && is_array($catalog[$current]['boards']
             $html .= '<ul>';
             foreach ($scoreRows as $score) {
                 $ver = $score['version'] === null ? 'no version' : $score['version'];
-                $html .= '<li>' . tylilo_e($score['name']) . ', ' . tylilo_e((string) $score['score']) . ', ' . tylilo_e(gmdate('Y-m-d', $score['at'])) . ', ' . tylilo_e($ver) . '</li>';
+                $html .= '<li>' . tylilo_e($score['name']) . ', ' . tylilo_e((string) $score['score']) . ', ' . tylilo_e(gmdate('Y-m-d', $score['at'])) . ', ' . tylilo_e($ver);
+                if (!empty($catalog[$current]['levels'])) {
+                    $level = $score['level'] ?? null;
+                    $html .= ', ' . tylilo_e($level === null ? 'no level' : 'level ' . (string) $level);
+                }
+                $html .= '</li>';
             }
             $html .= '</ul>';
         }
