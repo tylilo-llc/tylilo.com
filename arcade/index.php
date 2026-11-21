@@ -35,10 +35,16 @@ $games = [
         'href' => '/arcade/pop-spiral/',
         'art' => '/arcade/pop-spiral/art.svg',
     ],
+    [
+        'title' => 'Jungle Rescue',
+        'description' => 'A commando rescue run through the jungle.',
+        'href' => '/arcade/jungle-rescue/',
+        'art' => '/arcade/jungle-rescue/art.svg',
+    ],
 ];
 
 $pageTitle = 'Arcade — Tylilo';
-$pageDescription = 'Browser games from Tylilo, including Solitaire, Red Rain, and Pop Spiral.';
+$pageDescription = 'Browser games from Tylilo, including Solitaire, Red Rain, Pop Spiral, and Jungle Rescue.';
 $pageCanonical = TYLILO_URL . '/arcade/';
 $pageRobots = 'index, follow';
 
