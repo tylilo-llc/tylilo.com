@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#145a2a">
 <title>Klondike Solitaire</title>
 <style>
@@ -28,6 +28,7 @@
     background: rgba(0, 0, 0, .28);
     box-shadow: 0 2px 6px rgba(0, 0, 0, .25);
     z-index: 5000;
+    touch-action: manipulation; /* no double-tap zoom on the controls; pinch zoom stays available */
   }
   .controls, .stats { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
   .title { font-weight: 700; letter-spacing: .5px; margin-right: 6px; white-space: nowrap; }
@@ -43,6 +44,9 @@
   button.primary { background: #f2c94c; color: #222; border-color: #f2c94c; font-weight: 600; }
   button.primary:hover:not(:disabled) { background: #ffd966; }
   #autoBtn[hidden] { display: none; }
+  #muteBtn { padding-left: 8px; padding-right: 8px; line-height: 0; }
+  #muteBtn svg { width: 18px; height: 18px; vertical-align: middle; }
+  #muteBtn[aria-pressed="true"] { opacity: .75; }
   .stat { font-variant-numeric: tabular-nums; background: rgba(0,0,0,.22); border-radius: 6px; padding: 5px 10px; font-size: 14px; white-space: nowrap; }
   .stat b { font-weight: 600; opacity: .75; margin-right: 4px; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; }
 
@@ -64,11 +68,9 @@
   .card {
     position: absolute; width: var(--cw); height: var(--ch);
     border-radius: calc(var(--cw) * .08);
-    transition: left .17s ease-out, top .17s ease-out;
-    cursor: pointer;
+    cursor: pointer; /* movement is animated from script (FLIP transforms), never while dragging */
     font-family: Georgia, "Times New Roman", serif;
   }
-  #board.noanim .card { transition: none; }
   .card.dragging { transition: none; cursor: grabbing; }
   .card.dragging .face { box-shadow: 0 6px 14px rgba(0,0,0,.45); }
   .card .face, .card .back { position: absolute; inset: 0; border-radius: inherit; }
@@ -91,6 +93,13 @@
   }
   .card.down .face { display: none; }
   .card.down .back { display: block; }
+  /* Hint highlight: a pulsing gold ring around the suggested card(s) and destination. */
+  .card.hint::after, .slot.hint::after {
+    content: ''; position: absolute; inset: -4px; border-radius: calc(var(--cw) * .1);
+    border: 3px solid #ffd54a; box-shadow: 0 0 14px 4px rgba(255, 213, 74, .85);
+    pointer-events: none; animation: hintPulse .6s ease-in-out infinite alternate;
+  }
+  @keyframes hintPulse { from { opacity: 1; } to { opacity: .45; } }
   .card.red { color: #c8202a; }
   .card.black { color: #161616; }
   .corner {
@@ -119,15 +128,22 @@
     pointer-events: none; z-index: 6000; font-variant-numeric: tabular-nums;
   }
   #fx { position: fixed; inset: 0; z-index: 7000; display: none; }
-  #win {
+  #win, #statsDlg {
     position: fixed; left: 50%; top: 18%; transform: translateX(-50%);
     z-index: 8000; display: none;
     background: rgba(10, 40, 20, .92); border: 2px solid #f2c94c; border-radius: 14px;
     padding: 18px 26px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,.5);
     min-width: 260px;
   }
-  #win h2 { margin: 0 0 8px; color: #f2c94c; font-size: 28px; }
+  #win h2, #statsDlg h2 { margin: 0 0 8px; color: #f2c94c; font-size: 28px; }
   #win p { margin: 4px 0 14px; line-height: 1.5; }
+  #statsDlg { top: 10%; z-index: 8500; max-width: calc(100vw - 16px); padding: 16px 18px; }
+  #statsDlg table { border-collapse: collapse; margin: 4px auto 12px; font-variant-numeric: tabular-nums; }
+  #statsDlg th, #statsDlg td { padding: 5px 12px; text-align: right; border-bottom: 1px solid rgba(255,255,255,.12); }
+  #statsDlg th:first-child, #statsDlg td:first-child { text-align: left; opacity: .85; }
+  #statsDlg thead th { color: #f2c94c; }
+  #statsDlg .note { font-size: 12px; opacity: .7; margin: 0 0 12px; }
+  #statsDlg .row { display: flex; gap: 8px; justify-content: center; }
   #toast {
     position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%);
     background: rgba(0,0,0,.75); padding: 8px 14px; border-radius: 8px;
@@ -135,10 +151,16 @@
   }
   #toast.show { opacity: 1; }
 
+  @media (prefers-reduced-motion: reduce) {
+    .card.hint::after, .slot.hint::after { animation: none; }
+    #toast { transition: none; }
+  }
   @media (max-width: 600px) {
     header { padding: 6px 6px; gap: 4px 6px; }
     .title { display: none; }
     button { font-size: 13px; padding: 5px 8px; }
+    #muteBtn { padding: 5px 6px; }
+    #statsDlg th, #statsDlg td { padding: 5px 8px; }
     .stat { font-size: 13px; padding: 4px 7px; }
     .stat b { font-size: 10px; }
     .corner { font-size: calc(var(--cw) * .30); }
@@ -152,6 +174,9 @@
     <button id="newBtn" type="button" title="Deal a new game">New Game</button>
     <button id="undoBtn" type="button" title="Undo (Ctrl+Z)">Undo</button>
     <button id="drawBtn" type="button" title="Toggle Draw 1 / Draw 3 (starts a new game)">Draw 1</button>
+    <button id="hintBtn" type="button" title="Show a hint (H)">Hint</button>
+    <button id="statsBtn" type="button" title="Statistics and win streaks">Stats</button>
+    <button id="muteBtn" type="button" aria-pressed="false" aria-label="Mute sounds" title="Mute sounds"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 9v6h4l5 4V5L8 9H4z"/><path id="muteWaves" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path id="muteX" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M16 9l6 6M22 9l-6 6" display="none"/></svg></button>
     <button id="autoBtn" type="button" class="primary" hidden title="Move all remaining cards to the foundations">Auto-complete</button>
   </div>
   <div class="stats">
@@ -167,11 +192,20 @@
   <p id="winText"></p>
   <button id="againBtn" type="button" class="primary">Play again</button>
 </div>
-<div id="toast"></div>
-<div id="version">v1.0.1</div>
+<div id="statsDlg" role="dialog" aria-modal="true" aria-labelledby="statsTitle" style="display:none">
+  <h2 id="statsTitle">Statistics</h2>
+  <div id="statsBody"></div>
+  <p class="note">A game counts once you make your first move. Starting a new game (or leaving the page) mid-game counts as a loss.</p>
+  <div class="row">
+    <button id="resetStatsBtn" type="button">Reset stats</button>
+    <button id="closeStatsBtn" type="button" class="primary">Close</button>
+  </div>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="version">v1.1.2</div>
 
 <script>
-/* Klondike Solitaire v1.0.1 - single-file, no dependencies. */
+/* Klondike Solitaire v1.1.2 - single-file, no dependencies. */
 'use strict';
 
 /* ======================= Core rules engine (DOM-free) ======================= */
@@ -386,6 +420,119 @@ const Engine = (function () {
     return isWon(sim);
   }
 
+  /* ---------- Hints ---------- */
+  // Could this stock/waste card be played anywhere right now (ignoring Draw-3 reach)?
+  function placeable(s, card) {
+    if (foundationTarget(s, card) >= 0) return true;
+    return s.tableau.some(p => canTableau(card, p));
+  }
+
+  // One useful legal move, in priority order:
+  //   1. a card to a foundation (lowest rank first)
+  //   2. a tableau move that uncovers a face-down card
+  //   3. other useful tableau moves (waste to tableau, emptying a column, uncovering a foundation card)
+  //   4. drawing from the stock / recycling the waste, when a stock or waste card could still be played
+  // Returns { kind, from, i, to } for card moves, { kind: 'draw' | 'recycle' } for the stock, or null.
+  function findHint(s) {
+    if (isWon(s)) return null;
+    // 1. Foundation moves
+    let best = null;
+    const tops = [];
+    if (s.waste.length) tops.push({ loc: { type: 'waste' }, i: s.waste.length - 1 });
+    for (let t = 0; t < 7; t++) if (s.tableau[t].length) tops.push({ loc: { type: 'tableau', index: t }, i: s.tableau[t].length - 1 });
+    for (const c of tops) {
+      const card = getPile(s, c.loc)[c.i];
+      if (!card.up) continue;
+      const f = foundationTarget(s, card);
+      if (f >= 0 && (!best || card.rank < best.rank)) best = { kind: 'foundation', from: c.loc, i: c.i, to: { type: 'foundation', index: f }, rank: card.rank };
+    }
+    if (best) { delete best.rank; return best; }
+
+    const firstUp = p => { for (let k = 0; k < p.length; k++) if (p[k].up) return k; return -1; };
+    const tableauDest = (card, skip) => {
+      let emptyT = -1;
+      for (let t = 0; t < 7; t++) {
+        if (t === skip) continue;
+        const pile = s.tableau[t];
+        if (!canTableau(card, pile)) continue;
+        if (pile.length) return t;
+        if (emptyT < 0) emptyT = t;
+      }
+      return emptyT;
+    };
+    // 2. Moves that flip a face-down card
+    for (let t = 0; t < 7; t++) {
+      const p = s.tableau[t], u = firstUp(p);
+      if (u > 0 && isValidRun(p, u)) {
+        const d = tableauDest(p[u], t);
+        if (d >= 0) return { kind: 'flip', from: { type: 'tableau', index: t }, i: u, to: { type: 'tableau', index: d } };
+      }
+    }
+    // 3a. Waste to tableau
+    if (s.waste.length) {
+      const d = tableauDest(top(s.waste), -1);
+      if (d >= 0) return { kind: 'tableau', from: { type: 'waste' }, i: s.waste.length - 1, to: { type: 'tableau', index: d } };
+    }
+    for (let t = 0; t < 7; t++) {
+      const p = s.tableau[t];
+      // 3b. Move a whole non-King column onto another pile (empties the column for a King)
+      if (p.length && p[0].up && p[0].rank !== 13 && isValidRun(p, 0)) {
+        for (let d = 0; d < 7; d++) if (d !== t && s.tableau[d].length && canTableau(p[0], s.tableau[d]))
+          return { kind: 'tableau', from: { type: 'tableau', index: t }, i: 0, to: { type: 'tableau', index: d } };
+      }
+      // 3c. Move part of a run so the face-up card underneath can go to a foundation
+      for (let i = Math.max(1, firstUp(p) + 1); i < p.length; i++) {
+        if (!p[i - 1].up || !isValidRun(p, i) || foundationTarget(s, p[i - 1]) < 0) continue;
+        const d = tableauDest(p[i], t);
+        if (d >= 0) return { kind: 'tableau', from: { type: 'tableau', index: t }, i, to: { type: 'tableau', index: d } };
+      }
+    }
+    // 4. Stock / waste
+    if (s.stock.length + s.waste.length && [...s.stock, ...s.waste].some(c => placeable(s, c))) {
+      return { kind: s.stock.length ? 'draw' : 'recycle' };
+    }
+    return null;
+  }
+
+  /* ---------- Statistics (pure; the UI persists them) ---------- */
+  const blankModeStats = () => ({ played: 0, won: 0, streak: 0, bestStreak: 0, bestScore: 0, bestTime: 0 });
+  function emptyStats() { return { v: 1, d1: blankModeStats(), d3: blankModeStats(), pending: 0 }; }
+  // Repair anything odd read back from storage.
+  function normStats(o) {
+    const st = emptyStats();
+    if (!o || typeof o !== 'object') return st;
+    for (const m of ['d1', 'd3']) for (const k of Object.keys(st[m])) {
+      const v = o[m] && o[m][k];
+      if (typeof v === 'number' && isFinite(v) && v >= 0) st[m][k] = Math.floor(v);
+    }
+    st.pending = o.pending === 1 || o.pending === 3 ? o.pending : 0;
+    return st;
+  }
+  const modeKey = dc => (dc === 3 ? 'd3' : 'd1');
+  // First move of a game: it now counts as played and is pending until won or abandoned.
+  function statsStart(st, dc) {
+    if (st.pending) statsLose(st);
+    st[modeKey(dc)].played++;
+    st.pending = dc === 3 ? 3 : 1;
+  }
+  // Abandoned (new game mid-game, or page left mid-game): a loss that breaks the streak.
+  function statsLose(st) {
+    if (!st.pending) return;
+    st[modeKey(st.pending)].streak = 0;
+    st.pending = 0;
+  }
+  function statsWin(st, dc, score, sec) {
+    const m = st[modeKey(dc)];
+    if (st.pending !== (dc === 3 ? 3 : 1)) { statsLose(st); m.played++; }
+    m.won++;
+    m.streak++;
+    m.bestStreak = Math.max(m.bestStreak, m.streak);
+    m.bestScore = Math.max(m.bestScore, score | 0);
+    if (sec > 0 && (!m.bestTime || sec < m.bestTime)) m.bestTime = sec;
+    st.pending = 0;
+  }
+  const winRate = m => (m.played ? Math.round(m.won / m.played * 100) : 0);
+
   function totalCards(s) {
     return s.stock.length + s.waste.length +
       s.tableau.reduce((a, p) => a + p.length, 0) +
@@ -396,7 +543,8 @@ const Engine = (function () {
     RANK_LABELS, SUIT_SYMBOLS, SUIT_NAMES, SCORE,
     mulberry32, createDeck, shuffle, newGame, isRed, canTableau, canFoundation,
     getPile, isValidRun, canPick, canMove, move, draw, foundationTarget, autoTarget,
-    isWon, allTableauUp, clone, foundationStep, autoStep, canAutoComplete, totalCards
+    isWon, allTableauUp, clone, foundationStep, autoStep, canAutoComplete, totalCards,
+    findHint, emptyStats, normStats, statsStart, statsLose, statsWin, winRate
   };
 })();
 
@@ -404,19 +552,117 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Engine;
 
 /* ============================ Browser UI layer ============================ */
 if (typeof document !== 'undefined') (function () {
-  const VERSION = '1.0.1';
+  const VERSION = '1.1.2';
   const TEXT_VS = '\uFE0E'; // force text (non-emoji) rendering of suit glyphs
   const $ = id => document.getElementById(id);
   const board = $('board');
   const ui = {
     score: $('score'), moves: $('moves'), time: $('time'),
     newBtn: $('newBtn'), undoBtn: $('undoBtn'), drawBtn: $('drawBtn'), autoBtn: $('autoBtn'),
-    fx: $('fx'), win: $('win'), winText: $('winText'), againBtn: $('againBtn'), toast: $('toast')
+    fx: $('fx'), win: $('win'), winText: $('winText'), againBtn: $('againBtn'), toast: $('toast'),
+    hintBtn: $('hintBtn'), statsBtn: $('statsBtn'), muteBtn: $('muteBtn'),
+    statsDlg: $('statsDlg'), statsBody: $('statsBody'), resetStatsBtn: $('resetStatsBtn'), closeStatsBtn: $('closeStatsBtn')
   };
   $('version').textContent = 'v' + VERSION;
 
-  let drawCount = 1;
-  try { if (localStorage.getItem('klondike.draw') === '3') drawCount = 3; } catch (e) { /* ignore */ }
+  // Every localStorage key the game uses (all access is wrapped so blocked storage just means "not remembered").
+  const KEYS = { draw: 'klondike.draw', stats: 'klondike.stats', muted: 'klondike.muted' };
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* storage blocked or full */ } }
+  };
+
+  let drawCount = store.get(KEYS.draw) === '3' ? 3 : 1;
+
+  /* ---------- Stats ---------- */
+  let stats = Engine.emptyStats();
+  try { const raw = store.get(KEYS.stats); if (raw) stats = Engine.normStats(JSON.parse(raw)); } catch (e) { /* corrupt: start fresh */ }
+  const saveStats = () => store.set(KEYS.stats, JSON.stringify(stats));
+  // A game left unfinished on a previous visit counts as a loss.
+  if (stats.pending) { Engine.statsLose(stats); saveStats(); }
+  let gameCounted = false;
+  function countGameStart() {
+    if (gameCounted) return;
+    gameCounted = true;
+    Engine.statsStart(stats, state.drawCount);
+    saveStats();
+  }
+
+  /* ---------- Sound (Web Audio, generated; starts only after a user gesture) ---------- */
+  const Sound = (function () {
+    let ctx = null, out = null, noiseBuf = null;
+    let muted = store.get(KEYS.muted) === '1';
+    const log = [];
+    function unlock() {
+      if (muted) return;
+      if (ctx) { if (ctx.state === 'suspended') ctx.resume().catch(() => {}); return; }
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      try {
+        ctx = new AC();
+        out = ctx.createGain(); out.gain.value = 0.5; out.connect(ctx.destination);
+        noiseBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.3), ctx.sampleRate);
+        const d = noiseBuf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      } catch (e) { ctx = null; }
+    }
+    function env(g, t0, peak, dur) {
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(peak, t0 + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    }
+    function tone(freq, dur, o) {
+      o = o || {};
+      const t0 = ctx.currentTime + (o.delay || 0);
+      const osc = ctx.createOscillator(), g = ctx.createGain();
+      osc.type = o.type || 'sine';
+      osc.frequency.setValueAtTime(freq, t0);
+      if (o.to) osc.frequency.exponentialRampToValueAtTime(o.to, t0 + dur);
+      env(g, t0, o.gain || 0.1, dur);
+      osc.connect(g); g.connect(out);
+      osc.start(t0); osc.stop(t0 + dur + 0.02);
+    }
+    function noise(dur, o) {
+      o = o || {};
+      const t0 = ctx.currentTime + (o.delay || 0);
+      const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+      src.buffer = noiseBuf;
+      f.type = 'bandpass'; f.Q.value = o.q || 1;
+      f.frequency.setValueAtTime(o.freq || 2000, t0);
+      if (o.to) f.frequency.exponentialRampToValueAtTime(o.to, t0 + dur);
+      env(g, t0, o.gain || 0.2, dur);
+      src.connect(f); f.connect(g); g.connect(out);
+      src.start(t0); src.stop(t0 + dur + 0.02);
+    }
+    const sfx = {
+      pick() { noise(0.035, { freq: 3200, q: 1.4, gain: 0.18 }); },
+      place() { noise(0.05, { freq: 1500, q: 1, gain: 0.25 }); tone(190, 0.05, { type: 'triangle', gain: 0.05 }); },
+      flip() { noise(0.07, { freq: 2500, to: 5200, q: 0.9, gain: 0.14 }); },
+      draw() { noise(0.09, { freq: 4200, to: 1800, q: 0.8, gain: 0.16 }); },
+      invalid() { tone(170, 0.08, { type: 'square', gain: 0.025 }); tone(125, 0.11, { type: 'square', gain: 0.025, delay: 0.08 }); },
+      foundation() { tone(784, 0.12, { gain: 0.06 }); tone(1175, 0.16, { gain: 0.04, delay: 0.05 }); },
+      win() { [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.3, { type: 'triangle', gain: 0.06, delay: i * 0.11 })); }
+    };
+    function play(name) {
+      if (muted || !sfx[name]) return;
+      log.push(name); if (log.length > 30) log.shift();
+      if (!ctx || ctx.state !== 'running') return;
+      try { sfx[name](); } catch (e) { /* never let audio break the game */ }
+    }
+    function setMuted(m) {
+      muted = !!m;
+      store.set(KEYS.muted, muted ? '1' : '0');
+      if (!muted) unlock();
+    }
+    return { unlock, play, setMuted, get muted() { return muted; }, get state() { return ctx ? ctx.state : 'none'; }, log };
+  })();
+  window.addEventListener('pointerdown', Sound.unlock, true);
+  window.addEventListener('keydown', Sound.unlock, true);
+
+  /* ---------- Motion ---------- */
+  const reduceMotion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+  const SLIDE_MS = 190, FLIP_MS = 240;
+  const animOn = () => !(reduceMotion && reduceMotion.matches) && typeof Element.prototype.animate === 'function' && typeof Element.prototype.getAnimations === 'function';
 
   let state, history = [], L = null;
   let startTime = 0, frozenElapsed = null, timerId = null;
@@ -472,7 +718,9 @@ if (typeof document !== 'undefined') (function () {
     el.style.left = x + 'px';
     el.style.top = y + 'px';
     el.style.zIndex = z;
-    el.classList.toggle('down', !c.up);
+    el.dataset.z = z;
+    el.dataset.up = c.up ? '1' : '0';
+    if (!el._flipping) el.classList.toggle('down', !c.up);
     locOf.set(c.id, { loc, idx });
   }
 
@@ -486,7 +734,51 @@ if (typeof document !== 'undefined') (function () {
     return offs.map(o => o * f);
   }
 
-  function render() {
+  // FLIP animation: note where every card is drawn now, lay out the new state, then slide (and flip)
+  // each card from its old spot to its new one with a transform. Dragged cards are positioned directly.
+  function snapshotPositions() {
+    const br = board.getBoundingClientRect(), prev = {};
+    for (const id in cardEls) {
+      const el = cardEls[id], r = el.getBoundingClientRect();
+      prev[id] = { x: r.left + r.width / 2 - br.left - L.cw / 2, y: r.top + r.height / 2 - br.top - L.ch / 2, up: el.dataset.up };
+    }
+    return prev;
+  }
+  function animateFrom(prev) {
+    let order = 0;
+    for (const id in cardEls) {
+      const el = cardEls[id], p = prev[id];
+      if (!p || el.classList.contains('dragging')) continue;
+      const dx = p.x - parseFloat(el.style.left), dy = p.y - parseFloat(el.style.top);
+      const loc = locOf.get(id);
+      const flipped = p.up !== undefined && p.up !== el.dataset.up && !(loc && loc.loc.type === 'stock');
+      if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5 && !flipped) continue;
+      el.getAnimations().forEach(a => a.cancel());
+      const tr = (x, y, sx) => 'translate(' + x + 'px,' + y + 'px)' + (sx === 1 ? '' : ' scaleX(' + sx + ')');
+      let anim;
+      if (flipped) {
+        // Show the old face until the card is edge-on, then the new one.
+        el._flipping = true;
+        el.classList.toggle('down', p.up !== '1');
+        anim = el.animate([{ transform: tr(dx, dy, 1) }, { transform: tr(dx / 2, dy / 2, 0.02), offset: 0.5 }, { transform: tr(0, 0, 1) }],
+          { duration: FLIP_MS, easing: 'ease-in-out' });
+        setTimeout(() => { el._flipping = false; el.classList.toggle('down', el.dataset.up !== '1'); }, FLIP_MS / 2);
+      } else {
+        anim = el.animate([{ transform: tr(dx, dy, 1) }, { transform: 'none' }],
+          { duration: SLIDE_MS, easing: 'cubic-bezier(.2,.75,.35,1)', delay: Math.min(order, 6) * 12 });
+        if (Math.abs(dx) + Math.abs(dy) > 1) order++;
+      }
+      // Keep moving cards above the rest while they travel.
+      el.style.zIndex = 2000 + Number(el.dataset.z || 0);
+      el._anim = anim;
+      const done = () => { if (el._anim === anim) { el._anim = null; if (!el.classList.contains('dragging')) el.style.zIndex = el.dataset.z; } };
+      anim.onfinish = done; anim.oncancel = done;
+    }
+  }
+
+  function render(opts) {
+    clearHint();
+    const prev = !(opts && opts.instant) && animOn() ? snapshotPositions() : null;
     locOf.clear();
     const s = state;
     // Slots
@@ -517,6 +809,7 @@ if (typeof document !== 'undefined') (function () {
         y += offs[k] || 0;
       });
     });
+    if (prev) animateFrom(prev);
     updateHud();
   }
 
@@ -538,6 +831,7 @@ if (typeof document !== 'undefined') (function () {
     ui.undoBtn.disabled = history.length === 0 || busy || won;
     ui.drawBtn.textContent = 'Draw ' + drawCount;
     ui.autoBtn.hidden = busy || won || !Engine.canAutoComplete(state);
+    ui.hintBtn.disabled = busy || won;
   }
   function startTimer() {
     if (startTime || won) return;
@@ -559,13 +853,19 @@ if (typeof document !== 'undefined') (function () {
   }
 
   /* ---------- Actions ---------- */
-  function doAction(fn) {
+  const countDown = s => s.tableau.reduce((a, p) => a + p.filter(c => !c.up).length, 0);
+  const countFound = s => s.foundations.reduce((a, p) => a + p.length, 0);
+  function doAction(fn, kind) {
     if (won) return false;
     const snap = Engine.clone(state);
     if (!fn()) return false;
     history.push(snap);
     if (history.length > 1000) history.shift();
+    countGameStart();
     startTimer();
+    if (kind === 'draw') Sound.play('draw');
+    else Sound.play(countFound(state) > countFound(snap) ? 'foundation' : 'place');
+    if (countDown(state) < countDown(snap)) setTimeout(() => Sound.play('flip'), 110);
     afterChange();
     return true;
   }
@@ -575,26 +875,29 @@ if (typeof document !== 'undefined') (function () {
   }
 
   function newGame() {
+    if (gameCounted && !won) { Engine.statsLose(stats); saveStats(); }
+    gameCounted = false;
     stopCelebration();
     if (timerId) clearInterval(timerId);
     timerId = null; startTime = 0; frozenElapsed = null;
     won = false; busy = false; history = [];
     state = Engine.newGame(drawCount);
-    render();
+    render({ instant: true });
   }
 
   function undo() {
     if (busy || won || !history.length) return;
     state = history.pop();
+    Sound.play('place');
     render();
   }
 
   function toggleDraw() {
     if (busy) return;
     const next = drawCount === 1 ? 3 : 1;
-    if (state.moves > 0 && !won && !confirm('Switch to Draw ' + next + '? This starts a new game.')) return;
+    if (gameCounted && !won && !confirm('Switch to Draw ' + next + '? This starts a new game and counts this one as a loss.')) return;
     drawCount = next;
-    try { localStorage.setItem('klondike.draw', String(drawCount)); } catch (e) { /* ignore */ }
+    store.set(KEYS.draw, String(drawCount));
     newGame();
     toast('Draw ' + drawCount + ' - new game dealt');
   }
@@ -603,17 +906,85 @@ if (typeof document !== 'undefined') (function () {
     if (busy || won || !Engine.canAutoComplete(state)) return;
     busy = true;
     history.push(Engine.clone(state));
+    countGameStart();
     startTimer();
     updateHud();
+    // One card at a time, each sliding to its foundation before the next one goes.
     const step = () => {
       if (!busy) return;
       const r = Engine.autoStep(state);
+      if (r) Sound.play(r === 'move' ? 'foundation' : 'draw');
       render();
-      if (Engine.isWon(state)) { busy = false; onWin(); return; }
+      if (Engine.isWon(state)) { busy = false; updateHud(); setTimeout(() => { if (Engine.isWon(state)) onWin(); }, animOn() ? SLIDE_MS : 0); return; }
       if (!r) { busy = false; updateHud(); return; }
-      setTimeout(step, r === 'move' ? 70 : 40);
+      setTimeout(step, animOn() ? (r === 'move' ? 140 : 100) : (r === 'move' ? 70 : 40));
     };
     step();
+  }
+
+  /* ---------- Hints ---------- */
+  let hintEls = [], hintTimer = null;
+  function clearHint() {
+    clearTimeout(hintTimer);
+    hintEls.forEach(el => el.classList.remove('hint'));
+    hintEls = [];
+  }
+  function showHint() {
+    if (busy || won || celebrating || !state) return;
+    clearHint();
+    const h = Engine.findHint(state);
+    if (!h) { toast('No moves left'); return; }
+    const els = [];
+    if (h.kind === 'draw' || h.kind === 'recycle') {
+      els.push(slots.stock);
+      if (state.stock.length) els.push(cardEls[state.stock[state.stock.length - 1].id]);
+      toast('No moves - try drawing');
+    } else {
+      Engine.getPile(state, h.from).slice(h.i).forEach(c => els.push(cardEls[c.id]));
+      const dest = Engine.getPile(state, h.to);
+      els.push(dest.length ? cardEls[dest[dest.length - 1].id] : slots[(h.to.type === 'foundation' ? 'f' : 't') + h.to.index]);
+    }
+    els.forEach(el => el.classList.add('hint'));
+    hintEls = els;
+    hintTimer = setTimeout(clearHint, 2200);
+  }
+
+  /* ---------- Stats dialog ---------- */
+  function showStats() {
+    const fmtBest = (v, f) => (v ? f(v) : '-');
+    const rows = [
+      ['Games played', m => m.played],
+      ['Games won', m => m.won],
+      ['Win %', m => Engine.winRate(m) + '%'],
+      ['Current streak', m => m.streak],
+      ['Best streak', m => m.bestStreak],
+      ['Best score', m => fmtBest(m.bestScore, String)],
+      ['Best time', m => fmtBest(m.bestTime, fmtTime)]
+    ];
+    ui.statsBody.innerHTML = '<table><thead><tr><th></th><th>Draw 1</th><th>Draw 3</th></tr></thead><tbody>' +
+      rows.map(r => '<tr><th scope="row">' + r[0] + '</th><td>' + r[1](stats.d1) + '</td><td>' + r[1](stats.d3) + '</td></tr>').join('') +
+      '</tbody></table>';
+    ui.statsDlg.style.display = 'block';
+    ui.closeStatsBtn.focus();
+  }
+  function hideStats() { ui.statsDlg.style.display = 'none'; }
+  function resetStats() {
+    if (!confirm('Reset all statistics for Draw 1 and Draw 3? This cannot be undone.')) return;
+    stats = Engine.emptyStats();
+    // The game on the table still counts once it has been started.
+    if (gameCounted && !won) { stats.pending = 0; gameCounted = false; countGameStart(); }
+    saveStats();
+    showStats();
+    toast('Statistics reset');
+  }
+
+  function renderMute() {
+    const m = Sound.muted;
+    ui.muteBtn.setAttribute('aria-pressed', m ? 'true' : 'false');
+    ui.muteBtn.setAttribute('aria-label', m ? 'Unmute sounds' : 'Mute sounds');
+    ui.muteBtn.title = m ? 'Sounds off (click to turn on)' : 'Sounds on (click to mute)';
+    $('muteWaves').setAttribute('display', m ? 'none' : 'inline');
+    $('muteX').setAttribute('display', m ? 'inline' : 'none');
   }
 
   /* ---------- Pointer input (mouse + touch via Pointer Events) ---------- */
@@ -621,6 +992,7 @@ if (typeof document !== 'undefined') (function () {
   let lastAutoTap = { t: 0, x: -99, y: -99 };
 
   function shake(el) {
+    Sound.play('invalid');
     if (el && el.animate) el.animate(
       [{ transform: 'translateX(0)' }, { transform: 'translateX(-5px)' }, { transform: 'translateX(5px)' }, { transform: 'translateX(0)' }],
       { duration: 180 });
@@ -649,7 +1021,12 @@ if (typeof document !== 'undefined') (function () {
     if (!drag.moving) {
       if (!drag.els.length || Math.hypot(dx, dy) < 6) return;
       drag.moving = true;
-      drag.els.forEach((el, k) => { el.classList.add('dragging'); el.style.zIndex = 1000 + k; });
+      clearHint();
+      Sound.play('pick');
+      drag.els.forEach((el, k) => {
+        if (el.getAnimations) el.getAnimations().forEach(a => a.cancel());
+        el.classList.add('dragging'); el.style.zIndex = 4000 + k;
+      });
     }
     drag.els.forEach((el, k) => {
       el.style.left = (drag.orig[k].x + dx) + 'px';
@@ -663,7 +1040,7 @@ if (typeof document !== 'undefined') (function () {
     const d = drag; drag = null;
     if (d.moving) {
       d.els.forEach(el => el.classList.remove('dragging'));
-      if (cancelled || !dropAt(d)) render();
+      if (cancelled || !dropAt(d)) { if (!cancelled) Sound.play('invalid'); render(); }
     } else if (!cancelled) {
       handleTap(d, e);
     }
@@ -706,7 +1083,7 @@ if (typeof document !== 'undefined') (function () {
   function handleTap(d, e) {
     const isStock = (d.info && d.info.loc.type === 'stock') || (!d.info && d.slot === 'stock');
     if (isStock) {
-      if (!doAction(() => Engine.draw(state))) render();
+      if (!doAction(() => Engine.draw(state), 'draw')) { Sound.play('invalid'); render(); }
       return;
     }
     if (!d.info) return;
@@ -730,11 +1107,17 @@ if (typeof document !== 'undefined') (function () {
     const t = elapsedSec();
     const bonus = t >= 30 ? Math.round(700000 / t) : 0;
     finalScore = displayScore() + bonus;
+    Engine.statsWin(stats, state.drawCount, finalScore, t);
+    gameCounted = false;
+    saveStats();
     updateHud();
+    const m = stats[state.drawCount === 3 ? 'd3' : 'd1'];
     ui.winText.innerHTML = 'Score: <b>' + finalScore + '</b>' + (bonus ? ' (time bonus +' + bonus + ')' : '') +
-      '<br>Moves: <b>' + state.moves + '</b> &nbsp; Time: <b>' + fmtTime(t) + '</b>';
+      '<br>Moves: <b>' + state.moves + '</b> &nbsp; Time: <b>' + fmtTime(t) + '</b>' +
+      '<br>Win streak: <b>' + m.streak + '</b> &nbsp; Best: <b>' + m.bestStreak + '</b>';
     ui.win.style.display = 'block';
-    startCascade();
+    Sound.play('win');
+    if (animOn()) startCascade();
   }
 
   function startCascade() {
@@ -798,33 +1181,44 @@ if (typeof document !== 'undefined') (function () {
 
   /* ---------- Wiring ---------- */
   ui.newBtn.addEventListener('click', () => {
-    if (state.moves > 0 && !won && !confirm('Abandon this game and deal a new one?')) return;
+    if (gameCounted && !won && !confirm('Abandon this game and deal a new one? It will count as a loss.')) return;
     newGame();
   });
   ui.undoBtn.addEventListener('click', undo);
   ui.drawBtn.addEventListener('click', toggleDraw);
   ui.autoBtn.addEventListener('click', autoComplete);
   ui.againBtn.addEventListener('click', newGame);
+  ui.hintBtn.addEventListener('click', showHint);
+  ui.statsBtn.addEventListener('click', showStats);
+  ui.closeStatsBtn.addEventListener('click', hideStats);
+  ui.resetStatsBtn.addEventListener('click', resetStats);
+  ui.muteBtn.addEventListener('click', () => {
+    Sound.setMuted(!Sound.muted);
+    renderMute();
+    if (!Sound.muted) Sound.play('place');
+  });
+  renderMute();
   document.addEventListener('keydown', e => {
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
+    if (e.key === 'Escape' && ui.statsDlg.style.display === 'block') { hideStats(); return; }
+    if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === 'h') showHint();
   });
   let resizeRaf = 0;
   window.addEventListener('resize', () => {
     cancelAnimationFrame(resizeRaf);
     resizeRaf = requestAnimationFrame(() => {
-      board.classList.add('noanim');
-      computeLayout(); render();
-      requestAnimationFrame(() => board.classList.remove('noanim'));
+      computeLayout(); render({ instant: true });
     });
   });
 
   // Test hook (handy for automated checks; harmless for players).
-  window.__klondike = { get state() { return state; }, set state(s) { state = s; history = []; render(); }, render, Engine, version: VERSION };
+  window.__klondike = {
+    get state() { return state; }, set state(s) { state = s; history = []; render({ instant: true }); },
+    render, Engine, version: VERSION, sound: Sound, get stats() { return stats; }, keys: KEYS
+  };
 
-  board.classList.add('noanim');
   computeLayout();
   newGame();
-  requestAnimationFrame(() => requestAnimationFrame(() => board.classList.remove('noanim')));
 })();
 </script>
 </body>
