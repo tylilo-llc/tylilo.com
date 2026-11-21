@@ -27,6 +27,16 @@ function tylilo_score_games(): array
             'minPlayedMs' => $minPlayedMs,
         ];
     };
+    $time = static function (string $label): array {
+        return [
+            'label' => $label,
+            'order' => 'asc',
+            'unit' => 'seconds',
+            'min' => 1,
+            'max' => 7200,
+            'minPlayedMs' => 20000,
+        ];
+    };
 
     return [
         'solitaire' => [
@@ -57,15 +67,19 @@ function tylilo_score_games(): array
             'title' => 'Jungle Rescue',
             'levels' => true,
             'boards' => [
-                'default' => $points('Score', 5000000, 20000),
-                'time' => [
-                    'label' => 'Time',
-                    'order' => 'asc',
-                    'unit' => 'seconds',
-                    'min' => 1,
-                    'max' => 7200,
-                    'minPlayedMs' => 20000,
-                ],
+                'easy' => $points('Easy', 5000000, 20000) + ['group' => 'Easy', 'short' => 'Score'],
+                'easy-time' => $time('Easy time') + ['group' => 'Easy', 'short' => 'Time'],
+                'normal' => $points('Normal', 5000000, 20000) + ['group' => 'Normal', 'short' => 'Score'],
+                'normal-time' => $time('Normal time') + ['group' => 'Normal', 'short' => 'Time'],
+                'expert' => $points('Expert', 5000000, 20000) + ['group' => 'Expert', 'short' => 'Score'],
+                'expert-time' => $time('Expert time') + ['group' => 'Expert', 'short' => 'Time'],
+            ],
+            // Legacy boards from before the difficulty split (v2.17 and older).
+            // They still accept op:start and op:submit, but scores are stored on
+            // the target board, and they are never listed.
+            'aliases' => [
+                'default' => 'easy',
+                'time' => 'easy-time',
             ],
         ],
     ];
@@ -210,6 +224,32 @@ function tylilo_score_board(string $game, string $board): ?array
     return $games[$game]['boards'][$board];
 }
 
+/**
+ * Where a legacy board alias stores its scores, or null when $board is not an alias.
+ */
+function tylilo_score_alias_target(string $game, string $board): ?string
+{
+    $games = tylilo_score_games();
+    $target = $games[$game]['aliases'][$board] ?? null;
+    if (!is_string($target) || !isset($games[$game]['boards'][$target])) {
+        return null;
+    }
+
+    return $target;
+}
+
+/**
+ * The board a start or submit for $board is stored on: the board itself, or an alias target.
+ */
+function tylilo_score_storage_board(string $game, string $board): ?string
+{
+    if (tylilo_score_board($game, $board) !== null) {
+        return $board;
+    }
+
+    return tylilo_score_alias_target($game, $board);
+}
+
 function tylilo_score_secret(string $filename): string
 {
     $dir = tylilo_scores_dir();
@@ -283,20 +323,14 @@ function tylilo_scores_blank(): array
 /**
  * One recorded score that the game never submitted. Applied once, then remembered
  * so later deploys do not insert it again. Safe to delete this list after it has run.
+ * A seed on a legacy alias board is stored on the alias target.
+ * logan-jungle-rescue-187100 was removed on purpose (a cheat-code run). Do not re-add it.
  *
  * @return list<array{id: string, game: string, board: string, name: string, score: int, at: int}>
  */
 function tylilo_score_seeds(): array
 {
     return [
-        [
-            'id' => 'logan-jungle-rescue-187100',
-            'game' => 'jungle-rescue',
-            'board' => 'default',
-            'name' => 'LOGAN',
-            'score' => 187100,
-            'at' => 1795271100,
-        ],
         [
             'id' => 'link-red-rain-easy-1011970',
             'game' => 'red-rain',
@@ -308,22 +342,58 @@ function tylilo_score_seeds(): array
     ];
 }
 
+/**
+ * One-time data changes. Each runs once per data store, then its id is remembered
+ * with the applied seeds so it never runs again. Each must be safe on an empty store.
+ *
+ * @return array<string, callable(array): array>
+ */
+function tylilo_score_migrations(): array
+{
+    return [
+        // Nov 21, 2026: Jungle Rescue split into Easy, Normal, and Expert boards.
+        // Old rows had no difficulty and move to Easy. LOGAN 187100 was a
+        // cheat-code run and is deleted (Ryan: "Delete LOGAN's score").
+        'jungle-rescue-difficulty-split-2026-11-21' => static function (array $data): array {
+            $moves = ['default' => 'easy', 'time' => 'easy-time'];
+            $kept = [];
+            foreach ($data['scores'] as $row) {
+                if (($row['game'] ?? '') === 'jungle-rescue') {
+                    $board = (string) ($row['board'] ?? '');
+                    if (in_array($board, ['default', 'easy'], true) && ($row['name'] ?? '') === 'LOGAN' && (int) ($row['score'] ?? 0) === 187100) {
+                        continue;
+                    }
+                    if (isset($moves[$board])) {
+                        $row['board'] = $moves[$board];
+                    }
+                }
+                $kept[] = $row;
+            }
+            $data['scores'] = $kept;
+
+            return $data;
+        },
+    ];
+}
+
 function tylilo_score_ensure_seeds(): void
 {
-    static $done = false;
-    if ($done) {
+    static $done = [];
+    $key = tylilo_scores_dir() . '|' . (tylilo_score_uses_sqlite() ? 'sqlite' : 'json');
+    if (isset($done[$key])) {
         return;
     }
-    $done = true;
+    $done[$key] = true;
     tylilo_scores_with(static function (array $data): array {
         $applied = is_array($data['seeds'] ?? null) ? $data['seeds'] : [];
         foreach (tylilo_score_seeds() as $seed) {
             if (in_array($seed['id'], $applied, true)) {
                 continue;
             }
+            $board = tylilo_score_alias_target($seed['game'], $seed['board']) ?? $seed['board'];
             $present = false;
             foreach ($data['scores'] as $row) {
-                if ($row['game'] === $seed['game'] && $row['board'] === $seed['board'] && $row['name'] === $seed['name'] && (int) $row['score'] === $seed['score']) {
+                if ($row['game'] === $seed['game'] && $row['board'] === $board && $row['name'] === $seed['name'] && (int) $row['score'] === $seed['score']) {
                     $present = true;
                     break;
                 }
@@ -331,13 +401,20 @@ function tylilo_score_ensure_seeds(): void
             if (!$present) {
                 $data['scores'][] = [
                     'game' => $seed['game'],
-                    'board' => $seed['board'],
+                    'board' => $board,
                     'name' => $seed['name'],
                     'score' => $seed['score'],
                     'at' => $seed['at'],
                 ];
             }
             $applied[] = $seed['id'];
+        }
+        foreach (tylilo_score_migrations() as $id => $migrate) {
+            if (in_array($id, $applied, true)) {
+                continue;
+            }
+            $data = $migrate($data);
+            $applied[] = $id;
         }
         $data['seeds'] = $applied;
 
@@ -588,6 +665,9 @@ function tylilo_score_list(string $game, ?string $board, int $limit): array
         return ['ok' => false, 'status' => 404, 'error' => 'That game does not have a leaderboard.'];
     }
     $limit = max(1, min(TYLILO_SCORE_LIMIT_MAX, $limit));
+    if ($board !== null && $board !== '') {
+        $board = tylilo_score_alias_target($game, $board) ?? $board;
+    }
     $wanted = $board === null || $board === '' ? array_keys($games[$game]['boards']) : [$board];
     $data = tylilo_scores_with(static fn (array $stored): array => $stored);
     $boards = [];
@@ -596,14 +676,19 @@ function tylilo_score_list(string $game, ?string $board, int $limit): array
         if ($spec === null) {
             return ['ok' => false, 'status' => 404, 'error' => 'That board does not exist.'];
         }
-        $boards[] = [
+        $entry = [
             'board' => $id,
             'label' => $spec['label'],
             'order' => $spec['order'],
             'unit' => $spec['unit'],
             'levels' => !empty($games[$game]['levels']),
-            'scores' => tylilo_score_public_rows($data, $game, $id, $spec['order'], $limit),
         ];
+        if (isset($spec['group'])) {
+            $entry['group'] = $spec['group'];
+            $entry['short'] = $spec['short'] ?? $spec['label'];
+        }
+        $entry['scores'] = tylilo_score_public_rows($data, $game, $id, $spec['order'], $limit);
+        $boards[] = $entry;
     }
 
     return ['ok' => true, 'status' => 200, 'game' => $game, 'limit' => $limit, 'boards' => $boards];
@@ -648,12 +733,14 @@ function tylilo_score_whole_number(mixed $value): ?int
 
 function tylilo_score_start(string $game, string $board, int $now): array
 {
-    $spec = tylilo_score_board($game, $board);
+    $stored = tylilo_score_storage_board($game, $board);
+    $spec = $stored === null ? null : tylilo_score_board($game, $stored);
     if ($spec === null) {
         return ['ok' => false, 'status' => 404, 'error' => 'That game or board does not have a leaderboard.'];
     }
 
-    return [
+    // The token is bound to the board that was asked for, even when it is an alias.
+    $result = [
         'ok' => true,
         'status' => 200,
         'token' => tylilo_score_issue_token($game, $board, $now),
@@ -661,13 +748,22 @@ function tylilo_score_start(string $game, string $board, int $now): array
         'game' => $game,
         'board' => $board,
     ];
+    if ($stored !== $board) {
+        $result['storedAs'] = $stored;
+    }
+
+    return $result;
 }
 
 function tylilo_score_submit(array $input, string $ip, int $now): array
 {
+    if (!empty($input['cheat'])) {
+        return ['ok' => false, 'status' => 400, 'error' => 'Cheat runs are not saved.'];
+    }
     $game = is_string($input['game'] ?? null) ? $input['game'] : '';
     $board = is_string($input['board'] ?? null) ? $input['board'] : 'default';
-    $spec = tylilo_score_board($game, $board);
+    $stored = tylilo_score_storage_board($game, $board);
+    $spec = $stored === null ? null : tylilo_score_board($game, $stored);
     if ($spec === null) {
         return ['ok' => false, 'status' => 404, 'error' => 'That game or board does not have a leaderboard.'];
     }
@@ -703,7 +799,7 @@ function tylilo_score_submit(array $input, string $ip, int $now): array
     $result = ['ok' => true, 'status' => 200];
     $storedVersion = $version['version'];
     $storedLevel = $level['level'];
-    tylilo_scores_with(static function (array $data) use ($spec, $game, $board, $name, $score, $now, $tokenHash, $ipHash, $storedVersion, $storedLevel, &$result): array {
+    tylilo_scores_with(static function (array $data) use ($spec, $game, $stored, $name, $score, $now, $tokenHash, $ipHash, $storedVersion, $storedLevel, &$result): array {
         $data['rates'] = array_values(array_filter(
             $data['rates'],
             static fn (array $row): bool => $row['at'] >= $now - TYLILO_SCORE_RATE_WINDOW
@@ -734,7 +830,7 @@ function tylilo_score_submit(array $input, string $ip, int $now): array
         $data['rates'][] = ['hash' => $ipHash, 'at' => $now];
         $data['scores'][] = [
             'game' => $game,
-            'board' => $board,
+            'board' => $stored,
             'name' => $name['name'],
             'score' => $score,
             'at' => $now,
@@ -758,7 +854,7 @@ function tylilo_score_submit(array $input, string $ip, int $now): array
         $data['scores'] = $kept;
         $ordered = tylilo_score_sort(array_values(array_filter(
             $kept,
-            static fn (array $row): bool => $row['game'] === $game && $row['board'] === $board
+            static fn (array $row): bool => $row['game'] === $game && $row['board'] === $stored
         )), $spec['order']);
         $rank = null;
         foreach ($ordered as $index => $row) {
@@ -768,7 +864,7 @@ function tylilo_score_submit(array $input, string $ip, int $now): array
             }
         }
         $result['rank'] = $rank;
-        $result['scores'] = tylilo_score_public_rows($data, $game, $board, $spec['order'], TYLILO_SCORE_LIMIT_DEFAULT);
+        $result['scores'] = tylilo_score_public_rows($data, $game, $stored, $spec['order'], TYLILO_SCORE_LIMIT_DEFAULT);
 
         return $data;
     });

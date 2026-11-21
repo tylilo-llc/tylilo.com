@@ -46,10 +46,16 @@ Slugs and boards:
 | Solitaire | `solitaire` | `draw-1`, `draw-3` | higher wins | points | 0–20000 | 20 seconds |
 | Red Rain | `red-rain` | `easy`, `normal`, `expert`, `insane` | higher wins | points | 0–5000000 | 30 seconds |
 | Pop Spiral | `pop-spiral` | `default` | higher wins | points | 0–5000000 | 20 seconds |
-| Jungle Rescue | `jungle-rescue` | `default` | higher wins | points | 0–5000000 | 20 seconds |
-| Jungle Rescue | `jungle-rescue` | `time` | lower wins | seconds | 1–7200 | 20 seconds |
+| Jungle Rescue | `jungle-rescue` | `easy`, `normal`, `expert` | higher wins | points | 0–5000000 | 20 seconds |
+| Jungle Rescue | `jungle-rescue` | `easy-time`, `normal-time`, `expert-time` | lower wins | seconds | 1–7200 | 20 seconds |
 
-`default` on Jungle Rescue is the all-time score. `time` is a completion time in whole seconds. Pop Spiral, Jungle Rescue, and Red Rain report a level (`'levels' => true` in the game config). Their boards are the ones that show it. Solitaire does not.
+Jungle Rescue has one score board and one time board per difficulty (labels `Easy`, `Normal`, `Expert`, `Easy time`, `Normal time`, `Expert time`). A time is a completion time in whole seconds. Pop Spiral, Jungle Rescue, and Red Rain report a level (`'levels' => true` in the game config). Their boards are the ones that show it. Solitaire does not.
+
+Each Jungle Rescue board also has `group` (the difficulty) and `short` (`Score` or `Time`) in the `GET` response. The Arcade groups boards that have `group`: Easy shows Score and Time together, then Normal, then Expert. Boards without `group` (every other game) show one after another as before.
+
+Legacy aliases. A game can list `'aliases' => ['old-board' => 'new-board']` in `tylilo_score_games()`. An alias still accepts `op:start` and `op:submit`, but it is never listed (not in a `GET` without `board`, not in the Arcade, not on the admin pages), and its scores are stored on the target board. Jungle Rescue has two, kept so v2.17 and older keep saving: `default` → `easy` and `time` → `easy-time`. Tokens stay bound to the board that was asked for, so a token from `op:start` with `board:"default"` must be submitted with `board:"default"` (a submit to `easy` with that token is HTTP 400). `op:start` on an alias also returns `"storedAs":"easy"`. `GET ...&board=default` returns the `easy` board. A seed on an alias board is stored on its target. Remove an alias only when no live build still sends it.
+
+One-time migrations. `tylilo_score_migrations()` lists data changes that run once per store, right after the seeds, and are then remembered by id in the same applied list as the seeds (the `seeds` table in SQLite, the `seeds` array in JSON). They work the same on both stores and must be safe on an empty store. `jungle-rescue-difficulty-split-2026-11-21` moved every Jungle Rescue row on `default` to `easy` and on `time` to `easy-time` (those runs had no difficulty recorded), and deleted LOGAN 187100, a cheat-code run, at Ryan’s request on Nov 21, 2026. The `logan-jungle-rescue-187100` seed was removed so it cannot come back. Do not re-add it.
 
 Read the top scores:
 
@@ -95,9 +101,11 @@ A game that reports levels can send the optional `level` as a JSON whole number 
 
 `score` and `playedMs` are whole numbers. `playedMs` must be at least `minPlayedMs`, must not be longer than the token’s age plus 15 seconds, and the token itself must already be at least `minPlayedMs` old. `name` is 1–12 characters: letters, numbers, spaces, and `. ' - ! ? ,`. A fixed word list rejects names after a leetspeak fold (`0`→o, `1`→i, `3`→e, `4`→a, `5`→s, `@`→a, `$`→s, symbols removed, repeated letters collapsed). The check is on the whole name and on each word, not on a substring, so ordinary words that merely contain a fragment still pass. If `board` is omitted on submit it defaults to `default`, which Solitaire and Red Rain do not have.
 
+Cheat runs. A submit whose `cheat` field is truthy (`true`, `1`, or a non-empty string other than `"0"`) is HTTP 400 with `Cheat runs are not saved.`, for every game, before any other check. Nothing is stored and the token is not used up. Games should not submit cheat-code runs at all. The flag is a server-side backstop for a game that sends one. Omit `cheat`, or send `false`, for a normal run.
+
 Success is HTTP 200: `{"ok":true,"rank":1,"scores":[...]}` where `scores` is the top 10 for that board and `rank` counts every stored row, not just the top 10. The site keeps the best 100 rows per board. One network can save 5 scores in 10 minutes, across every game. The sixth is HTTP 429.
 
-Other errors are `{"ok":false,"error":"<plain sentence>"}` with HTTP 400 (name, score, token, or play time), 403 (cross-site POST), 404 (unknown game or board), 405 (not GET or POST), 413 (body over 4096 bytes), or 500 (storage failure). `GET` does not require `Origin`.
+Other errors are `{"ok":false,"error":"<plain sentence>"}` with HTTP 400 (name, score, token, play time, or a cheat run), 403 (cross-site POST), 404 (unknown game or board), 405 (not GET or POST), 413 (body over 4096 bytes), or 500 (storage failure). `GET` does not require `Origin`.
 
 The homepage links to `/arcade/` from the tile between About and Contact. The footer does too.
 

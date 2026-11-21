@@ -104,7 +104,11 @@ tylilo_score_handle('POST', [], json_encode([
     'name' => 'High', 'score' => 90, 'playedMs' => 40000, 'token' => $high2['token'],
 ]), $orderServer, $now + 80);
 $list = tylilo_score_handle('GET', ['game' => 'red-rain', 'board' => 'easy', 'limit' => '10'], '', [], $now + 90);
-check(($list['boards'][0]['scores'][0]['name'] ?? '') === 'High', 'higher scores rank first');
+// The LINK 1011970 seed is also on red-rain easy, so compare High with Low, not with first place.
+$orderNames = array_map(static fn (array $row): string => (string) ($row['name'] ?? ''), $list['boards'][0]['scores'] ?? []);
+$highAt = array_search('High', $orderNames, true);
+$lowAt = array_search('Low', $orderNames, true);
+check($highAt !== false && $lowAt !== false && $highAt < $lowAt, 'higher scores rank first');
 
 $timeServer = $server;
 $timeServer['REMOTE_ADDR'] = '203.0.113.30';
@@ -122,19 +126,21 @@ $times = tylilo_score_handle('GET', ['game' => 'jungle-rescue', 'board' => 'time
 check(($times['boards'][0]['scores'][0]['name'] ?? '') === 'Fast', 'lower times rank first');
 check(($times['boards'][0]['order'] ?? '') === 'asc', 'time boards are ascending');
 
-$logan = tylilo_score_handle('GET', ['game' => 'jungle-rescue', 'board' => 'default', 'limit' => '10'], '', [], $now);
-$loganScores = array_map(static fn (array $row): int => (int) ($row['score'] ?? 0), $logan['boards'][0]['scores'] ?? []);
-check(count(array_filter($loganScores, static fn (int $score): bool => $score === 187100)) === 1, 'seeds Logan 187100 on jungle-rescue once');
-$loganAgain = tylilo_score_handle('GET', ['game' => 'jungle-rescue', 'board' => 'default', 'limit' => '10'], '', [], $now);
-$loganAgainScores = array_map(static fn (array $row): int => (int) ($row['score'] ?? 0), $loganAgain['boards'][0]['scores'] ?? []);
-check(count(array_filter($loganAgainScores, static fn (int $score): bool => $score === 187100)) === 1, 'reading the board does not seed Logan twice');
+$jungleAll = tylilo_score_handle('GET', ['game' => 'jungle-rescue', 'limit' => '25'], '', [], $now);
+$jungleAllScores = [];
+foreach ($jungleAll['boards'] ?? [] as $jungleBoard) {
+    foreach ($jungleBoard['scores'] ?? [] as $row) {
+        $jungleAllScores[] = (int) ($row['score'] ?? 0);
+    }
+}
+check(!in_array(187100, $jungleAllScores, true), 'Logan 187100 is not seeded on a fresh store');
 
 $bigServer = $server;
 $bigServer['REMOTE_ADDR'] = '203.0.113.40';
 $bigStart = tylilo_score_handle('POST', [], json_encode(['op' => 'start', 'game' => 'jungle-rescue', 'board' => 'default']), $bigServer, $now);
 $bigSave = tylilo_score_handle('POST', [], json_encode([
     'op' => 'submit', 'game' => 'jungle-rescue', 'board' => 'default',
-    'name' => 'LOGAN', 'score' => 187100, 'playedMs' => 120000, 'token' => $bigStart['token'],
+    'name' => 'MAX', 'score' => 187100, 'playedMs' => 120000, 'token' => $bigStart['token'],
 ]), $bigServer, $now + 120);
 check(($bigSave['ok'] ?? false) === true, 'a two-minute run of 187100 is accepted');
 
@@ -321,11 +327,159 @@ if ($originalStore === false) {
 
 tylilo_score_clear_board('pop-spiral', 'default');
 check(tylilo_score_admin_rows('pop-spiral', 'default') === [], 'clearing a board removes only that board');
-check(tylilo_score_admin_rows('jungle-rescue', 'default') !== [], 'clearing one board leaves the others');
+check(tylilo_score_admin_rows('jungle-rescue', 'easy') !== [], 'clearing one board leaves the others');
 
 $both = tylilo_score_handle('GET', ['game' => 'solitaire'], '', [], $now);
 $boardIds = array_map(static fn (array $row): string => (string) ($row['board'] ?? ''), $both['boards'] ?? []);
 check($boardIds === ['draw-1', 'draw-3'], 'omitting board returns every solitaire board');
+
+// Jungle Rescue difficulty boards, legacy aliases, the one-time migration, and the cheat flag.
+$jr = tylilo_score_handle('GET', ['game' => 'jungle-rescue'], '', [], $now);
+$jrIds = array_map(static fn (array $row): string => (string) ($row['board'] ?? ''), $jr['boards'] ?? []);
+check($jrIds === ['easy', 'easy-time', 'normal', 'normal-time', 'expert', 'expert-time'], 'jungle-rescue lists exactly the six difficulty boards');
+$jrLabels = array_map(static fn (array $row): string => (string) ($row['label'] ?? ''), $jr['boards'] ?? []);
+check($jrLabels === ['Easy', 'Easy time', 'Normal', 'Normal time', 'Expert', 'Expert time'], 'jungle-rescue board labels');
+$jrGroups = array_map(static fn (array $row): string => (string) ($row['group'] ?? ''), $jr['boards'] ?? []);
+check($jrGroups === ['Easy', 'Easy', 'Normal', 'Normal', 'Expert', 'Expert'], 'jungle-rescue boards carry their difficulty group');
+$jrOk = true;
+foreach ($jr['boards'] ?? [] as $row) {
+    $isTime = str_ends_with((string) $row['board'], '-time');
+    $spec = tylilo_score_board('jungle-rescue', (string) $row['board']);
+    $jrOk = $jrOk && $row['levels'] === true
+        && $row['order'] === ($isTime ? 'asc' : 'desc')
+        && $row['unit'] === ($isTime ? 'seconds' : 'points')
+        && $spec['min'] === ($isTime ? 1 : 0)
+        && $spec['max'] === ($isTime ? 7200 : 5000000)
+        && $spec['minPlayedMs'] === 20000;
+}
+check($jrOk, 'jungle-rescue boards keep the old score and time rules with levels on');
+$redRainList = tylilo_score_handle('GET', ['game' => 'red-rain'], '', [], $now);
+check(!array_key_exists('group', $redRainList['boards'][0] ?? []), 'other games have no group field');
+
+$aliasServer = $server;
+$aliasServer['REMOTE_ADDR'] = '203.0.113.90';
+$aliasStart = tylilo_score_handle('POST', [], json_encode(['op' => 'start', 'game' => 'jungle-rescue', 'board' => 'default']), $aliasServer, $now);
+check(($aliasStart['ok'] ?? false) === true && ($aliasStart['board'] ?? '') === 'default' && ($aliasStart['storedAs'] ?? '') === 'easy' && ($aliasStart['minPlayedMs'] ?? 0) === 20000, 'op:start still works for the legacy default board');
+$aliasToken = tylilo_score_read_token((string) ($aliasStart['token'] ?? ''), $now);
+check(($aliasToken['board'] ?? '') === 'default', 'a legacy token stays bound to default');
+$wrongBoard = tylilo_score_handle('POST', [], json_encode([
+    'op' => 'submit', 'game' => 'jungle-rescue', 'board' => 'easy',
+    'name' => 'Alias', 'score' => 321, 'playedMs' => 30000, 'level' => 2, 'token' => $aliasStart['token'],
+]), $aliasServer, $now + 30);
+check(($wrongBoard['status'] ?? 0) === 400, 'a default token cannot submit to easy');
+$aliasSaved = tylilo_score_handle('POST', [], json_encode([
+    'op' => 'submit', 'game' => 'jungle-rescue', 'board' => 'default',
+    'name' => 'Alias', 'score' => 321, 'playedMs' => 30000, 'level' => 2, 'token' => $aliasStart['token'],
+]), $aliasServer, $now + 30);
+$aliasNames = array_map(static fn (array $row): string => (string) ($row['name'] ?? ''), $aliasSaved['scores'] ?? []);
+check(($aliasSaved['ok'] ?? false) === true && in_array('Alias', $aliasNames, true), 'a default token submits OK under default');
+$aliasEasy = array_column(tylilo_score_admin_rows('jungle-rescue', 'easy'), 'name');
+check(in_array('Alias', $aliasEasy, true), 'a default submit is stored on easy');
+check(tylilo_score_admin_rows('jungle-rescue', 'default') === [], 'nothing is stored on the default alias');
+$aliasRead = tylilo_score_handle('GET', ['game' => 'jungle-rescue', 'board' => 'default'], '', [], $now + 31);
+check(($aliasRead['boards'][0]['board'] ?? '') === 'easy', 'GET board=default reads easy');
+$timeStart = tylilo_score_handle('POST', [], json_encode(['op' => 'start', 'game' => 'jungle-rescue', 'board' => 'time']), $aliasServer, $now + 40);
+$timeSaved = tylilo_score_handle('POST', [], json_encode([
+    'op' => 'submit', 'game' => 'jungle-rescue', 'board' => 'time',
+    'name' => 'Quick', 'score' => 61, 'playedMs' => 61000, 'level' => 4, 'token' => $timeStart['token'],
+]), $aliasServer, $now + 101);
+$easyTime = array_column(tylilo_score_admin_rows('jungle-rescue', 'easy-time'), 'name');
+check(($timeSaved['ok'] ?? false) === true && in_array('Quick', $easyTime, true), 'a time submit is stored on easy-time');
+$normalStart = tylilo_score_handle('POST', [], json_encode(['op' => 'start', 'game' => 'jungle-rescue', 'board' => 'expert-time']), $aliasServer, $now + 110);
+check(($normalStart['ok'] ?? false) === true && !array_key_exists('storedAs', $normalStart), 'a new board starts without storedAs');
+
+$cheatServer = $server;
+$cheatServer['REMOTE_ADDR'] = '203.0.113.95';
+foreach (['true' => true, 'a string' => 'yes', 'one' => 1] as $label => $flag) {
+    $cheatStart = tylilo_score_handle('POST', [], json_encode(['op' => 'start', 'game' => 'pop-spiral', 'board' => 'default']), $cheatServer, $now);
+    $cheat = tylilo_score_handle('POST', [], json_encode([
+        'op' => 'submit', 'game' => 'pop-spiral', 'board' => 'default',
+        'name' => 'Cheat', 'score' => 99, 'playedMs' => 30000, 'cheat' => $flag, 'token' => $cheatStart['token'],
+    ]), $cheatServer, $now + 30);
+    check(($cheat['status'] ?? 0) === 400 && ($cheat['error'] ?? '') === 'Cheat runs are not saved.', "cheat {$label} is rejected");
+}
+check(!in_array('Cheat', array_column(tylilo_score_admin_rows('pop-spiral', 'default'), 'name'), true), 'a cheat run is not stored');
+$fairStart = tylilo_score_handle('POST', [], json_encode(['op' => 'start', 'game' => 'pop-spiral', 'board' => 'default']), $cheatServer, $now);
+$fair = tylilo_score_handle('POST', [], json_encode([
+    'op' => 'submit', 'game' => 'pop-spiral', 'board' => 'default',
+    'name' => 'Fair', 'score' => 98, 'playedMs' => 30000, 'cheat' => false, 'token' => $fairStart['token'],
+]), $cheatServer, $now + 30);
+check(($fair['ok'] ?? false) === true, 'cheat false still saves');
+
+$liveRows = static function () use ($now): array {
+    return [
+        ['game' => 'jungle-rescue', 'board' => 'default', 'name' => 'LOGAN', 'score' => 187100, 'at' => $now - 50, 'version' => null, 'level' => null],
+        ['game' => 'jungle-rescue', 'board' => 'default', 'name' => 'LOGAN', 'score' => 24500, 'at' => $now - 40, 'version' => '2.16', 'level' => 3],
+        ['game' => 'jungle-rescue', 'board' => 'default', 'name' => 'LOGAN', 'score' => 4550, 'at' => $now - 30, 'version' => null, 'level' => null],
+        ['game' => 'jungle-rescue', 'board' => 'default', 'name' => 'RYAN', 'score' => 700, 'at' => $now - 20, 'version' => '2.17', 'level' => 1],
+        ['game' => 'jungle-rescue', 'board' => 'time', 'name' => 'RYAN', 'score' => 300, 'at' => $now - 10, 'version' => '2.17', 'level' => 2],
+        ['game' => 'red-rain', 'board' => 'easy', 'name' => 'LINK', 'score' => 1011970, 'at' => $now - 5, 'version' => null, 'level' => null],
+    ];
+};
+$checkMigrated = static function (string $kind) use ($now): void {
+    $easy = tylilo_score_handle('GET', ['game' => 'jungle-rescue', 'board' => 'easy'], '', [], $now);
+    $easyRows = array_map(static fn (array $row): array => [$row['name'], $row['score'], $row['level']], $easy['boards'][0]['scores'] ?? []);
+    check($easyRows === [['LOGAN', 24500, 3], ['LOGAN', 4550, null], ['RYAN', 700, 1]], "{$kind}: migration moves default rows to easy with levels and drops LOGAN 187100");
+    $easyTime = tylilo_score_handle('GET', ['game' => 'jungle-rescue', 'board' => 'easy-time'], '', [], $now);
+    $timeRows = array_map(static fn (array $row): array => [$row['name'], $row['score'], $row['level']], $easyTime['boards'][0]['scores'] ?? []);
+    check($timeRows === [['RYAN', 300, 2]], "{$kind}: migration moves time rows to easy-time");
+    $raw = tylilo_scores_with(static fn (array $stored): array => $stored);
+    $left = array_filter($raw['scores'], static fn (array $row): bool => $row['game'] === 'jungle-rescue' && in_array($row['board'], ['default', 'time'], true));
+    $banned = array_filter($raw['scores'], static fn (array $row): bool => $row['score'] === 187100);
+    check($left === [] && $banned === [], "{$kind}: no rows remain on the legacy boards and 187100 is gone");
+    check(in_array('jungle-rescue-difficulty-split-2026-11-21', $raw['seeds'], true), "{$kind}: the migration is remembered as applied");
+    $redRain = array_filter($raw['scores'], static fn (array $row): bool => $row['game'] === 'red-rain' && $row['name'] === 'LINK');
+    check(count($redRain) === 1, "{$kind}: other games are untouched and LINK is not seeded twice");
+    $migrations = tylilo_score_migrations();
+    $again = $migrations['jungle-rescue-difficulty-split-2026-11-21']($raw);
+    check($again['scores'] === $raw['scores'], "{$kind}: running the migration again changes nothing");
+};
+
+$beforeDir = getenv('TYLILO_DATA_DIR');
+$beforeStore = getenv('TYLILO_SCORE_STORE');
+$migJson = sys_get_temp_dir() . '/tylilo-scores-mig-json-' . getmypid();
+mkdir($migJson, 0700, true);
+file_put_contents($migJson . '/scores.json', json_encode([
+    'scores' => $liveRows(), 'rates' => [], 'used' => [],
+    'seeds' => ['logan-jungle-rescue-187100', 'link-red-rain-easy-1011970'],
+], JSON_UNESCAPED_SLASHES));
+putenv('TYLILO_DATA_DIR=' . $migJson);
+putenv('TYLILO_SCORE_STORE=json');
+$checkMigrated('JSON');
+
+if (class_exists('PDO') && in_array('sqlite', PDO::getAvailableDrivers(), true)) {
+    $migSqlite = sys_get_temp_dir() . '/tylilo-scores-mig-sqlite-' . getmypid();
+    mkdir($migSqlite, 0700, true);
+    putenv('TYLILO_DATA_DIR=' . $migSqlite);
+    putenv('TYLILO_SCORE_STORE=sqlite');
+    $pdo = tylilo_scores_pdo();
+    $insert = $pdo->prepare('INSERT INTO scores (game, board, name, score, at, version, level) VALUES (?, ?, ?, ?, ?, ?, ?)');
+    foreach ($liveRows() as $row) {
+        $insert->execute(array_values($row));
+    }
+    $pdo->exec("INSERT INTO seeds (id) VALUES ('logan-jungle-rescue-187100'), ('link-red-rain-easy-1011970')");
+    $pdo = null;
+    $checkMigrated('SQLite');
+}
+
+$freshDir = sys_get_temp_dir() . '/tylilo-scores-fresh-' . getmypid();
+mkdir($freshDir, 0700, true);
+putenv('TYLILO_DATA_DIR=' . $freshDir);
+putenv('TYLILO_SCORE_STORE=json');
+tylilo_score_handle('GET', ['game' => 'jungle-rescue'], '', [], $now);
+$fresh = tylilo_scores_with(static fn (array $stored): array => $stored);
+$freshJungle = array_filter($fresh['scores'], static fn (array $row): bool => $row['game'] === 'jungle-rescue');
+check($freshJungle === [] && !in_array('logan-jungle-rescue-187100', $fresh['seeds'], true), 'a fresh store does not re-seed LOGAN 187100');
+check(in_array('jungle-rescue-difficulty-split-2026-11-21', $fresh['seeds'], true), 'a fresh store records the migration as applied');
+$freshSeeds = array_column(tylilo_score_seeds(), 'id');
+check(!in_array('logan-jungle-rescue-187100', $freshSeeds, true), 'the LOGAN 187100 seed entry is gone');
+
+putenv('TYLILO_DATA_DIR=' . $beforeDir);
+if ($beforeStore === false) {
+    putenv('TYLILO_SCORE_STORE');
+} else {
+    putenv('TYLILO_SCORE_STORE=' . $beforeStore);
+}
 
 echo $failed === 0 ? "\n{$checks} checks passed\n" : "\n{$failed} failed\n";
 exit($failed === 0 ? 0 : 1);
