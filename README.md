@@ -63,6 +63,7 @@ Nothing secret is stored in this repository. The address above is the public con
 ```
 index.php                 Homepage
 accessibility.php         Accessibility statement
+privacy.php               Privacy policy
 404.php                   Missing-page page
 contact.php               Form handler
 config.php                Email, site name, year
@@ -90,13 +91,15 @@ To add another page, copy the top of `index.php` (the bootstrap and head include
 
 Every change should meet WCAG 2.2 Level AA and stay in good shape for search. That means semantic HTML, a unique title, meta description, canonical URL, and Open Graph tags on each page, structured data where it fits, an updated `sitemap.xml` for new public pages, and a valid `robots.txt`. Keep pages fast enough for Core Web Vitals, and follow current indexing guidance from Google, Bing, DuckDuckGo, and Brave.
 
-The full rules and the pre-merge checklist (axe or pa11y, Lighthouse accessibility and SEO, keyboard-only use, both themes, and 200% zoom) are in [AGENTS.md](AGENTS.md).
+A significant change, especially one that touches forms, cookies, storage, analytics, embeds, or another company’s service, must also review `/privacy` and update its effective date.
+
+The full rules and the pre-merge checklist (axe or pa11y, Lighthouse accessibility and SEO, keyboard-only use, both themes, 200% zoom, and a privacy-page check) are in [AGENTS.md](AGENTS.md).
 
 ## OTRadio
 
 The player is in the repo, but it is hidden until the app is further along. `TYLILO_OTRADIO_ENABLED` in `config.php` is `false`, so `/otradio/` returns the normal 404 page (with `noindex`), the footer does not link to it, and it is not in `sitemap.xml`. The player files stay in place. `otradio/player.js`, `otradio/player.css`, and `otradio/assets/fonts/` are still served, so turning the page back on does not require putting those files back.
 
-To show it again, set `TYLILO_OTRADIO_ENABLED` to `true` and add `https://tylilo.com/otradio/` to `sitemap.xml`. The footer link follows the flag. The page is `otradio/index.php`. It uses the same header, footer, skip link, focus ring, and theme as the homepage.
+To show it again, set `TYLILO_OTRADIO_ENABLED` to `true` and add `https://tylilo.com/otradio/` to `sitemap.xml`. Also restore the OTRadio section on `/privacy` (on-device caption, speed, and position storage, plus catalog, audio, captions, and artwork loaded from `https://pub-a3eee908554d4a948d807c160caa454e.r2.dev`) and update that page’s effective date. The footer link follows the flag. The page is `otradio/index.php`. It uses the same header, footer, skip link, focus ring, and theme as the homepage.
 
 ```
 otradio/index.php          Page (shared header and footer)
@@ -110,6 +113,8 @@ The catalog address is the `CATALOG_URL` constant at the top of `otradio/player.
 The header’s theme switch is the only theme control. It uses the `tylilo-theme` value in this browser and sets `data-theme` on the page before the first paint, the same way the homepage does. Player colors are wired to the site’s tokens at the bottom of `player.css` (for example `--otr-navy` follows `--navy`, which stays `#0A3161`). The player’s own theme buttons are not on the page.
 
 Captions start on. The CC button turns them off for this browser. If a caption file cannot be loaded, the player says so and disables that button. Show notes turn a bare web address into a short link (an archived log, a public-domain license, or the site’s domain) and still wrap inside the card if a long word remains. None of that is linked from the public site while the flag above is `false`.
+
+While OTRadio is switched off with `TYLILO_OTRADIO_ENABLED` in `config.php`, `/privacy` does not mention it. Turning it back on requires restoring that privacy section: on-device storage of caption preference, playback speed, and episode position, plus catalog, audio, captions, and artwork loaded from `https://pub-a3eee908554d4a948d807c160caa454e.r2.dev`. Update the effective date on `/privacy` when you restore it.
 
 ## Deploy to HostM
 

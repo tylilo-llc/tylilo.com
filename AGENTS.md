@@ -13,6 +13,7 @@ Every change to this site must meet WCAG 2.2 Level AA and stay easy for search e
 - Images have useful alt text. The theme switch has an accessible name and a pressed state.
 - Layout reflows at 320px wide and at 200% zoom without sideways scrolling. Tap targets are at least 24×24 CSS pixels, and 44×44 where the control can grow without breaking the layout.
 - `/accessibility` states the WCAG 2.2 AA target and how to report a barrier. Keep that page linked from the footer.
+- Every significant site change must review and update `/privacy`, including its effective date. Do this especially when forms, cookies, storage, analytics, embeds, or third-party services change. Turning OTRadio back on is one of those changes: restore its privacy section (on-device caption, speed, and position storage, and media loaded from `pub-a3eee908554d4a948d807c160caa454e.r2.dev`) and update the effective date. The steps are in the README’s OTRadio section.
 
 ## SEO
 
@@ -24,7 +25,7 @@ Every change to this site must meet WCAG 2.2 Level AA and stay easy for search e
 
 ## OTRadio
 
-The player files in `otradio/` stay in the repo. While `TYLILO_OTRADIO_ENABLED` in `config.php` is `false`, `/otradio/` returns the site 404 page, sends `noindex`, is omitted from `sitemap.xml`, and is not linked from the footer. The script, stylesheet, and fonts under `otradio/` remain available. To publish the player again, set that flag to `true` and add `https://tylilo.com/otradio/` to `sitemap.xml`. The footer link follows the flag.
+The player files in `otradio/` stay in the repo. While `TYLILO_OTRADIO_ENABLED` in `config.php` is `false`, `/otradio/` returns the site 404 page, sends `noindex`, is omitted from `sitemap.xml`, and is not linked from the footer. The script, stylesheet, and fonts under `otradio/` remain available. To publish the player again, set that flag to `true`, add `https://tylilo.com/otradio/` to `sitemap.xml`, and restore the OTRadio section on `/privacy`: on-device caption, speed, and position storage, plus catalog, audio, captions, and artwork loaded from `pub-a3eee908554d4a948d807c160caa454e.r2.dev`. Update the effective date on `/privacy` when you do. The footer link follows the flag.
 
 ## Pre-merge checklist
 
@@ -35,3 +36,4 @@ Run this before asking Ryan to merge:
 3. Keyboard only: tab through the page, use the skip link, the theme switch, and the form.
 4. Light theme and dark theme.
 5. 200% zoom and a 320px-wide window, with no sideways scroll.
+6. If the change affects what the site collects or loads, update `/privacy` and its effective date.

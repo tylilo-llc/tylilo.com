@@ -60,5 +60,10 @@ if ($uri === '/accessibility' || $uri === '/accessibility/') {
     exit;
 }
 
+if ($uri === '/privacy' || $uri === '/privacy/') {
+    require __DIR__ . '/privacy.php';
+    exit;
+}
+
 http_response_code(404);
 require __DIR__ . '/404.php';

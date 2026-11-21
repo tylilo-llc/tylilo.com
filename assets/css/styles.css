@@ -575,6 +575,10 @@ textarea:-webkit-autofill {
   text-underline-offset: 0.18em;
 }
 
+.prose code {
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 640px) {
   .hero {
     border-bottom-left-radius: 2rem;
