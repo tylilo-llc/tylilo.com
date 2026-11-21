@@ -12,8 +12,8 @@ require __DIR__ . '/../includes/bootstrap.php';
  * The game file is arcade/<slug>/index.html. Another maintainer owns
  * that file; drop a new version in unchanged. Do not edit it here.
  * Artwork is decorative: the tile name is the accessible text.
- * Games open in a new window. Leave newWindow unset (it defaults to
- * true). The Top scores button sits after the link, inside the
+ * Games open in the same tab. Do not add target="_blank".
+ * The Top scores button sits after the link, inside the
  * article, and is not part of the link. Its data-game value is the
  * leaderboard slug in includes/scores.php.
  */
@@ -86,25 +86,16 @@ require __DIR__ . '/../includes/head.php';
       <div class="arcade-grid">
 <?php foreach ($games as $game): ?>
 <?php
-    $opensNewWindow = ($game['newWindow'] ?? true) !== false;
     $gameSlug = basename(trim((string) (parse_url($game['href'], PHP_URL_PATH) ?? ''), '/'));
     $scoresId = 'scores-' . $gameSlug;
 ?>
         <article class="game-slot">
-          <a class="game-tile" href="<?= tylilo_e($game['href']) ?>"<?php if ($opensNewWindow): ?> target="_blank" rel="noopener"<?php endif; ?>>
+          <a class="game-tile" href="<?= tylilo_e($game['href']) ?>">
             <span class="game-tile-art">
               <img src="<?= tylilo_e(tylilo_asset($game['art'])) ?>" alt="" width="200" height="150">
             </span>
             <span class="game-tile-name"><?= tylilo_e($game['title']) ?></span>
-<?php if ($opensNewWindow): ?>
-            <svg class="game-tile-out" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="16" height="16">
-              <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 5h5v5M19 5l-8 8"/>
-              <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M10 5H6.5A1.5 1.5 0 0 0 5 6.5v11A1.5 1.5 0 0 0 6.5 19h11a1.5 1.5 0 0 0 1.5-1.5V14"/>
-            </svg>
-            <span class="visually-hidden"><?= tylilo_e($game['description']) ?> (opens in a new window)</span>
-<?php else: ?>
             <span class="visually-hidden"><?= tylilo_e($game['description']) ?></span>
-<?php endif; ?>
           </a>
           <div class="score-panel">
             <button class="score-toggle" type="button" aria-expanded="false" aria-controls="<?= tylilo_e($scoresId) ?>" data-game="<?= tylilo_e($gameSlug) ?>">

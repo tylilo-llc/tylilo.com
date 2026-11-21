@@ -114,7 +114,7 @@ arcade/jungle-rescue/art.svg    Tile artwork
 
 The artwork is an SVG. The tile shows it above the game name, and the whole tile is the link. The name is the accessible text, so the image alt stays empty. The one-line description stays in the page for search and screen readers, visually hidden on the tile.
 
-Every game opens in a new window. The template does this for every entry unless `newWindow` is set to false, which it should not be. The link gets `target="_blank"` and `rel="noopener"`, plus the words “(opens in a new window)” for assistive tech and a small window icon that is hidden from them. The homepage Arcade tile is separate: it opens `/arcade/` in the same tab.
+Every game opens in the same tab. The tile link does not use `target="_blank"`, and it has no new-window hint or window icon. The homepage Arcade tile also opens `/arcade/` in the same tab. Game links are prefetched, not prerendered, so the game does not start running in the background.
 
 `index.html` is the whole game. It is maintained elsewhere and replaced as a unit, so leave the file as it arrives. Do not reformat it or point it at other hosts. The folder is served as `/arcade/<slug>/` with or without the trailing slash. `DirectoryIndex` lists `index.html` after `index.php`, so a game folder is not blocked by the PHP index used on the rest of the site.
 

@@ -2,6 +2,23 @@
 <!--
   RED RAIN - changelog
   ====================
+  v2.2.2 (2026-11-21)
+  - New explosion sounds, still 100% synthesized in Web Audio (no audio files). Every interceptor blast,
+    chain blast, city/ground impact and nuke is now built from four layers: a sharp 1-2 ms crack
+    (band-passed noise), a body (low-passed noise whose filter sweeps down), a sub-bass thump (sine
+    falling from ~120 Hz to ~35 Hz) and a rolling rumble tail (double low-passed noise).
+  - A shared explosion bus adds mild tanh saturation for grit, a short reverb (one ConvolverNode with a
+    generated decaying-noise impulse) so blasts ring out over the city, and a compressor so big chain
+    reactions stay full instead of clipping. It feeds the existing Effects volume, so the Sound effects
+    toggle, Effects volume, M mute, pause and tab-hidden suspend work exactly as before.
+  - Weight and length step up: interceptor blast < chain blast < city impact < nuke. City hits add debris
+    crackles; the nuke has a huge crack, a ~24 Hz sub, a ~4 s rolling rumble and a second shockwave.
+  - Each explosion varies slightly (pitch, filter, decay) and is panned left/right (up to +-0.7) to where
+    it happens on screen.
+  - Performance: one shared noise buffer, one reverb and one compressor for all explosions; the 40 ms
+    blast/chain throttle and the 40-voice cap stay (4 voices per boom; blasts/chains leave 8 voices free for impacts, nukes and other
+    sounds; debris is dropped near the cap).
+    The fireworks pop sound is unchanged.
   v2.2.1 (2026-11-21)
   - Versioning is now MAJOR.MINOR.BUILD. BUILD goes up by 1 with every shipped release and never
     resets; MINOR moves only when a roadmap milestone is reached. v2.2 is read as 2.2.0.
@@ -236,7 +253,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#07040f">
-<title>Red Rain v2.2.1</title>
+<title>Red Rain v2.2.2</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Cdefs%3E%3ClinearGradient%20id='s'%20x1='0'%20y1='0'%20x2='0'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%2314030c'/%3E%3Cstop%20offset='.65'%20stop-color='%233d0812'/%3E%3Cstop%20offset='1'%20stop-color='%236e1414'/%3E%3C/linearGradient%3E%3CradialGradient%20id='m'%20cx='.4'%20cy='.4'%20r='.6'%3E%3Cstop%20offset='0'%20stop-color='%23ff8a66'/%3E%3Cstop%20offset='1'%20stop-color='%23c0181e'/%3E%3C/radialGradient%3E%3ClinearGradient%20id='t'%20gradientUnits='userSpaceOnUse'%20x1='6'%20y1='2'%20x2='33'%20y2='37'%3E%3Cstop%20offset='0'%20stop-color='%23ff3b2f'%20stop-opacity='0'/%3E%3Cstop%20offset='.7'%20stop-color='%23ff5a3c'%20stop-opacity='.8'/%3E%3Cstop%20offset='1'%20stop-color='%23ffc27a'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20width='64'%20height='64'%20rx='12'%20fill='url(%23s)'/%3E%3Ccircle%20cx='47'%20cy='16'%20r='13'%20fill='%23ff3b2f'%20opacity='.18'/%3E%3Ccircle%20cx='47'%20cy='16'%20r='8.5'%20fill='url(%23m)'/%3E%3Ccircle%20cx='44'%20cy='14'%20r='1.6'%20fill='%23a3121a'%20opacity='.6'/%3E%3Ccircle%20cx='50'%20cy='19'%20r='1.2'%20fill='%23a3121a'%20opacity='.6'/%3E%3Ccircle%20cx='14'%20cy='9'%20r='.8'%20fill='%23ffd9cc'/%3E%3Ccircle%20cx='26'%20cy='5'%20r='.6'%20fill='%23ffd9cc'/%3E%3Ccircle%20cx='58'%20cy='34'%20r='.6'%20fill='%23ffd9cc'/%3E%3Cpath%20d='M6%202L33%2037'%20stroke='url(%23t)'%20stroke-width='5'%20stroke-linecap='round'%20opacity='.45'/%3E%3Cpath%20d='M6%202L33%2037'%20stroke='url(%23t)'%20stroke-width='2.2'%20stroke-linecap='round'/%3E%3Ccircle%20cx='33.5'%20cy='37.5'%20r='6'%20fill='%23ff5a3c'%20opacity='.45'/%3E%3Ccircle%20cx='33.5'%20cy='37.5'%20r='2.6'%20fill='%23fff1d6'/%3E%3Cpath%20d='M0%2064V50h5v-6h4v6h3v-9h6v9h4v-5h5v5h3v-11h6v11h4v-7h5v7h3v-4h4v4h6v-8h6v22z'%20fill='%230d0208'/%3E%3Cpath%20d='M0%2053h64'%20stroke='%23ff3b2f'%20stroke-width='.6'%20opacity='.35'/%3E%3Crect%20x='14'%20y='44'%20width='1.4'%20height='1.4'%20fill='%23ffcf7a'/%3E%3Crect%20x='32'%20y='43'%20width='1.4'%20height='1.4'%20fill='%23ffcf7a'/%3E%3Crect%20x='35'%20y='47'%20width='1.4'%20height='1.4'%20fill='%23ffcf7a'/%3E%3Crect%20x='54'%20y='48'%20width='1.4'%20height='1.4'%20fill='%23ffcf7a'/%3E%3C/svg%3E">
 <link rel="apple-touch-icon" sizes="180x180" href="data:image/png;base64,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">
 <style>
@@ -255,7 +272,7 @@
 <script>
 (() => {
 'use strict';
-const VERSION = '2.2.1';   // MAJOR.MINOR.BUILD - BUILD +1 per shipped release, never reset
+const VERSION = '2.2.2';   // MAJOR.MINOR.BUILD - BUILD +1 per shipped release, never reset
 document.title = 'Red Rain v' + VERSION;
 // ---------- helpers ----------
 const canvas = document.getElementById('c');
@@ -531,13 +548,132 @@ function noise(dur, vol = 0.3, freq = 1200, endFreq = 200, delay = 0) {
   voices++; s.onended = voiceEnd;
   s.start(t, Math.random()); s.stop(t + dur + 0.05);
 }
+// ---------- layered explosions (v2.2.2) ----------
+// Each boom = 4 layers from the ONE shared noise buffer + one sine: crack (band-passed noise, ~20 ms),
+// body (low-passed noise, filter sweeps down, held then decays), sub thump (sine ~120 -> 35 Hz) and a
+// rolling rumble (noise through two low-passes). Per boom: one gain -> one StereoPanner -> the shared
+// boom bus. Bus (built once, lazily): mild tanh saturation -> 24 Hz high-pass -> compressor -> sfxGain,
+// plus ONE ConvolverNode reverb send (generated decaying-noise impulse). So the Effects volume, the
+// Sound effects toggle, M mute and tab-hidden suspend all apply exactly as before. 4 voices per boom.
+const BOOM_OUT = 0.4;   // bus output trim: in-game level, balanced against music and the other SFX
+let boomBus = null;
+function getBoomBus() {
+  if (boomBus) return boomBus;
+  const inp = actx.createGain();
+  const shaper = actx.createWaveShaper();
+  const n = 1024, curve = new Float32Array(n), kd = 2.2, nrm = Math.tanh(kd);
+  for (let i = 0; i < n; i++) { const x = i * 2 / (n - 1) - 1; curve[i] = Math.tanh(kd * x) / nrm; }
+  shaper.curve = curve; shaper.oversample = '2x';
+  const hp = actx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 24; hp.Q.value = 0.6;
+  const send = actx.createGain();
+  const conv = actx.createConvolver();
+  const len = Math.floor(actx.sampleRate * 1.4), ir = actx.createBuffer(2, len, actx.sampleRate);
+  for (let c = 0; c < 2; c++) {
+    const d = ir.getChannelData(c); let lp = 0;
+    for (let i = 0; i < len; i++) {
+      const p = i / len, a = 0.35 + 0.6 * p;
+      lp += (1 - a) * ((Math.random() * 2 - 1) - lp);
+      d[i] = lp * Math.pow(1 - p, 3.2) * (i < actx.sampleRate * 0.012 ? i / (actx.sampleRate * 0.012) : 1);
+    }
+  }
+  conv.buffer = ir; conv.normalize = true;
+  const wet = actx.createGain(); wet.gain.value = 0.55;
+  const comp = actx.createDynamicsCompressor();
+  comp.threshold.value = -4; comp.knee.value = 8; comp.ratio.value = 8; comp.attack.value = 0.002; comp.release.value = 0.22;
+  const out = actx.createGain(); out.gain.value = BOOM_OUT;
+  inp.connect(shaper); shaper.connect(hp); hp.connect(comp);
+  send.connect(conv); conv.connect(wet); wet.connect(comp);
+  comp.connect(out); out.connect(sfxGain || master);
+  boomBus = { inp, send };
+  return boomBus;
+}
+// rumble envelope: decays over dur with slow random swells ("rolling" thunder)
+function rollCurve(peak, dur, rollAmt, attack) {
+  const N = Math.max(32, Math.floor(dur * 60)), c = new Float32Array(N);
+  let wob = 0, tgt = 0;
+  for (let i = 0; i < N; i++) {
+    const tt = (i / (N - 1)) * dur;
+    if (i % 6 === 0) tgt = rand(-1, 1);
+    wob += (tgt - wob) * 0.18;
+    const env = tt < attack ? tt / attack : Math.pow(1 - (tt - attack) / (dur - attack), 2.2);
+    c[i] = Math.max(0, peak * env * (1 + rollAmt * wob));
+  }
+  c[N - 1] = 0;
+  return c;
+}
+// screen x (world units) -> modest stereo pan, about +-0.7
+const sfxPan = x => (Number.isFinite(x) && W > 0) ? Math.max(-0.7, Math.min(0.7, (x / W * 2 - 1) * 0.7)) : 0;
+// o = { pan, lvl, wet, delay, crack:[vol,dur,freq], body:[vol,dur,f1,f2,hold], sub:[vol,dur,f1,f2],
+//       rumble:[vol,dur,freq,roll,attack], debris:[count,spread,vol] }
+function boom(o) {
+  // o.reserve: blasts/chains leave that many voices free so impacts, nukes and UI sounds still get through
+  if (!actx || muted || !SET.sfx || voices + 4 > MAX_VOICES - (o.reserve || 0) || actx.state !== 'running') return;
+  const buf = getNoiseBuf(), bus = getBoomBus();
+  const t = actx.currentTime + (o.delay || 0);
+  const vp = rand(0.92, 1.08), vf = rand(0.85, 1.15), vd = rand(0.9, 1.12);   // per-call variation
+  const out = actx.createGain(); out.gain.value = o.lvl || 1;
+  const pan = actx.createStereoPanner ? actx.createStereoPanner() : null;
+  if (pan) { pan.pan.value = Math.max(-1, Math.min(1, o.pan || 0)); out.connect(pan); pan.connect(bus.inp); }
+  else out.connect(bus.inp);
+  const sg = actx.createGain(); sg.gain.value = o.wet; (pan || out).connect(sg); sg.connect(bus.send);
+  const src = (dur, loop) => {
+    const s = actx.createBufferSource(); s.buffer = buf; s.loop = !!loop;
+    voices++; s.onended = voiceEnd;
+    s.start(t, Math.random() * (buf.duration - 0.1)); s.stop(t + dur + 0.05);
+    return s;
+  };
+  { const [vol, dur0, fq] = o.crack, dur = dur0 * vd;                 // 1) crack
+    const s = src(dur), f = actx.createBiquadFilter(), g = actx.createGain();
+    f.type = 'bandpass'; f.frequency.value = fq * vf; f.Q.value = 0.8;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.0015);
+    g.gain.exponentialRampToValueAtTime(0.0005, t + dur);
+    s.connect(f); f.connect(g); g.connect(out); }
+  { const [vol, dur0, f1, f2, hold] = o.body, dur = dur0 * vd;        // 2) body
+    const s = src(hold + (dur - hold) * 1.25, (dur * 1.25) > buf.duration - 0.2), f = actx.createBiquadFilter(), g = actx.createGain();
+    f.type = 'lowpass'; f.Q.value = 1.1;
+    f.frequency.setValueAtTime(f1 * vf, t); f.frequency.exponentialRampToValueAtTime(Math.max(40, f2 * vf), t + dur * 0.8);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.006);
+    g.gain.setValueAtTime(vol, t + hold); g.gain.setTargetAtTime(0, t + hold, (dur - hold) / 6);
+    s.connect(f); f.connect(g); g.connect(out); }
+  { const [vol, dur0, f1, f2] = o.sub, dur = dur0 * vd;               // 3) sub thump
+    const osc = actx.createOscillator(), g = actx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(f1 * vp, t); osc.frequency.exponentialRampToValueAtTime(f2 * vp, t + dur * 0.55);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.004);
+    g.gain.setTargetAtTime(0, t + 0.03, dur / 5);
+    osc.connect(g); g.connect(out);
+    voices++; osc.onended = voiceEnd; osc.start(t); osc.stop(t + 0.03 + dur * 1.5); }
+  { const [vol, dur0, fq, roll, att] = o.rumble, dur = dur0 * vd;     // 4) rolling rumble
+    const s = src(dur, dur > buf.duration - 0.2), f = actx.createBiquadFilter(), f2 = actx.createBiquadFilter(), g = actx.createGain();
+    f.type = 'lowpass'; f.frequency.value = fq * vf; f.Q.value = 0.5;
+    f2.type = 'lowpass'; f2.frequency.value = fq * vf * 1.4; f2.Q.value = 0.5;
+    g.gain.setValueAtTime(0, t); g.gain.setValueCurveAtTime(rollCurve(vol, dur, roll, att), t, dur);
+    s.connect(f); f.connect(f2); f2.connect(g); g.connect(out); }
+  if (o.debris) {                                                       // debris crackles (dropped near the voice cap)
+    const [cnt, spread, dvol] = o.debris;
+    for (let i = 0; i < cnt && voices < MAX_VOICES; i++) {
+      const dt = rand(0.06, spread), d = rand(0.02, 0.05);
+      const s = actx.createBufferSource(), f = actx.createBiquadFilter(), g = actx.createGain();
+      s.buffer = buf; f.type = 'bandpass'; f.frequency.value = rand(1500, 4000); f.Q.value = 1.2;
+      const v = dvol * rand(0.4, 1) * (1 - dt / (spread * 1.3));
+      g.gain.setValueAtTime(0, t + dt); g.gain.linearRampToValueAtTime(v, t + dt + 0.002);
+      g.gain.exponentialRampToValueAtTime(0.0005, t + dt + d);
+      s.connect(f); f.connect(g); g.connect(out);
+      voices++; s.onended = voiceEnd; s.start(t + dt, Math.random()); s.stop(t + dt + d + 0.03);
+    }
+  }
+}
 let lastBoom = 0;
 const SFX = {
   fire()   { tone(900, 300, 0.12, 'square', 0.06); },
   empty()  { tone(160, 120, 0.08, 'square', 0.06); },
-  blast()  { const n = performance.now(); if (n - lastBoom < 40) return; lastBoom = n; noise(0.45, 0.25, 2200, 120); tone(140, 40, 0.3, 'sine', 0.2); },
-  chain()  { const n = performance.now(); if (n - lastBoom < 40) return; lastBoom = n; noise(0.3, 0.16, 3000, 300); },
-  impact() { noise(0.9, 0.45, 900, 40); tone(90, 30, 0.7, 'sawtooth', 0.18); },
+  // v2.2.2 layered explosions; pan = sfxPan(worldX). Weight/length: blast < chain < impact < nuke.
+  // lvl = per-sound in-game level (chain sits a little under blast because chain kills are so frequent)
+  blast(pan = 0)  { const n = performance.now(); if (n - lastBoom < 40) return; lastBoom = n;
+    boom({ pan, lvl: 0.8, reserve: 8, wet: 0.16, crack: [0.32, 0.018, 3200], body: [0.30, 0.5, 2600, 160, 0.02], sub: [0.42, 0.32, 120, 42], rumble: [0.16, 0.7, 150, 0.2, 0.03] }); },
+  chain(pan = 0)  { const n = performance.now(); if (n - lastBoom < 40) return; lastBoom = n;
+    boom({ pan, lvl: 0.38, reserve: 8, wet: 0.2, crack: [0.36, 0.022, 2800], body: [0.34, 0.65, 2400, 130, 0.03], sub: [0.5, 0.42, 115, 38], rumble: [0.22, 1.25, 140, 0.3, 0.04] }); },
+  impact(pan = 0) { boom({ pan, lvl: 0.7, wet: 0.26, crack: [0.4, 0.028, 2200], body: [0.42, 1.1, 1800, 70, 0.06], sub: [0.62, 0.75, 110, 35], rumble: [0.36, 1.9, 120, 0.45, 0.06], debris: [3, 0.7, 0.12] }); },
   laser()  { tone(1800, 600, 0.09, 'sawtooth', 0.05); },
   buy()    { tone(660, 660, 0.07, 'square', 0.08); tone(990, 990, 0.1, 'square', 0.08, 0.07); },
   deny()   { tone(200, 140, 0.15, 'square', 0.08); },
@@ -554,7 +690,10 @@ const SFX = {
   fanfare() { [523, 659, 784, 1046, 784, 1046].forEach((f, i) => tone(f, f, i === 5 ? 0.5 : 0.14, 'triangle', 0.1, i * 0.12)); },
   alarm()  { for (let i = 0; i < 4; i++) { tone(880, 330, 0.42, 'sawtooth', 0.07, i * 0.5); tone(440, 165, 0.42, 'square', 0.04, i * 0.5); } },
   siren()  { for (let i = 0; i < 3; i++) { tone(620, 980, 0.18, 'square', 0.06, i * 0.36); tone(980, 620, 0.18, 'square', 0.06, i * 0.36 + 0.18); } },
-  nuke()   { noise(3.2, 0.6, 700, 30); tone(70, 22, 3.0, 'sine', 0.35); tone(45, 20, 3.4, 'sawtooth', 0.12); noise(0.5, 0.5, 4000, 400); },
+  nuke(pan = 0)   {   // huge crack, deep long sub, ~4 s rolling rumble, debris + a delayed second shockwave
+    boom({ pan, lvl: 1.6, wet: 0.32, crack: [0.55, 0.04, 1600], body: [0.5, 2.2, 2200, 45, 0.15], sub: [0.75, 2.4, 95, 24], rumble: [0.5, 4.2, 110, 0.6, 0.35], debris: [5, 1.6, 0.1] });
+    boom({ pan: pan * 0.5, lvl: 1.6, wet: 0.4, delay: 0.32, crack: [0.18, 0.03, 900], body: [0.26, 1.6, 900, 40, 0.1], sub: [0.35, 1.4, 60, 28], rumble: [0.3, 3.6, 90, 0.7, 0.5] });
+  },
 };
 
 // ---------- static scenery (normalized, so it survives any resize) ----------
@@ -879,7 +1018,7 @@ function nukeImpact(x, by) {
   G.quake = { t: 0, dur: 1.9, seed: Math.random() * 10 };   // whole-screen shake (world + HUD)
   try { if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate([350, 80, 250, 80, 150]); } catch (e) {}
   explode(x, by, 70 * Math.max(gs, 0.8), 'enemy', 0);
-  SFX.nuke();
+  SFX.nuke(sfxPan(x));
 }
 function spawnBomber() {
   const dir = Math.random() < 0.5 ? 1 : -1;
@@ -1223,6 +1362,9 @@ function drawHelp() {
 // Player-facing release notes, newest first, written from the changelog. Opens ONLY from the
 // WHAT'S NEW button or the W key - never automatically.
 const WHATS_NEW = [
+  { v: '2.2.2', d: '2026-11-21', items: [
+    'Brand-new explosion sounds: punchier booms with deep bass, echo over the city, and left/right placement.',
+    'City hits and nukes now sound bigger and longer than your own interceptor blasts.' ] },
   { v: '2.2.1', d: '2026-11-21', items: [
     'New: this What\'s New screen. Find it on the title and pause menus, or press W.',
     'Pinch to zoom now works on phones and tablets.',
@@ -1901,7 +2043,7 @@ function update(dt) {
       s.dead = true;
       explode(s.tx, s.ty, blastRadius(), 'player', 0);
       G.explosions[G.explosions.length - 1].shot = true;   // the player's own interceptor detonation
-      SFX.blast();
+      SFX.blast(sfxPan(s.tx));
       const mi = G.markers.findIndex(mk => mk.x === s.tx && mk.y === s.ty);
       if (mi >= 0) G.markers.splice(mi, 1);
     }
@@ -2004,7 +2146,7 @@ function update(dt) {
           m.dmgT = 0.4;
           for (let i = 0; i < 14; i++) addP(m.x + rand(-6, 6), m.y, rand(-90, 90), rand(-90, 60), 0.5, 0.5, i % 2 ? '#ffb347' : '#ffffff', 2, 80);
           G.floaters.push({ x: m.x, y: m.y - 24, text: 'HIT - 1 MORE', t: 1.2, c: '#ffb347' });
-          SFX.chain();
+          SFX.chain(sfxPan(m.x));
           continue;
         }
       }
@@ -2012,7 +2154,7 @@ function update(dt) {
       addKill(m.type, ex.chain, m.x, m.y);
       if (m.type === 'nuke') { G.floaters.push({ x: m.x, y: m.y - 22, text: 'NUKE DOWN!', t: 1.8, c: '#ffe066' }); G.shake = Math.max(G.shake, 5); }
       explode(m.x, m.y, Math.max(16, blastRadius() * 0.6), 'player', ex.chain + 1);
-      SFX.chain();
+      SFX.chain(sfxPan(m.x));
     }
     for (const b of G.bombers) {
       const pad = (b.kind === 'stealth' ? 22 : 14) * HIT;
@@ -2032,7 +2174,7 @@ function update(dt) {
           b.dmgT = 0.4;
           for (let i = 0; i < 14; i++) addP(b.x + rand(-12, 12), b.y, rand(-90, 90), rand(-90, 60), 0.5, 0.5, i % 2 ? '#ffb347' : '#ffffff', 2, 80);
           G.floaters.push({ x: b.x, y: b.y - 20, text: 'HIT - 1 MORE', t: 1.2, c: '#ffb347' });
-          SFX.chain();
+          SFX.chain(sfxPan(b.x));
           continue;
         }
       }
@@ -2040,14 +2182,14 @@ function update(dt) {
       addKill(b.kind === 'stealth' ? 'stealth' : 'bomber', ex.chain, b.x, b.y);
       explode(b.x, b.y, blastRadius() * 0.9, 'player', ex.chain + 1);
       G.shake = Math.max(G.shake, 6);
-      SFX.blast();
+      SFX.blast(sfxPan(b.x));
     }
     for (const d of G.drones) {
       if (d.dead || dist2(d.x, d.y, ex.x, ex.y) > (ex.r + 9 * HIT) * (ex.r + 9 * HIT)) continue;
       d.dead = true; G.droneKills++;
       addKill('drone', ex.chain, d.x, d.y);
       explode(d.x, d.y, Math.max(20, blastRadius() * 0.7), 'player', ex.chain + 1);
-      SFX.chain();
+      SFX.chain(sfxPan(d.x));
     }
     if (G.bplane && G.bplane.state === 'fly' && dist2(G.bplane.x, G.bplane.y, ex.x, ex.y) < (ex.r + 16 * bpS()) * (ex.r + 16 * bpS())) shootBannerPlane();
     // only player blasts (incl. chains & auto flak blasts) collect crates; enemy impacts never do
@@ -2164,7 +2306,7 @@ function finaleImpact(m) {
   }
   if (G.build && G.build.phase === 'active' && (m.build || Math.abs(x - G.build.x) < 40 * gs)) failBuild();
   G.shake = Math.max(G.shake, big ? 18 : 10);
-  if (big) SFX.impact(); else SFX.blast();
+  if (big) SFX.impact(sfxPan(x)); else SFX.blast(sfxPan(x));
 }
 function updateFinale(dt) {
   const F = G.finale; if (!F) return;
@@ -2249,7 +2391,7 @@ function impact(x, y) {
   }
   explode(x, y, 34 * Math.max(gs, 0.8), 'enemy', 0);
   G.shake = Math.max(G.shake, 10);
-  SFX.impact();
+  SFX.impact(sfxPan(x));
   for (const c of G.cities) {
     if (c.alive && Math.abs(c.x - x) < 36 * gs) {
       c.alive = false;
