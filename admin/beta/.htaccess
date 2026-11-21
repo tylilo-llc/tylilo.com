@@ -1,0 +1,8 @@
+Options -Indexes
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^g/([a-z0-9-]+)/(.+)$ g.php?game=$1&file=$2 [B,L]
+  RewriteRule ^g/([a-z0-9-]+)/?$ g.php?game=$1&file=index.html [L]
+</IfModule>

@@ -21,7 +21,7 @@ if (str_contains($uri, "\0") || str_contains($uri, '..')) {
 }
 
 $path = __DIR__ . $uri;
-if (preg_match('#^/(?:data|tests|includes|scripts)(?:/|$)#', $uri) || $uri === '/config.php' || $uri === '/router.php') {
+if (preg_match('#^/(?:data|tests|includes|scripts|beta)(?:/|$)#', $uri) || $uri === '/config.php' || $uri === '/router.php') {
     http_response_code(403);
     exit;
 }
@@ -32,6 +32,12 @@ if ($uri === '/otradio/index.php' && TYLILO_OTRADIO_ENABLED) {
 }
 if ($uri === '/arcade/index.php') {
     header('Location: /arcade/', true, 301);
+    exit;
+}
+if (preg_match('#^/admin/beta/g/([a-z0-9-]+)(?:/(.*))?$#', $uri, $betaRoute) === 1) {
+    $_GET['game'] = $betaRoute[1];
+    $_GET['file'] = ($betaRoute[2] ?? '') === '' ? 'index.html' : $betaRoute[2];
+    require __DIR__ . '/admin/beta/g.php';
     exit;
 }
 if ($uri !== '/' && is_file($path)) {

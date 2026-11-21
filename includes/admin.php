@@ -8,6 +8,8 @@ if (!defined('TYLILO_BOOTSTRAPPED')) {
 }
 
 require_once __DIR__ . '/turnstile.php';
+require_once __DIR__ . '/admin-access.php';
+require_once __DIR__ . '/beta.php';
 
 function tylilo_admin_boot(): void
 {
@@ -15,6 +17,7 @@ function tylilo_admin_boot(): void
     header('Cache-Control: no-store, private');
     tylilo_session_start();
     tylilo_admin_with(static function (array $data): array {
+        $data = tylilo_admin_migrate($data);
         if (empty($data['seeded'])) {
             $data = tylilo_admin_seed($data);
             $data['seeded'] = true;
@@ -22,6 +25,7 @@ function tylilo_admin_boot(): void
 
         return $data;
     });
+    tylilo_admin_touch_session();
 }
 
 function tylilo_admin_blank(): array
@@ -32,6 +36,11 @@ function tylilo_admin_blank(): array
         'notes' => [],
         'todos' => [],
         'versions' => [],
+        'invites' => [],
+        'feedback' => [],
+        'ideas' => [],
+        'comments' => [],
+        'activity' => [],
         'seeded' => false,
     ];
 }
@@ -83,6 +92,7 @@ function tylilo_admin_with_json(callable $change): array
             $data = tylilo_admin_blank();
         }
         $data += tylilo_admin_blank();
+        $data = tylilo_admin_migrate($data);
         $data = $change($data);
         $encoded = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         if (!is_string($encoded)) {
@@ -112,7 +122,9 @@ function tylilo_admin_pdo(): PDO
             id INTEGER PRIMARY KEY,
             username TEXT NOT NULL UNIQUE,
             password_hash TEXT NOT NULL,
-            role TEXT NOT NULL CHECK (role IN (\'admin\', \'member\')),
+            role TEXT NOT NULL CHECK (role IN (\'owner\', \'member\')),
+            disabled INTEGER NOT NULL DEFAULT 0,
+            permissions TEXT NOT NULL DEFAULT \'{}\',
             totp_secret TEXT NOT NULL DEFAULT \'\',
             totp_enabled INTEGER NOT NULL DEFAULT 0,
             recovery_hashes TEXT NOT NULL DEFAULT \'[]\',
@@ -120,7 +132,53 @@ function tylilo_admin_pdo(): PDO
         )'
     );
 
+    tylilo_admin_migrate_user_table($pdo);
+
     return $pdo;
+}
+
+function tylilo_admin_migrate_user_table(PDO $pdo): void
+{
+    $sql = $pdo->query("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'users'")->fetchColumn();
+    if (!is_string($sql) || $sql === '') {
+        return;
+    }
+    if (str_contains($sql, "'owner'")) {
+        return;
+    }
+    $pdo->exec('ALTER TABLE users RENAME TO users_legacy');
+    $pdo->exec(
+        'CREATE TABLE users (
+            id INTEGER PRIMARY KEY,
+            username TEXT NOT NULL UNIQUE,
+            password_hash TEXT NOT NULL,
+            role TEXT NOT NULL CHECK (role IN (\'owner\', \'member\')),
+            disabled INTEGER NOT NULL DEFAULT 0,
+            permissions TEXT NOT NULL DEFAULT \'{}\',
+            totp_secret TEXT NOT NULL DEFAULT \'\',
+            totp_enabled INTEGER NOT NULL DEFAULT 0,
+            recovery_hashes TEXT NOT NULL DEFAULT \'[]\',
+            created_at INTEGER NOT NULL
+        )'
+    );
+    $old = $pdo->query('SELECT * FROM users_legacy')->fetchAll();
+    $stmt = $pdo->prepare('INSERT INTO users (id, username, password_hash, role, disabled, permissions, totp_secret, totp_enabled, recovery_hashes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    foreach ($old as $row) {
+        $role = (string) $row['role'] === 'member' ? 'member' : 'owner';
+        $stmt->execute([
+            (int) $row['id'],
+            (string) $row['username'],
+            (string) $row['password_hash'],
+            $role,
+            0,
+            '{}',
+            (string) ($row['totp_secret'] ?? ''),
+            (int) ($row['totp_enabled'] ?? 0),
+            (string) ($row['recovery_hashes'] ?? '[]'),
+            (int) ($row['created_at'] ?? time()),
+        ]);
+    }
+    $pdo->exec('DROP TABLE users_legacy');
 }
 
 function tylilo_admin_with_sqlite(callable $change): array
@@ -134,6 +192,7 @@ function tylilo_admin_with_sqlite(callable $change): array
             $data = tylilo_admin_blank();
         }
         $data += tylilo_admin_blank();
+        $data = tylilo_admin_migrate($data);
         $storedUsers = tylilo_admin_users_from_table($pdo);
         if ($storedUsers !== []) {
             $data['users'] = $storedUsers;
@@ -157,14 +216,17 @@ function tylilo_admin_with_sqlite(callable $change): array
 
 function tylilo_admin_users_from_table(PDO $pdo): array
 {
-    $rows = $pdo->query('SELECT id, username, password_hash, role, totp_secret, totp_enabled, recovery_hashes, created_at FROM users ORDER BY id')->fetchAll();
+    $rows = $pdo->query('SELECT id, username, password_hash, role, disabled, permissions, totp_secret, totp_enabled, recovery_hashes, created_at FROM users ORDER BY id')->fetchAll();
     $users = [];
     foreach ($rows as $row) {
+        $permissions = json_decode((string) ($row['permissions'] ?? '{}'), true);
         $users[] = [
             'id' => (int) $row['id'],
             'username' => (string) $row['username'],
             'password_hash' => (string) $row['password_hash'],
             'role' => (string) $row['role'],
+            'disabled' => (int) ($row['disabled'] ?? 0),
+            'permissions' => is_array($permissions) ? $permissions : [],
             'totp_secret' => (string) $row['totp_secret'],
             'totp_enabled' => (int) $row['totp_enabled'],
             'recovery_hashes' => (string) $row['recovery_hashes'],
@@ -178,17 +240,23 @@ function tylilo_admin_users_from_table(PDO $pdo): array
 function tylilo_admin_write_users(PDO $pdo, array $users): void
 {
     $pdo->exec('DELETE FROM users');
-    $stmt = $pdo->prepare('INSERT INTO users (id, username, password_hash, role, totp_secret, totp_enabled, recovery_hashes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+    $stmt = $pdo->prepare('INSERT INTO users (id, username, password_hash, role, disabled, permissions, totp_secret, totp_enabled, recovery_hashes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
     foreach ($users as $user) {
         $role = (string) ($user['role'] ?? '');
-        if ($role !== 'admin' && $role !== 'member') {
-            throw new RuntimeException('A user role must be admin or member.');
+        if ($role === 'admin') {
+            $role = 'owner';
         }
+        if ($role !== 'owner' && $role !== 'member') {
+            throw new RuntimeException('A user role must be owner or member.');
+        }
+        $permissions = json_encode(is_array($user['permissions'] ?? null) ? $user['permissions'] : []);
         $stmt->execute([
             (int) $user['id'],
             (string) $user['username'],
             (string) $user['password_hash'],
             $role,
+            (int) ($user['disabled'] ?? 0),
+            is_string($permissions) ? $permissions : '{}',
             (string) ($user['totp_secret'] ?? ''),
             (int) ($user['totp_enabled'] ?? 0),
             (string) ($user['recovery_hashes'] ?? '[]'),
@@ -302,7 +370,7 @@ function tylilo_admin_has_admin(): bool
 {
     $data = tylilo_admin_with(static fn (array $stored): array => $stored);
     foreach ($data['users'] as $user) {
-        if (($user['role'] ?? '') === 'admin') {
+        if (($user['role'] ?? '') === 'admin' || ($user['role'] ?? '') === 'owner') {
             return true;
         }
     }
@@ -399,8 +467,17 @@ function tylilo_admin_current(): ?array
 {
     tylilo_session_start();
     $id = $_SESSION['admin_user_id'] ?? 0;
+    if (!is_int($id) || $id <= 0) {
+        return null;
+    }
+    $user = tylilo_admin_user_by_id($id);
+    if (!is_array($user) || (int) ($user['disabled'] ?? 0) === 1) {
+        unset($_SESSION['admin_user_id'], $_SESSION['admin_last_seen']);
 
-    return is_int($id) && $id > 0 ? tylilo_admin_user_by_id($id) : null;
+        return null;
+    }
+
+    return $user;
 }
 
 function tylilo_admin_markdown(string $text): string

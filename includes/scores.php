@@ -679,6 +679,21 @@ function tylilo_score_submit(array $input, string $ip, int $now): array
     return $result;
 }
 
+function tylilo_score_clear_board(string $game, string $board): void
+{
+    if (tylilo_score_board($game, $board) === null) {
+        return;
+    }
+    tylilo_scores_with(static function (array $data) use ($game, $board): array {
+        $data['scores'] = array_values(array_filter(
+            $data['scores'],
+            static fn (array $row): bool => ($row['game'] ?? '') !== $game || ($row['board'] ?? '') !== $board
+        ));
+
+        return $data;
+    });
+}
+
 function tylilo_score_handle(string $method, array $query, string $body, array $server, ?int $now = null): array
 {
     tylilo_score_ensure_seeds();
