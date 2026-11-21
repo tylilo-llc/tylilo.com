@@ -44,7 +44,9 @@ $nonce = tylilo_e($cspNonce);
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16.png">
-  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png" sizes="180x180">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Tylilo Arcade">
   <link rel="manifest" href="/site.webmanifest">
   <link rel="preload" as="image" href="/assets/img/logo-round.webp" type="image/webp" fetchpriority="high">
   <link rel="preload" as="font" href="/assets/fonts/nunito-800.woff2" type="font/woff2" crossorigin>

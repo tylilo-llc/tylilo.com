@@ -27,7 +27,7 @@ The legal name is written **Tylilo, LLC**, with a comma. Use `TYLILO_LEGAL_NAME`
 
 ## Arcade
 
-Each game is one folder, `/arcade/<slug>/index.html`. The list on `/arcade/` is the `$games` array in `arcade/index.php`: title, one-line description, path, and `art`. Adding a game is one new entry, in the order it should appear, plus an `art.svg` in that game’s folder. The tile name is the accessible text, so the artwork stays decorative (`alt=""`).
+Each game is one folder, `/arcade/<slug>/index.html`. The list on `/arcade/` is the `$games` array in `arcade/index.php`: title, one-line description, path, and cover art. Adding a game is one new entry, in the order it should appear, plus `arcade/<slug>/cover-400.webp` and `arcade/<slug>/cover-800.webp`. The tile name is the accessible text, so the artwork stays decorative (`alt=""`).
 
 Every game opens in the same tab. Do not add `target="_blank"`, a new-window hint, or a window icon to a game link. The homepage Arcade tile also opens `/arcade/` in the same tab. Speculation rules prefetch `a.game-tile` and do not prerender those links, so a game’s audio and loop do not start in the background.
 
