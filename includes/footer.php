@@ -18,7 +18,34 @@ if (!defined('TYLILO_BOOTSTRAPPED')) {
     </nav>
     <p>© <?= tylilo_e(TYLILO_YEAR) ?> <?= tylilo_e(TYLILO_LEGAL_NAME) ?></p>
   </footer>
-  <script src="<?= tylilo_e(tylilo_asset('/assets/js/theme.js')) ?>"></script>
-  <script src="<?= tylilo_e(tylilo_asset('/assets/js/form.js')) ?>"></script>
+  <script src="<?= tylilo_e(tylilo_asset('/assets/js/theme.js')) ?>" defer></script>
+  <script src="<?= tylilo_e(tylilo_asset('/assets/js/form.js')) ?>" defer></script>
+  <script nonce="<?= tylilo_e($cspNonce) ?>">
+    (function () {
+      if (window.HTMLScriptElement && HTMLScriptElement.supports && HTMLScriptElement.supports("speculationrules")) return;
+      var seen = Object.create(null);
+      function prefetch(a) {
+        var url;
+        try { url = new URL(a.href, location.href); } catch (e) { return; }
+        if (url.origin !== location.origin) return;
+        if (url.pathname === location.pathname && url.search === location.search) return;
+        var href = url.pathname + url.search;
+        if (seen[href]) return;
+        seen[href] = 1;
+        var link = document.createElement("link");
+        link.rel = "prefetch";
+        link.as = "document";
+        link.href = href;
+        document.head.appendChild(link);
+      }
+      function fromEvent(e) {
+        var node = e.target;
+        var a = node && node.closest ? node.closest("a[href]") : null;
+        if (a) prefetch(a);
+      }
+      document.addEventListener("mouseover", fromEvent, true);
+      document.addEventListener("touchstart", fromEvent, true);
+    })();
+  </script>
 </body>
 </html>

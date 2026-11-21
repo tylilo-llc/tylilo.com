@@ -38,7 +38,7 @@ $games = [
 ];
 
 $pageTitle = 'Arcade — Tylilo';
-$pageDescription = 'Play Solitaire, Red Rain, and Pop Spiral in the browser: Klondike solitaire, missile defense, and a marble-shooter puzzle.';
+$pageDescription = 'Browser games from Tylilo, including Solitaire, Red Rain, and Pop Spiral.';
 $pageCanonical = TYLILO_URL . '/arcade/';
 $pageRobots = 'index, follow';
 
@@ -75,7 +75,6 @@ require __DIR__ . '/../includes/head.php';
       <div class="card about-card arcade-lead">
         <p class="kicker">Play</p>
         <h1>Arcade</h1>
-        <p class="muted">Three games in the browser. Nothing to install.</p>
       </div>
       <div class="arcade-grid">
 <?php foreach ($games as $game): ?>

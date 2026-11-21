@@ -46,7 +46,9 @@ $nonce = tylilo_e($cspNonce);
   <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
-  <link rel="preload" as="image" href="/assets/img/logo-round.webp" type="image/webp">
+  <link rel="preload" as="image" href="/assets/img/logo-round.webp" type="image/webp" fetchpriority="high">
+  <link rel="preload" as="font" href="/assets/fonts/nunito-800.woff2" type="font/woff2" crossorigin>
+  <link rel="preload" as="font" href="/assets/fonts/nunito-500.woff2" type="font/woff2" crossorigin>
   <script nonce="<?= $nonce ?>">
     (function () {
       var theme = "auto";
@@ -67,7 +69,35 @@ $nonce = tylilo_e($cspNonce);
       }
     })();
   </script>
+<?php $tyliloCss = tylilo_inline_css('/assets/css/styles.css'); ?>
+<?php if ($tyliloCss !== ''): ?>
+  <style nonce="<?= $nonce ?>"><?= $tyliloCss ?></style>
+<?php else: ?>
   <link rel="stylesheet" href="<?= tylilo_e(tylilo_asset('/assets/css/styles.css')) ?>">
+<?php endif; ?>
+  <script type="speculationrules" nonce="<?= $nonce ?>">
+  {
+    "prerender": [{
+      "where": {
+        "and": [
+          {"href_matches": "/*"},
+          {"not": {"href_matches": "/contact.php*"}},
+          {"not": {"selector_matches": "a[target=_blank]"}}
+        ]
+      },
+      "eagerness": "moderate"
+    }],
+    "prefetch": [{
+      "where": {
+        "or": [
+          {"href_matches": "/contact.php*"},
+          {"selector_matches": "a[target=_blank]"}
+        ]
+      },
+      "eagerness": "moderate"
+    }]
+  }
+  </script>
 <?php if (!empty($pageStylesheets) && is_array($pageStylesheets)): ?>
 <?php foreach ($pageStylesheets as $pageStylesheet): ?>
 <?php if (is_string($pageStylesheet) && $pageStylesheet !== ''): ?>
