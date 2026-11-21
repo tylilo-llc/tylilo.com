@@ -106,8 +106,10 @@ arcade/solitaire/index.html   Klondike Solitaire
 arcade/solitaire/art.svg      Tile artwork
 arcade/red-rain/index.html    Red Rain
 arcade/red-rain/art.svg       Tile artwork
-arcade/pop-spiral/index.html  Pop Spiral
-arcade/pop-spiral/art.svg     Tile artwork
+arcade/pop-spiral/index.html    Pop Spiral
+arcade/pop-spiral/art.svg       Tile artwork
+arcade/jungle-rescue/index.html Jungle Rescue
+arcade/jungle-rescue/art.svg    Tile artwork
 ```
 
 The artwork is an SVG. The tile shows it above the game name, and the whole tile is the link. The name is the accessible text, so the image alt stays empty. The one-line description stays in the page for search and screen readers, visually hidden on the tile.
@@ -116,7 +118,7 @@ Every game opens in a new window. The template does this for every entry unless 
 
 `index.html` is the whole game. It is maintained elsewhere and replaced as a unit, so leave the file as it arrives. Do not reformat it or point it at other hosts. The folder is served as `/arcade/<slug>/` with or without the trailing slash. `DirectoryIndex` lists `index.html` after `index.php`, so a game folder is not blocked by the PHP index used on the rest of the site.
 
-Red Rain stores music and mute, difficulty, options, and high scores in the browser’s local storage. Solitaire stores its draw mode under `klondike.draw`, stats under `klondike.stats` (games played and won, streaks, best score and time for each draw mode, and whether a game is in progress; no personal data), and sound on or off under `klondike.muted`. Pop Spiral stores a best score under `popSpiral.best` and its settings under `popSpiral.settings.v1`. None of that is sent to Tylilo, and the games do not load scripts, images, or fonts from another site. `/privacy` says so. If a future game stores something else, or starts loading a third-party file, update that section and its effective date.
+Red Rain stores music and mute, difficulty, options, and high scores in the browser’s local storage. Solitaire stores its draw mode under `klondike.draw`, stats under `klondike.stats` (games played and won, streaks, best score and time for each draw mode, and whether a game is in progress; no personal data), and sound on or off under `klondike.muted`. Pop Spiral stores a best score under `popSpiral.best` and its settings under `popSpiral.settings.v1`. Jungle Rescue stores `jungleRescueOpts`, `jungleRescueDiff`, `jungleRescueHi`, `jungleRescueBestDist` and `jungleRescueBestDist2` through `jungleRescueBestDist20`, `jungleRescueUnlocked`, `jungleRescueBeat`, and `jungleRescueCards`. Options → Reset Progress clears Unlocked, Beat, and Cards. It does not use session storage, cookies, or IndexedDB. None of that is sent to Tylilo, and the games do not load scripts, images, or fonts from another site. `/privacy` says so. If a future game stores something else, or starts loading a third-party file, update that section and its effective date.
 
 The homepage has an Arcade tile between About and Contact. It opens this page in the same tab. The footer links to Arcade as well.
 
