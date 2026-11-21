@@ -31,9 +31,15 @@ foreach (tylilo_score_games() as $slug => $game) {
         if ($rows === []) {
             $html .= '<p>No scores.</p>';
         } else {
+            $showLevel = !empty($game['levels']);
             $html .= '<ul>';
             foreach ($rows as $row) {
-                $html .= '<li>' . tylilo_e((string) $row['name']) . ', ' . tylilo_e((string) $row['score']) . '</li>';
+                $html .= '<li>' . tylilo_e((string) $row['name']) . ', ' . tylilo_e((string) $row['score']);
+                if ($showLevel) {
+                    $level = $row['level'] ?? null;
+                    $html .= ', ' . tylilo_e($level === null ? 'no level' : 'level ' . (string) $level);
+                }
+                $html .= '</li>';
             }
             $html .= '</ul>';
         }

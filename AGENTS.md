@@ -49,7 +49,7 @@ Slugs and boards:
 | Jungle Rescue | `jungle-rescue` | `default` | higher wins | points | 0–5000000 | 20 seconds |
 | Jungle Rescue | `jungle-rescue` | `time` | lower wins | seconds | 1–7200 | 20 seconds |
 
-`default` on Jungle Rescue is the all-time score. `time` is a completion time in whole seconds.
+`default` on Jungle Rescue is the all-time score. `time` is a completion time in whole seconds. Pop Spiral and Jungle Rescue report a level (`'levels' => true` in the game config). Their boards are the ones that show it. Solitaire and Red Rain do not.
 
 Read the top scores:
 
@@ -58,8 +58,10 @@ Read the top scores:
 `board` is optional. Omit it to get every board for that game. `limit` defaults to 10 and is capped at 25. A missing game or board is HTTP 404.
 
 ```json
-{"ok":true,"game":"solitaire","limit":10,"boards":[{"board":"draw-1","label":"Draw 1","order":"desc","unit":"points","scores":[{"name":"Ada","score":1500,"at":"2026-11-21T12:00:00+00:00"}]}]}
+{"ok":true,"game":"solitaire","limit":10,"boards":[{"board":"draw-1","label":"Draw 1","order":"desc","unit":"points","levels":false,"scores":[{"name":"Ada","score":1500,"at":"2026-11-21T12:00:00+00:00","level":null}]}]}
 ```
+
+`levels` is true only for games that report a level. Every public score includes `level`. It is `null` when the run did not send one. Unlike `version`, `level` is public.
 
 Start a run, once, when the run begins:
 
@@ -78,8 +80,18 @@ The token is `<base64url payload>.<hex hmac-sha256>`. It is tied to that game an
 Save the score after the run has lasted at least that long in real time:
 
 ```json
-{"op":"submit","game":"solitaire","board":"draw-1","name":"Ada","score":1500,"playedMs":45000,"token":"<signed>"}
+{"op":"submit","game":"solitaire","board":"draw-1","name":"Ada","score":1500,"playedMs":45000,"version":"1.1.6","token":"<signed>"}
 ```
+
+A game that reports levels can send the optional `level` as a JSON whole number from 1 to 999:
+
+```json
+{"op":"submit","game":"pop-spiral","board":"default","name":"Ada","score":1500,"playedMs":30000,"version":"0.2.5","level":7,"token":"<signed>"}
+```
+
+`level` is optional. Omit it, or send `null` or `""`, and the score is stored with `level` null. A present value must be a JSON integer from 1 to 999. Strings, floats, booleans, `0`, and `1000` are HTTP 400 with `Level must be a whole number from 1 to 999.` The stored value is kept in both the SQLite and JSON stores. Older rows stay null. The public `GET` and the `scores` array in a successful submit include `level`. The Arcade shows `Lv 7` only on boards whose game has `levels` set. The private admin Games page and the leaderboard moderation page show it too.
+
+`version` is optional. Omit it, or send `null` or `""`, and the score is stored with no version. When present it is a string of 1–16 characters from `0-9`, `A-Z`, `a-z`, `.`, `_`, and `-` only. Anything else is HTTP 400. The public `GET`, and the `scores` array in a successful submit, never include `version`. Older rows stay null. The private admin Games page shows it and can clear one board.
 
 `score` and `playedMs` are whole numbers. `playedMs` must be at least `minPlayedMs`, must not be longer than the token’s age plus 15 seconds, and the token itself must already be at least `minPlayedMs` old. `name` is 1–12 characters: letters, numbers, spaces, and `. ' - ! ? ,`. A fixed word list rejects names after a leetspeak fold (`0`→o, `1`→i, `3`→e, `4`→a, `5`→s, `@`→a, `$`→s, symbols removed, repeated letters collapsed). The check is on the whole name and on each word, not on a substring, so ordinary words that merely contain a fragment still pass. If `board` is omitted on submit it defaults to `default`, which Solitaire and Red Rain do not have.
 
