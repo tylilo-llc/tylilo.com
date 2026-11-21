@@ -452,6 +452,50 @@ h2 {
 
 .arcade-lead p:last-child { margin-bottom: 0; }
 
+.beta-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.9rem;
+  margin-top: 0.9rem;
+}
+
+@media (min-width: 640px) {
+  .beta-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.beta-card h2,
+.beta-card p {
+  margin: 0;
+}
+
+.beta-card .kicker {
+  margin-bottom: 0.45rem;
+}
+
+.beta-card h2 {
+  margin-bottom: 0.25rem;
+}
+
+.beta-version {
+  color: var(--muted);
+}
+
+.beta-card > .beta-play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.9rem;
+}
+
+.beta-cover {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 0.95rem;
+  margin-bottom: 0.9rem;
+  background: var(--navy);
+}
+
 .arcade-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -460,7 +504,8 @@ h2 {
 }
 
 @media (min-width: 900px) {
-  .arcade-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .arcade-grid,
+  .beta-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 .game-slot {
