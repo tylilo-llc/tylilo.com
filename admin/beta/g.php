@@ -47,9 +47,12 @@ header('Referrer-Policy: strict-origin-when-cross-origin');
 if ($extension === 'html') {
     header(
         "Content-Security-Policy: default-src 'self'; base-uri 'self'; form-action 'none'; frame-ancestors 'self'; "
-        . "frame-src 'none'; object-src 'none'; img-src 'self' data: blob:; font-src 'self' data:; "
-        . "style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; "
-        . "media-src 'self' data: blob:; worker-src 'self' blob:; connect-src 'none'"
+        .         "frame-src 'none'; object-src 'none'; img-src 'self' data: blob: https://cdn-profiles.tunein.com https://*.tunein.com; "
+        . "font-src 'self' data: https://fonts.gstatic.com; "
+        . "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        . "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://cdn.jsdelivr.net https://opml.radiotime.com; "
+        . "media-src 'self' data: blob: https:; worker-src 'self' blob:; "
+        . "connect-src https://opml.radiotime.com https://feed.tunein.com https://np.tritondigital.com https://api.live365.com"
     );
     if (basename($path) === 'index.html') {
         tylilo_admin_log((int) $me['id'], (string) $me['username'], 'play-beta', $slug);

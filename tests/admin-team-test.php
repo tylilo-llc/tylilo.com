@@ -73,9 +73,13 @@ $owner = tylilo_admin_user_by_name('ryan');
 $member = tylilo_admin_user_by_name('sam');
 check(is_array($owner) && tylilo_admin_is_owner($owner), 'an admin account is the owner');
 check(is_array($member) && tylilo_admin_can($member, 'feedback') && !tylilo_admin_can($member, 'leaderboards') && !tylilo_admin_can($member, 'beta'), 'a member has the default permissions');
-$sample = tylilo_beta_game('sample');
-check(is_array($sample) && $sample['title'] === 'Sample Beta' && $sample['version'] === '0.1.0', 'the sample beta game keeps its title and version');
-check(tylilo_beta_file('sample', 'index.html') !== null && tylilo_beta_file('sample', '../.htaccess') === null && tylilo_beta_file('sample', 'index.php') === null, 'a beta file stays inside that game folder');
+$expected = ['crash-cars' => ['Crash Cars', '2.3'], 'jumpy-jumperton' => ['Jumpy Jumperton', '1.4'], 'starbase-defender' => ['Starbase Defender', '1.5.0']];
+foreach ($expected as $slug => [$title, $version]) {
+    $game = tylilo_beta_game($slug);
+    check(is_array($game) && $game['title'] === $title && $game['version'] === $version, $title . ' is a beta game at ' . $version);
+    check(tylilo_beta_file($slug, 'index.html') !== null && tylilo_beta_file($slug, '../.htaccess') === null, $title . ' stays inside its own folder');
+}
+check(tylilo_beta_game('sample') === null, 'the sample beta game is gone');
 check(is_array($owner) && tylilo_admin_can($owner, 'beta'), 'the owner can play beta games');
 $arcadePage = (string) file_get_contents($root . '/arcade/index.php');
 $sitemap = (string) file_get_contents($root . '/sitemap.xml');
