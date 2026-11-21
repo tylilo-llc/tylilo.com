@@ -45,7 +45,7 @@ The footer reads `© 2026 Tylilo, LLC` from `TYLILO_YEAR` and `TYLILO_LEGAL_NAME
 
 The form posts to `contact.php`. The server checks Cloudflare Turnstile before the other checks, then emails the result to `TYLILO_CONTACT_EMAIL` with PHP `mail()`. Reply goes to the person who wrote in.
 
-- Turnstile’s public sitekey is in the homepage. The secret is not in this repository. Deploy writes it from the GitHub Actions secret `TURNSTILE_SECRET` into `tylilo-data/turnstile.php` beside the site (outside the web root) and into `data/turnstile.php`, which the site refuses to serve. If that secret is missing, the form rejects the message.
+- Turnstile’s public sitekey is in the homepage. The secret is not in this repository. Deploy writes it from the GitHub Actions secret `TURNSTILE_SECRET` beside the web root and also into `data/turnstile.php` and `tylilo-data/turnstile.php` under `FTP_SERVER_DIR`. PHP checks those paths, `DOCUMENT_ROOT`, and the account home, and uses the first file it can read. `data/` and `tylilo-data/` are not served. If that secret is missing, the form rejects the message. The widget stays hidden unless Cloudflare asks the visitor to interact.
 - Local tests can set `TURNSTILE_SITEKEY` and `TURNSTILE_SECRET` to Cloudflare’s dummy keys. Do not put those dummy values in `config.php`.
 - A hidden field (`ty_extra`) is a honeypot. People never see it. If it is filled in, the submission is discarded and the page still says thank you, so a bot is not told it was blocked.
 - Name, email, and message are required. The email must look like an email. The message can be up to 5,000 characters.

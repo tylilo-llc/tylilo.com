@@ -128,7 +128,7 @@ require __DIR__ . '/includes/head.php';
 <?php endif; ?>
             </div>
             <div class="turnstile-slot">
-              <div class="cf-turnstile" data-sitekey="<?= tylilo_e($turnstileSitekey) ?>" data-action="contact" data-theme="auto"></div>
+              <div class="cf-turnstile" data-contact-turnstile data-sitekey="<?= tylilo_e($turnstileSitekey) ?>" data-action="contact" data-appearance="interaction-only" data-size="flexible" data-theme="auto"></div>
             </div>
             <button class="btn send" type="submit">Send message</button>
           </form>
@@ -145,5 +145,7 @@ require __DIR__ . '/includes/head.php';
         'logo' => TYLILO_URL . '/assets/img/logo-round.webp',
     ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_THROW_ON_ERROR) ?>
   </script>
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-<?php require __DIR__ . '/includes/footer.php'; ?>
+<?php
+$pageTurnstile = true;
+require __DIR__ . '/includes/footer.php';
+?>

@@ -20,6 +20,10 @@ if (!defined('TYLILO_BOOTSTRAPPED')) {
   </footer>
   <script src="<?= tylilo_e(tylilo_asset('/assets/js/theme.js')) ?>" defer></script>
   <script src="<?= tylilo_e(tylilo_asset('/assets/js/form.js')) ?>" defer></script>
+<?php if (!empty($pageTurnstile)): ?>
+  <script src="<?= tylilo_e(tylilo_asset('/assets/js/turnstile.js')) ?>" defer></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&amp;onload=tyliloTurnstile" defer></script>
+<?php endif; ?>
   <script nonce="<?= tylilo_e($cspNonce) ?>">
     (function () {
       if (window.HTMLScriptElement && HTMLScriptElement.supports && HTMLScriptElement.supports("speculationrules")) return;

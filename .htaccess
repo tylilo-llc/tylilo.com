@@ -17,6 +17,7 @@ AddDefaultCharset UTF-8
   RewriteRule ^includes/ - [F,L]
   RewriteRule ^scripts/ - [F,L]
   RewriteRule ^data/ - [F,L]
+  RewriteRule ^tylilo-data/ - [F,L]
   RewriteRule ^tests/ - [F,L]
   RewriteRule ^config\.php$ - [F,L]
   RewriteRule ^router\.php$ - [F,L]
