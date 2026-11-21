@@ -2,6 +2,21 @@
 <!--
   RED RAIN - changelog
   ====================
+  v2.2.5 (2026-11-21)
+  - Leaderboard fix (same bug as Jungle Rescue): if op:start failed, errored or timed out when a run began,
+    2.2.4 never asked again; at game over an error reply hid the save panel silently and a network failure
+    showed only a note, so the score could not be saved.
+  - op:start now times out after 8 s and is retried in the background during the run (2, 4, 8, 16 s, then
+    every 30 s), on the 'online' event, and again from the top at game over, until a token arrives.
+    No request is made while the browser reports itself offline.
+  - On the real site a qualifying run (30 s+) always gets the SAVE YOUR SCORE panel. With no token yet it
+    says "Couldn't reach the leaderboard - still trying" and keeps retrying while the game-over screen is up.
+  - playedMs is clamped to the token's real age (measured from when it arrived). If the token is younger
+    than the board's minPlayedMs, SUBMIT is dimmed with a countdown; pressing it (or Enter) queues the
+    score ("Saving... (N s)") and it is sent automatically once the token is old enough.
+  - Restarting is still never blocked: leaving the game-over screen (play again, CHANGE DIFFICULTY, title)
+    stops the retries and drops the queued score. Opened as a local file, nothing changes (no panel,
+    no requests). Submit requests time out after 15 s with a "try again" message.
   v2.2.4 (2026-11-21)
   - Arcade leaderboard (contract: arcade-handoff/LEADERBOARD-API.md). The only network traffic in the game,
     same origin, relative URL /api/scores.php, no third-party calls. Boards = difficulty keys 1:1
@@ -283,7 +298,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#07040f">
-<title>Red Rain v2.2.4</title>
+<title>Red Rain v2.2.5</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Cdefs%3E%3ClinearGradient%20id='s'%20x1='0'%20y1='0'%20x2='0'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%2314030c'/%3E%3Cstop%20offset='.65'%20stop-color='%233d0812'/%3E%3Cstop%20offset='1'%20stop-color='%236e1414'/%3E%3C/linearGradient%3E%3CradialGradient%20id='m'%20cx='.4'%20cy='.4'%20r='.6'%3E%3Cstop%20offset='0'%20stop-color='%23ff8a66'/%3E%3Cstop%20offset='1'%20stop-color='%23c0181e'/%3E%3C/radialGradient%3E%3ClinearGradient%20id='t'%20gradientUnits='userSpaceOnUse'%20x1='6'%20y1='2'%20x2='33'%20y2='37'%3E%3Cstop%20offset='0'%20stop-color='%23ff3b2f'%20stop-opacity='0'/%3E%3Cstop%20offset='.7'%20stop-color='%23ff5a3c'%20stop-opacity='.8'/%3E%3Cstop%20offset='1'%20stop-color='%23ffc27a'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20width='64'%20height='64'%20rx='12'%20fill='url(%23s)'/%3E%3Ccircle%20cx='47'%20cy='16'%20r='13'%20fill='%23ff3b2f'%20opacity='.18'/%3E%3Ccircle%20cx='47'%20cy='16'%20r='8.5'%20fill='url(%23m)'/%3E%3Ccircle%20cx='44'%20cy='14'%20r='1.6'%20fill='%23a3121a'%20opacity='.6'/%3E%3Ccircle%20cx='50'%20cy='19'%20r='1.2'%20fill='%23a3121a'%20opacity='.6'/%3E%3Ccircle%20cx='14'%20cy='9'%20r='.8'%20fill='%23ffd9cc'/%3E%3Ccircle%20cx='26'%20cy='5'%20r='.6'%20fill='%23ffd9cc'/%3E%3Ccircle%20cx='58'%20cy='34'%20r='.6'%20fill='%23ffd9cc'/%3E%3Cpath%20d='M6%202L33%2037'%20stroke='url(%23t)'%20stroke-width='5'%20stroke-linecap='round'%20opacity='.45'/%3E%3Cpath%20d='M6%202L33%2037'%20stroke='url(%23t)'%20stroke-width='2.2'%20stroke-linecap='round'/%3E%3Ccircle%20cx='33.5'%20cy='37.5'%20r='6'%20fill='%23ff5a3c'%20opacity='.45'/%3E%3Ccircle%20cx='33.5'%20cy='37.5'%20r='2.6'%20fill='%23fff1d6'/%3E%3Cpath%20d='M0%2064V50h5v-6h4v6h3v-9h6v9h4v-5h5v5h3v-11h6v11h4v-7h5v7h3v-4h4v4h6v-8h6v22z'%20fill='%230d0208'/%3E%3Cpath%20d='M0%2053h64'%20stroke='%23ff3b2f'%20stroke-width='.6'%20opacity='.35'/%3E%3Crect%20x='14'%20y='44'%20width='1.4'%20height='1.4'%20fill='%23ffcf7a'/%3E%3Crect%20x='32'%20y='43'%20width='1.4'%20height='1.4'%20fill='%23ffcf7a'/%3E%3Crect%20x='35'%20y='47'%20width='1.4'%20height='1.4'%20fill='%23ffcf7a'/%3E%3Crect%20x='54'%20y='48'%20width='1.4'%20height='1.4'%20fill='%23ffcf7a'/%3E%3C/svg%3E">
 <link rel="apple-touch-icon" sizes="180x180" href="data:image/png;base64,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">
 <style>
@@ -317,7 +332,7 @@
 <script>
 (() => {
 'use strict';
-const VERSION = '2.2.4';   // MAJOR.MINOR.BUILD - BUILD +1 per shipped release, never reset
+const VERSION = '2.2.5';   // MAJOR.MINOR.BUILD - BUILD +1 per shipped release, never reset
 document.title = 'Red Rain v' + VERSION;
 // ---------- helpers ----------
 const canvas = document.getElementById('c');
@@ -874,7 +889,7 @@ function collectCrate(c) {
 
 function newGame() {
   G.diff = selDiff;
-  G.lb = null; G.runMs = 0; G.lbRun = LB.startRun(G.diff);   // v2.2.4: leaderboard run token
+  lbDrop(); G.runMs = 0; G.lbRun = LB.startRun(G.diff);   // v2.2.4: leaderboard run token
   G.wave = 0; G.score = 0; G.money = 0; G.kills = 0;
   G.up = { blast: 0, speed: 0, ammo: 0, turrets: 1, auto: 0 };
   G.cities = CITY_F.map(makeCity);
@@ -1422,6 +1437,9 @@ function drawHelp() {
 // Player-facing release notes, newest first, written from the changelog. Opens ONLY from the
 // WHAT'S NEW button or the W key - never automatically.
 const WHATS_NEW = [
+  { v: '2.2.5', d: '2026-11-21', items: [
+    'Leaderboard fix: if the leaderboard couldn\'t be reached when your run started, the game keeps trying in the background, so you can still save your score at game over.',
+    'If it needs a few more seconds, SUBMIT waits and saves automatically.' ] },
   { v: '2.2.4', d: '2026-11-21', items: [
     'Arcade leaderboard: after a run of 30 seconds or more you can type a name and save your score on tylilo.com. Each difficulty has its own board.',
     'It is optional - press SKIP (or just play again) and nothing is sent. The game remembers the last name you used.' ] },
@@ -1674,7 +1692,7 @@ function drawOptions() {
 }
 function goTitle() {
   G.enemies = []; G.explosions = []; G.bombers = []; G.drones = []; G.shots = []; G.crates = []; G.nukes = []; G.fw = null; G.bplane = null; G.quake = null; G.flash = 0;
-  G.lb = null;
+  lbDrop();
   setState('title');
 }
 function quitToMenu() {
@@ -1684,7 +1702,7 @@ function quitToMenu() {
   G.fw = null; G.bplane = null; G.bplaneCrash = null; G.build = null; G.auto = null; G.bonus = null;
   G.quake = null; G.shake = 0; G.flash = 0; G.banner = 0; G.drag = null; G.finale = null;
   G.quitConfirm = false; G.helpOpen = false; G.optOpen = false; G.wnOpen = false; G.prevState = null;
-  G.lbRun = null; G.lb = null;
+  lbDrop();
   setState('title');   // music follows the state: calm title mood
 }
 // v2.2.3: Back to Arcade. Title: leave now. Pause: ask first (same confirm box as MAIN MENU).
@@ -1704,41 +1722,70 @@ function leaveToArcade(fromRun) {
 }
 arcadeA11y.addEventListener('click', () => { if (!arcadeA11y.hidden) requestArcade(); });
 window.addEventListener('pageshow', () => { G.leaving = false; });   // back-button (bfcache) return
-// ---------- v2.2.4: Arcade leaderboard (optional; works only when served from tylilo.com) ----------
+// ---------- v2.2.4 / v2.2.5: Arcade leaderboard (optional; works only when served over http(s)) ----------
 // Contract: /workspace/arcade-handoff/LEADERBOARD-API.md. Same origin, relative URL, no third-party calls.
+// v2.2.5: a failed / timed-out op:start is retried in the background (2, 4, 8, 16 s, then every 30 s) during the
+// run and again at game over until a token arrives; the save prompt is never hidden silently on the real site.
 const LB_API = '/api/scores.php', LB_GAME = 'red-rain', LB_MIN_MS = 30000, LB_MAX_SCORE = 5000000, LB_NAME_KEY = 'redRainLbName';
 const LB_BOARD = { easy: 'easy', normal: 'normal', expert: 'expert', insane: 'insane' };   // difficulty key -> board
+const LB_BACKOFF = [2000, 4000, 8000, 16000, 30000];   // then every 30 s
+const LB_START_TIMEOUT = 8000, LB_SUBMIT_TIMEOUT = 15000, LB_AGE_MARGIN = 250;
 const lbInput = document.getElementById('lbName');
 const LB = {
   available: () => /^https?:$/.test(location.protocol) && typeof fetch === 'function',
-  async post(body) {
-    const res = await fetch(LB_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), credentials: 'same-origin', cache: 'no-store' });
-    let data = null;
-    try { data = await res.json(); } catch (e) {}
-    return { status: res.status, ok: res.ok && !!data && data.ok !== false, data };
+  async post(body, timeoutMs) {
+    const ac = typeof AbortController === 'function' ? new AbortController() : null;
+    const to = ac ? setTimeout(() => ac.abort(), timeoutMs) : 0;
+    try {
+      const res = await fetch(LB_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), credentials: 'same-origin', cache: 'no-store', signal: ac ? ac.signal : undefined });
+      let data = null;
+      try { data = await res.json(); } catch (e) {}
+      return { status: res.status, ok: res.ok && !!data && data.ok !== false, data };
+    } finally { if (to) clearTimeout(to); }
   },
   // called when a run begins; never throws, never blocks
   startRun(diff) {
-    const run = { board: LB_BOARD[diff] || 'easy', token: null, tokenAt: 0, minPlayedMs: LB_MIN_MS, state: 'pending' };
-    if (!LB.available()) { run.state = 'none'; return run; }
-    if (navigator.onLine === false) { run.state = 'offline'; return run; }   // skip the request: no console noise
-    run.ready = LB.post({ op: 'start', game: LB_GAME, board: run.board }).then(r => {
+    const run = { board: LB_BOARD[diff] || 'easy', token: null, tokenAt: 0, minPlayedMs: LB_MIN_MS, state: 'pending', tries: 0, timer: 0, inflight: false, dead: false };
+    if (!LB.available()) { run.state = 'none'; return run; }   // local file: no leaderboard at all
+    LB.requestToken(run);
+    return run;
+  },
+  requestToken(run) {
+    if (!run || run.dead || run.token || run.inflight || run.state === 'none') return;
+    clearTimeout(run.timer); run.timer = 0;
+    if (navigator.onLine === false) { LB.retryLater(run); return; }   // no request while offline: no console noise
+    run.inflight = true; run.tries++;
+    LB.post({ op: 'start', game: LB_GAME, board: run.board }, LB_START_TIMEOUT).then(r => {
+      run.inflight = false;
+      if (run.dead) return;
       if (r.ok && typeof r.data.token === 'string' && r.data.token) {
         run.token = r.data.token; run.tokenAt = performance.now(); run.state = 'ready';
         if (Number(r.data.minPlayedMs) > 0) run.minPlayedMs = Number(r.data.minPlayedMs);
-      } else run.state = 'none';   // this host has no leaderboard (404, not JSON...): hide it
-    }, () => { run.state = 'offline'; });
-    return run;
+      } else LB.retryLater(run);   // error reply, 404, not JSON...: try again later
+    }, () => { run.inflight = false; if (!run.dead) LB.retryLater(run); });   // network error / timeout
   },
+  retryLater(run) {
+    if (run.dead || run.token) return;
+    run.state = 'retrying';
+    const d = LB_BACKOFF[Math.min(run.fails = (run.fails || 0) + 1, LB_BACKOFF.length) - 1];
+    clearTimeout(run.timer);
+    run.timer = setTimeout(() => { run.timer = 0; LB.requestToken(run); }, d);
+  },
+  retryNow(run) {   // game over: start the backoff again from the top and ask right away
+    if (!run || run.dead || run.token || run.state === 'none') return;
+    run.fails = 0; LB.requestToken(run);
+  },
+  kill(run) { if (run) { run.dead = true; clearTimeout(run.timer); run.timer = 0; } },
+  tokenAge: run => run && run.token ? performance.now() - run.tokenAt : 0,
+  // ms until the token is old enough to submit (0 = now); Infinity = no token yet
+  waitMs(run) { if (!run || !run.token) return Infinity; return Math.max(0, Math.max(LB_MIN_MS, run.minPlayedMs) + LB_AGE_MARGIN - LB.tokenAge(run)); },
   async submit(run, name, score, playedMs) {
-    if (!run || run.state === 'none') return { ok: false, retry: false, msg: 'Couldn\'t save score: no leaderboard here.' };
-    if (run.ready) { try { await run.ready; } catch (e) {} }
-    if (!run.token) return { ok: false, retry: false, msg: 'Couldn\'t save score: the leaderboard can\'t be reached.' };
+    if (!run || !run.token) return { ok: false, retry: true, msg: 'Couldn\'t reach the leaderboard.' };
     if (navigator.onLine === false) return { ok: false, retry: true, msg: 'Couldn\'t save score. You seem to be offline.' };
-    // playedMs never exceeds the token's age (the server allows +15 s; we keep 10 s of that for latency)
-    const pm = Math.max(0, Math.round(Math.min(playedMs, performance.now() - run.tokenAt + 10000)));
+    // playedMs is clamped to the token's real age (measured from when it arrived, so never over the server's view)
+    const pm = Math.max(0, Math.floor(Math.min(playedMs, LB.tokenAge(run))));
     let r;
-    try { r = await LB.post({ op: 'submit', game: LB_GAME, board: run.board, name, score, playedMs: pm, token: run.token }); }
+    try { r = await LB.post({ op: 'submit', game: LB_GAME, board: run.board, name, score, playedMs: pm, token: run.token }, LB_SUBMIT_TIMEOUT); }
     catch (e) { return { ok: false, retry: true, msg: 'Couldn\'t save score. Check your connection and try again.' }; }
     if (r.ok) { run.token = null; return { ok: true, rank: Number(r.data.rank) || 0 }; }   // tokens are single use
     if (r.status === 429) return { ok: false, retry: true, msg: 'Try again later.' };
@@ -1746,6 +1793,7 @@ const LB = {
     return { ok: false, retry: true, msg: m ? String(m).slice(0, 140) : 'Couldn\'t save score.' };
   },
 };
+window.addEventListener('online', () => { LB.retryNow(G.lbRun); if (G.lb) LB.retryNow(G.lb.run); });
 const lbCleanName = v => String(v || '').replace(/[^\p{L}\p{N} .'\-!?,]/gu, '').replace(/\s+/g, ' ').trim().slice(0, 12);
 let lbSavedName = '';
 try { lbSavedName = lbCleanName(localStorage.getItem(LB_NAME_KEY)); } catch (e) {}
@@ -1754,38 +1802,58 @@ lbInput.addEventListener('input', () => {   // keep only characters the server a
   if (v !== lbInput.value) lbInput.value = v;
   if (G.lb && G.lb.mode === 'error' && G.lb.retry) { G.lb.mode = 'entry'; G.lb.msg = ''; }
 });
+// drop every leaderboard thing tied to the run being left (restart, title, quit): never blocks anything
+function lbDrop() { LB.kill(G.lbRun); if (G.lb) LB.kill(G.lb.run); G.lbRun = null; G.lb = null; }
 // run ended (dying -> gameover): decide what the game-over panel shows
 function lbOnGameOver() {
   const run = G.lbRun; G.lbRun = null;
-  const L = { run, score: clamp(Math.round(G.score || 0), 0, LB_MAX_SCORE), playedMs: Math.round(G.runMs || 0), mode: 'hidden', msg: '', retry: true, busy: false };
+  const L = { run, score: clamp(Math.round(G.score || 0), 0, LB_MAX_SCORE), playedMs: Math.round(G.runMs || 0), mode: 'hidden', msg: '', retry: true, busy: false, queued: false, name: '' };
   G.lb = L;
-  if (!run || run.state === 'none') return;   // local file / no leaderboard on this host: hide it
+  if (!run || run.state === 'none') return;   // local file: no leaderboard
   const minMs = Math.max(LB_MIN_MS, run.minPlayedMs || 0);
-  if (L.playedMs < minMs) { L.mode = 'note'; L.msg = 'Runs under ' + Math.round(minMs / 1000) + ' seconds can\'t go on the Arcade leaderboard.'; return; }
-  if (run.state === 'offline') { L.mode = 'note'; L.msg = 'Couldn\'t save score: the leaderboard can\'t be reached.'; return; }
-  L.mode = 'entry';
+  if (L.playedMs < minMs) { L.mode = 'note'; L.msg = 'Runs under ' + Math.round(minMs / 1000) + ' seconds can\'t go on the Arcade leaderboard.'; LB.kill(run); return; }
+  L.mode = 'entry';   // always offer it on the real site - even with no token yet (we keep trying)
   lbInput.value = lbSavedName;
+  LB.retryNow(run);
 }
-async function lbSubmit() {
+// status line under the name box when there is no message of its own
+function lbStatus(L) {
+  if (!L || !L.run) return null;
+  const w = LB.waitMs(L.run);
+  if (L.queued) return { t: w === Infinity ? 'Saving... (waiting for the leaderboard)' : 'Saving...' + (w > 0 ? ' (' + Math.ceil(w / 1000) + ' s)' : ''), c: '#ccc' };
+  if (w === Infinity) return { t: 'Couldn\'t reach the leaderboard - still trying.', c: '#ffb3a0' };
+  if (w > 0) return { t: 'Leaderboard ready in ' + Math.ceil(w / 1000) + ' s - SUBMIT will save it then.', c: '#ccc' };
+  return null;
+}
+function lbSubmit() {
   const L = G.lb;
-  if (!L || L.busy || !(L.mode === 'entry' || (L.mode === 'error' && L.retry))) return;
+  if (!L || L.busy || L.queued || !(L.mode === 'entry' || (L.mode === 'error' && L.retry))) return;
   const name = lbCleanName(lbInput.value);
   if (!name) { L.mode = 'error'; L.retry = true; L.msg = 'Type a name first (1-12 characters).'; return; }
-  lbInput.value = name; lbSavedName = name;
+  lbInput.value = name; lbSavedName = name; L.name = name;
   try { localStorage.setItem(LB_NAME_KEY, name); } catch (e) {}
-  L.busy = true; L.mode = 'sending'; L.msg = 'Saving...';
+  L.mode = 'sending'; L.msg = ''; L.queued = true;   // sent by lbTick as soon as a token is there and old enough
   lbInput.blur();
-  let r;
-  try { r = await LB.submit(L.run, name, L.score, L.playedMs); } catch (e) { r = { ok: false, retry: true, msg: 'Couldn\'t save score.' }; }
-  L.busy = false;
-  if (G.lb !== L) return;   // the player already moved on
-  if (r.ok) { L.mode = 'done'; L.msg = 'Saved to the Arcade leaderboard' + (r.rank ? ' - #' + r.rank + ' on ' + (DIFFS[L.run.board] ? DIFFS[L.run.board].name : L.run.board) : '') + '!'; SFX.buy(); }
-  else { L.mode = r.retry ? 'error' : 'note'; L.retry = r.retry; L.msg = r.msg; }
+  if (!L.run.token) LB.retryNow(L.run);
+  lbTick();
 }
-function lbSkip() { if (G.lb && !G.lb.busy) G.lb.mode = 'hidden'; lbInput.blur(); }
+// every frame: send a queued score once the token exists and is old enough
+function lbTick() {
+  const L = G.lb;
+  if (!L || !L.queued || L.busy || G.state !== 'gameover' || LB.waitMs(L.run) > 0) return;
+  L.queued = false; L.busy = true;
+  LB.submit(L.run, L.name, L.score, L.playedMs).catch(() => ({ ok: false, retry: true, msg: 'Couldn\'t save score.' })).then(r => {
+    L.busy = false;
+    if (G.lb !== L) return;   // the player already moved on
+    if (r.ok) { L.mode = 'done'; L.msg = 'Saved to the Arcade leaderboard' + (r.rank ? ' - #' + r.rank + ' on ' + (DIFFS[L.run.board] ? DIFFS[L.run.board].name : L.run.board) : '') + '!'; LB.kill(L.run); SFX.buy(); }
+    else { L.mode = 'error'; L.retry = true; L.msg = r.msg; }
+  });
+}
+function lbSkip() { if (G.lb && !G.lb.busy) { G.lb.mode = 'hidden'; G.lb.queued = false; LB.kill(G.lb.run); } lbInput.blur(); }
 const lbFormOn = () => G.state === 'gameover' && G.lb && (G.lb.mode === 'entry' || G.lb.mode === 'sending' || (G.lb.mode === 'error' && G.lb.retry));
 let lbInputCss = '';
 function syncLbInput() {   // the real input sits exactly on the canvas-drawn field
+  lbTick();
   const f = lbFormOn() && GO.lb && GO.lb.field;
   if (!f) { if (lbInput.style.display !== 'none') { if (document.activeElement === lbInput) lbInput.blur(); lbInput.style.display = 'none'; lbInputCss = ''; } return; }
   const fs = Math.max(16, Math.min(22, Math.round(f.h * 0.4)));   // >= 16 px: iOS doesn't zoom on focus
@@ -1987,7 +2055,7 @@ G._dbg = { waveSpec: n => waveSpec(n), fireAt: (x, y) => fireAt(x, y), startWave
   fireworks: () => G.fw ? { t: G.fw.t, rockets: G.fw.rockets.length, sparks: G.fw.sparks.length } : null, spawnNuke: (x, y) => spawnNuke(x, y), nukeImpact: (x, y) => nukeImpact(x, y), nukeDirectR: () => NUKE_DIRECT_R(), nukeBurstY: () => nukeBurstY(), spawnMissile: (t, x, y, tg) => spawnMissile(t, x, y, tg), impact: (x, y) => impact(x, y), inShield: (x, y) => !!inShield(x, y),
   fsSupported, toggleFullscreen: () => toggleFullscreen(), fsRect: () => fsRect(),
   music: () => ({ on: musicOn, built: !!music, step: music ? music.step : 0, ctx: actx ? actx.state : 'none', bus: music ? music.bus.gain.value : 0, muted, stored: (() => { try { return localStorage.getItem('redReignMusic'); } catch (e) { return 'n/a'; } })() }), setMusic: on => setMusic(on) };
-G._dbg.lbUi = () => ({ mode: G.lb ? G.lb.mode : null, msg: G.lb ? G.lb.msg : '', playedMs: G.lb ? G.lb.playedMs : null, score: G.lb ? G.lb.score : null, run: G.lbRun ? { state: G.lbRun.state, board: G.lbRun.board } : (G.lb && G.lb.run ? { state: G.lb.run.state, board: G.lb.run.board } : null), ui: GO.lb, btn: GO.btn, runMs: G.runMs, input: { display: lbInput.style.display, value: lbInput.value, disabled: lbInput.disabled } });   // v2.2.4 test hook
+G._dbg.lbUi = () => ({ queued: G.lb ? G.lb.queued : null, busy: G.lb ? G.lb.busy : null, tok: (r => r ? { has: !!r.token, age: LB.tokenAge(r), wait: LB.waitMs(r), tries: r.tries, state: r.state, dead: r.dead } : null)(G.lbRun || (G.lb && G.lb.run)), status: G.lb ? lbStatus(G.lb) : null, mode: G.lb ? G.lb.mode : null, msg: G.lb ? G.lb.msg : '', playedMs: G.lb ? G.lb.playedMs : null, score: G.lb ? G.lb.score : null, run: G.lbRun ? { state: G.lbRun.state, board: G.lbRun.board } : (G.lb && G.lb.run ? { state: G.lb.run.state, board: G.lb.run.board } : null), ui: GO.lb, btn: GO.btn, runMs: G.runMs, input: { display: lbInput.style.display, value: lbInput.value, disabled: lbInput.disabled } });   // v2.2.4 test hook
 
 // ---------- update ----------
 // ---------- 1,000,000 celebration fireworks (purely visual: never touches gameplay lists) ----------
@@ -4066,10 +4134,14 @@ function drawGameOver() {
       const foc = document.activeElement === lbInput;
       ctx.fillStyle = 'rgba(5,2,10,0.85)'; rrect(field.x, field.y, field.w, field.h, 8); ctx.fill();
       ctx.strokeStyle = foc ? '#ffb3a0' : 'rgba(255,200,180,0.5)'; ctx.lineWidth = foc ? 2.5 : 1.5; rrect(field.x + 0.75, field.y + 0.75, field.w - 1.5, field.h - 1.5, 8); ctx.stroke();
+      const notReady = LB.waitMs(L.run) > 0 && !L.queued && L.mode !== 'sending';   // v2.2.5: dimmed until the token is old enough (a press queues it)
+      if (notReady) { ctx.save(); ctx.globalAlpha = 0.55; }
       drawMenuBtn(GO.lb.submit, L.mode === 'sending' ? 'SAVING...' : 'SUBMIT', true);
+      if (notReady) ctx.restore();
       drawMenuBtn(GO.lb.skip, 'SKIP', false);
-      const hint = L.msg || (isTouch ? 'Optional - tap the box to type a name (up to 12).' : 'Optional - click the box or press Tab, type a name, Enter to save.');
-      txt(hint, b.cx, by + fh + pS * 0.95, pS, L.msg ? msgCol : '#bbb', 'center', 'normal', pw - 2 * pad);
+      const stt = L.msg ? null : lbStatus(L);
+      const hint = L.msg || (stt && stt.t) || (isTouch ? 'Optional - tap the box to type a name (up to 12).' : 'Optional - click the box or press Tab, type a name, Enter to save.');
+      txt(hint, b.cx, by + fh + pS * 0.95, pS, L.msg ? msgCol : stt ? stt.c : '#bbb', 'center', 'normal', pw - 2 * pad);
     } else {
       txt(L.msg, b.cx, py + panelH / 2, pS, msgCol, 'center', L.mode === 'done' ? 'bold' : 'normal', pw - 2 * pad);
     }
