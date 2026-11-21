@@ -46,6 +46,22 @@
     background:rgba(40,70,120,.6);color:#eaf6ff;cursor:pointer;min-width:120px}
   button.ui.primary{background:linear-gradient(180deg,#38c6ff,#1f7fe0);border-color:#8fe0ff;box-shadow:0 4px 16px rgba(40,160,255,.4)}
   button.ui:hover{filter:brightness(1.12)}
+  .lb{margin:10px auto 0;max-width:340px;text-align:center}
+  .lbHead{font-weight:700;font-size:15px;color:#9fd8ff;margin-bottom:4px}
+  .lbList{list-style:none;margin:0 auto;padding:0;counter-reset:lb;text-align:left;font-size:15px}
+  .lbList li{counter-increment:lb;display:flex;gap:8px;padding:1px 4px;border-bottom:1px solid rgba(160,220,255,.12)}
+  .lbList li::before{content:counter(lb) ".";width:1.8em;color:#7fa8c8;text-align:right}
+  .lbName{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .lbScore{color:#ffd36b;font-weight:700}
+  .lbSave{margin-top:10px}
+  .lbLabel{display:block;font-size:14px;color:#cfe6ff;margin-bottom:4px}
+  .lbForm{display:flex;gap:8px;justify-content:center}
+  .lbForm input{font:inherit;font-size:16px;min-height:44px;box-sizing:border-box;width:0;flex:1;min-width:0;max-width:200px;padding:6px 10px;border-radius:10px;border:1px solid rgba(160,220,255,.5);background:rgba(5,12,28,.8);color:#fff}
+  .lbForm input:focus{outline:2px solid #38c6ff}
+  .lbBtn{min-height:44px;padding:8px 18px}
+  .lbMsg{min-height:18px;font-size:14px;margin-top:4px;color:#cfe6ff}
+  .lbMsg.err{color:#ffb4a8}.lbMsg.ok{color:#9dff8a}
+  @media (orientation:landscape) and (max-height:500px){#lbTitle{display:none}.lb{margin-top:4px}.lbList{font-size:14px}}
   .stat{font-size:18px;margin:4px 0}
   .stat b{color:#ffd36b}
   #settings{z-index:20}
@@ -173,6 +189,28 @@
 </div>
 <script>
 var POP_SPIRAL_CHANGELOG = [
+  {
+    "version": "0.2.4",
+    "date": "2026-11-21",
+    "sections": [
+      {
+        "heading": "Added",
+        "items": [
+          "Tylilo Arcade leaderboard (only on tylilo.com; on file:// or any other host it is hidden and the game makes no network calls). When a run starts the game asks the Arcade for a run token, and at game over you can enter an optional name (1-12 characters) and press Save. Nothing is sent unless you press Save. The top 5 scores show on the title screen and at game over. The server's message is shown if a name is rejected, and a rate limit says \"Try again later\".",
+          "If the Arcade can't be reached when a run starts, the game keeps retrying quietly in the background (1, 2, 4, 8, 15, then every 30 seconds) and tries again right at game over. If it still can't be reached, game over shows \"Couldn't reach the leaderboard\" instead of the save box, and the save box appears as soon as a token arrives. If you press Save before the token is 20 seconds old, the game waits until it is old enough (\"Saving… almost there\") instead of failing. The play time sent is never longer than the token's real age.",
+          "The name you save is remembered (`popSpiral.playerName`) and filled in next time.",
+          "Name entry works with mouse, touch and keyboard (Enter saves); typing a name never triggers Space, Enter or Esc game keys. The box and Save button are at least 44 px tall with 16 px text, so phones don't zoom."
+        ]
+      },
+      {
+        "heading": "Tests",
+        "items": [
+          "Unit tests (mock fetch, fake clock) cover host detection, no calls when disabled, start on run begin, start failing then succeeding, start never succeeding (capped backoff), hanging requests, retry at game over, the 20 s wait, playedMs clamped to the token's age, name rules, server error / 429 messages, and single-use tokens.",
+          "Browser checks route `/api/scores.php` on a tylilo.com page and cover file:// and other hosts, offline, start failing then succeeding with the 20 s wait and clamped playedMs, start never succeeding (play not blocked), typing a name with Space/Enter/Esc, error and 429 messages by touch, and the phone portrait and landscape layouts."
+        ]
+      }
+    ]
+  },
   {
     "version": "0.2.3",
     "date": "2026-11-21",
@@ -332,7 +370,7 @@ var POP_SPIRAL_CHANGELOG = [
 /* =====================================================================
  *  PURE LOGIC (no DOM) — exposed as global.PopLogic for unit tests
  * ===================================================================== */
-var VERSION = '0.2.3';
+var VERSION = '0.2.4';
 var CFG = {
   W: 1000, H: 700, R: 16, SPACING: 32, PROJ_SPEED: 700, MUZZLE: 40,
   GAP_EPS: 4, COMPRESS_SPEED: 560, MATCH_MIN: 3, INSERT_TIME: 0.13,
@@ -1040,6 +1078,144 @@ var PopLogic = {
 global.PopLogic = PopLogic;
 
 /* =====================================================================
+ *  TYLILO ARCADE LEADERBOARD CLIENT (no DOM; env is injectable for tests)
+ *  The one approved network exception: same-origin POST/GET to the
+ *  relative URL /api/scores.php, only on tylilo.com. Never blocks play.
+ * ===================================================================== */
+var BOARD_URL = '/api/scores.php', BOARD_SLUG = 'pop-spiral', BOARD_NAME = 'default';
+var BOARD_MIN_MS = 20000, BOARD_MAX_SCORE = 5000000, BOARD_NAME_MAX = 12;
+var BOARD_REQ_TIMEOUT = 8000, BOARD_RETRY_MS = [1000, 2000, 4000, 8000, 15000, 30000], BOARD_TOKEN_WAIT = 12000;
+
+function boardHostOk(loc) {
+  if (!loc) return false;
+  var proto = String(loc.protocol || '').toLowerCase(), host = String(loc.hostname || '').toLowerCase();
+  return (proto === 'https:' || proto === 'http:') && (host === 'tylilo.com' || /\.tylilo\.com$/.test(host));
+}
+
+function createBoard(env) {
+  var enabled = !!env.enabled, run = null, gen = 0, listeners = [];
+  var fetchFn = env.fetch, now = env.now, setT = env.setTimeout, clearT = env.clearTimeout;
+  function changed() { if (env.onChange) { try { env.onChange(); } catch (e) {} } }
+
+  // one request with a hard timeout; resolves {status, data} or rejects (network, timeout, bad JSON)
+  function request(url, init) {
+    return new Promise(function (resolve, reject) {
+      var done = false, ac = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+      var timer = setT(function () { if (done) return; done = true; if (ac) { try { ac.abort(); } catch (e) {} } reject(new Error('timeout')); }, BOARD_REQ_TIMEOUT);
+      var opts = init || {}; if (ac) opts.signal = ac.signal;
+      var p; try { p = fetchFn(url, opts); } catch (e) { done = true; clearT(timer); reject(e); return; }
+      Promise.resolve(p).then(function (res) {
+        return Promise.resolve(res.json()).then(function (data) { return { status: res.status, data: data }; },
+          function () { return { status: res.status, data: null }; });
+      }).then(function (r) { if (done) return; done = true; clearT(timer); resolve(r); },
+        function (e) { if (done) return; done = true; clearT(timer); reject(e); });
+    });
+  }
+  function post(body) {
+    return request(BOARD_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(body) });
+  }
+
+  function attemptStart(r) {
+    if (run !== r || r.token || r.inflight || r.dead) return;
+    r.inflight = true; r.attempts++;
+    post({ op: 'start', game: BOARD_SLUG, board: BOARD_NAME }).then(function (res) {
+      if (run !== r) return;
+      r.inflight = false;
+      var d = res.data;
+      if (res.status >= 200 && res.status < 300 && d && d.ok !== false && typeof d.token === 'string' && d.token) {
+        r.token = d.token; r.tokenAt = now();
+        r.minMs = (d.minPlayedMs > 0 && d.minPlayedMs < 600000) ? Math.ceil(d.minPlayedMs) : BOARD_MIN_MS;
+        if (r.timer) { clearT(r.timer); r.timer = null; }
+        var w = r.waiters; r.waiters = []; w.forEach(function (f) { f(); });
+        changed();
+      } else startFailed(r);
+    }, function () { if (run !== r) return; r.inflight = false; startFailed(r); });
+  }
+  function startFailed(r) {
+    var was = r.failed; r.failed = true;
+    var delay = BOARD_RETRY_MS[Math.min(r.attempts - 1, BOARD_RETRY_MS.length - 1)];
+    if (r.timer) clearT(r.timer);
+    r.timer = setT(function () { r.timer = null; attemptStart(r); }, delay);
+    if (!was) changed();
+  }
+
+  var api = {
+    enabled: enabled,
+    // a run begins: ask the server for a token, keep retrying with backoff until one arrives
+    beginRun: function () {
+      if (!enabled) return;
+      if (run) { run.dead = true; if (run.timer) clearT(run.timer); var w = run.waiters; run.waiters = []; w.forEach(function (f) { f(); }); }
+      run = { id: ++gen, startedAt: now(), token: null, tokenAt: 0, minMs: BOARD_MIN_MS, attempts: 0, failed: false,
+        inflight: false, timer: null, waiters: [], ended: false, score: 0, submitting: false, saved: false, dead: false };
+      attemptStart(run);
+    },
+    // game over: remember the score, and try again right now if there is still no token
+    endRun: function (score) {
+      if (!enabled || !run) return;
+      run.ended = true; run.score = Math.max(0, Math.min(BOARD_MAX_SCORE, Math.round(+score || 0)));
+      if (!run.token && !run.inflight) { if (run.timer) { clearT(run.timer); run.timer = null; } attemptStart(run); }
+    },
+    hasRun: function () { return !!run; },
+    hasToken: function () { return !!(run && run.token); },
+    unreachable: function () { return !!(run && !run.token && run.failed); },
+    saved: function () { return !!(run && run.saved); },
+    tokenAge: function () { return run && run.token ? now() - run.tokenAt : -1; },
+    top: function (limit) {
+      if (!enabled) return Promise.resolve(null);
+      var u = BOARD_URL + '?game=' + BOARD_SLUG + '&board=' + BOARD_NAME + '&limit=' + (limit || 10);
+      return request(u, { method: 'GET', credentials: 'same-origin' }).then(function (res) {
+        var d = res.data, b = d && d.ok !== false && d.boards && d.boards[0];
+        return (b && Array.isArray(b.scores)) ? b.scores : null;
+      }, function () { return null; });
+    },
+    // Save the score. Waits for a token, then until the token is old enough. onStatus('connecting'|'waiting').
+    submit: function (name, onStatus) {
+      var r = run, st = function (s) { if (onStatus) { try { onStatus(s); } catch (e) {} } };
+      function fail(msg, code) { r.submitting = false; return { ok: false, msg: msg, code: code }; }
+      if (!enabled || !r || !r.ended) return Promise.resolve({ ok: false, msg: 'Nothing to save.' });
+      if (r.saved) return Promise.resolve({ ok: false, msg: 'Already saved.' });
+      if (r.submitting) return Promise.resolve({ ok: false, msg: 'Saving…' });
+      name = String(name == null ? '' : name).trim();
+      if (name.length < 1 || name.length > BOARD_NAME_MAX) return Promise.resolve({ ok: false, msg: 'Enter a name of 1-' + BOARD_NAME_MAX + ' characters.' });
+      r.submitting = true;
+      function waitToken() {
+        if (r.token) return Promise.resolve(true);
+        st('connecting');
+        return new Promise(function (resolve) {
+          var t = setT(function () { resolve(!!r.token); }, BOARD_TOKEN_WAIT);
+          r.waiters.push(function () { clearT(t); resolve(!!r.token); });
+          if (!r.inflight) { if (r.timer) { clearT(r.timer); r.timer = null; } attemptStart(r); }
+        });
+      }
+      function waitAge() {
+        if (run !== r || r.dead) return Promise.resolve(false);
+        var need = r.minMs - (now() - r.tokenAt);
+        if (need <= 0) return Promise.resolve(true);
+        st('waiting');
+        return new Promise(function (resolve) { setT(resolve, need + 150); }).then(waitAge);
+      }
+      return waitToken().then(function (got) {
+        if (!got) return fail("Couldn't reach the leaderboard", 'unreachable');
+        return waitAge().then(function (okAge) {
+          if (!okAge) return fail('Run replaced.', 'dead');
+          var t = now(), played = Math.floor(Math.min(t - r.startedAt, t - r.tokenAt));   // never more than the token's real age
+          return post({ op: 'submit', game: BOARD_SLUG, board: BOARD_NAME, name: name, score: r.score, playedMs: played, token: r.token }).then(function (res) {
+            var d = res.data;
+            if (res.status === 429) return fail('Try again later', 'rate');
+            if (res.status >= 200 && res.status < 300 && d && d.ok !== false) { r.submitting = false; r.saved = true; return { ok: true, msg: 'Saved!', playedMs: played }; }
+            var m = d && (d.error || d.message);
+            return fail(typeof m === 'string' && m ? m : "Couldn't save your score.", 'rejected');
+          }, function () { return fail("Couldn't reach the leaderboard. Try again.", 'network'); });
+        });
+      });
+    }
+  };
+  return api;
+}
+global.PopBoard = { create: createBoard, hostOk: boardHostOk, SLUG: BOARD_SLUG, BOARD: BOARD_NAME, URL: BOARD_URL, MIN_MS: BOARD_MIN_MS,
+  RETRY_MS: BOARD_RETRY_MS, REQ_TIMEOUT: BOARD_REQ_TIMEOUT, TOKEN_WAIT: BOARD_TOKEN_WAIT, NAME_MAX: BOARD_NAME_MAX };
+
+/* =====================================================================
  *  BROWSER: rendering, audio, input, settings, state machine
  * ===================================================================== */
 if (typeof document === 'undefined' || !document.getElementById('game')) return;
@@ -1325,7 +1501,7 @@ function loadLevel(i) {
 }
 function startPlaying() {
   audio.unlock();
-  hide(overlay); app.state = 'PLAYING'; app.title = false; app.paused = false; updateButtons();
+  hide(overlay); app.state = 'PLAYING'; app.title = false; app.paused = false; lbRefresh = null; lbBeginRun(); updateButtons();
 }
 
 /* ---------- Overlays ---------- */
@@ -1346,7 +1522,7 @@ function showOverlay(html, buttons) {
   show(overlay); updateButtons();
 }
 overlay.addEventListener('click', function (e) {
-  if (e.target.tagName !== 'BUTTON' && primaryAction && !settingsOpen() && !whatsNewOpen()) { audio.unlock(); primaryAction(); }
+  if (e.target.tagName !== 'BUTTON' && !(e.target.closest && e.target.closest('.lb')) && primaryAction && !settingsOpen() && !whatsNewOpen()) { audio.unlock(); primaryAction(); }
 });
 var CONTROLS_HTML = '<div class="controls"><b>Aim</b>: mouse / drag finger &nbsp; <b>Shoot</b>: click / release touch<br>' +
   '<b>Swap orbs</b>: tap the shooter, right-click, Space, or the &#8646; button<br><b>Pause &amp; settings</b>: Esc or &#9881;<br>' +
@@ -1357,12 +1533,13 @@ function showReady() {
     showOverlay('<div class="title">Pop Spiral</div><div class="ver" id="titleVersion">v' + VERSION + '</div>' +
       '<p class="sub">An orb-popping puzzle of spirals and chain reactions.</p>' + CONTROLS_HTML +
       (app.best ? '<div class="stat">Best score: <b>' + app.best + '</b></div>' : '') +
-      '<p class="sub" style="margin-top:10px">Click to start</p>' +
+      lbHtml('lbTitle') + '<p class="sub" style="margin-top:10px">Click to start</p>' +
       '<div class="copyright" id="titleCopyright">' + copyrightLine() + '</div>',
       [{ label: 'Play', primary: true, action: startPlaying },
        { label: 'Settings', action: function () { openSettings(); } },
        { label: "What's New", action: function () { openWhatsNew(); } },
        { label: 'Back to Arcade', action: function () { requestBackToArcade(); } }]);
+    lbMountTitle();
   } else {
     showOverlay('<h2>Level ' + (app.levelIndex + 1) + ' &middot; ' + esc(L.name) + '</h2><p class="sub">' + L.totalMarbles + ' orbs &middot; ' + L.colors + ' colors</p>' +
       '<div class="stat">Score: <b>' + app.score + '</b></div><p class="sub">Click to start</p>',
@@ -1375,8 +1552,9 @@ function showWon() {
   saveBest();
   if (last) {
     showOverlay('<h2>All spirals cleared!</h2><div class="ver">Pop Spiral v' + VERSION + '</div><div class="stat">Clear bonus: <b>+' + bonus + '</b></div>' +
-      '<div class="stat">Final score: <b>' + app.score + '</b></div><div class="stat">Best: <b>' + app.best + '</b></div>',
+      '<div class="stat">Final score: <b>' + app.score + '</b></div><div class="stat">Best: <b>' + app.best + '</b></div>' + lbHtml('lbOver'),
       [{ label: 'Play again', primary: true, action: function () { app.score = 0; app.title = true; loadLevel(0); } }]);
+    lbEndRun(app.score); lbMountOver(app.score);
   } else {
     showOverlay('<h2>Level clear!</h2><div class="stat">Clear bonus: <b>+' + bonus + '</b></div><div class="stat">Score: <b>' + app.score + '</b></div>' +
       '<div class="stat">Best chain reaction: <b>x' + (app.world.maxDepth + 1) + '</b></div><p class="sub">Click to continue</p>',
@@ -1385,9 +1563,10 @@ function showWon() {
 }
 function showLost() {
   saveBest();
-  showOverlay('<h2>The orbs reached the vortex</h2><div class="stat">Score: <b>' + app.world.score + '</b></div><p class="sub">Retry restores your score from the start of this level.</p>',
+  showOverlay('<h2>The orbs reached the vortex</h2><div class="stat">Score: <b>' + app.world.score + '</b></div><p class="sub">Retry restores your score from the start of this level.</p>' + lbHtml('lbOver'),
     [{ label: 'Retry', primary: true, action: function () { app.score = app.levelStartScore; loadLevel(app.levelIndex); startPlaying(); } },
      { label: 'Title', action: function () { app.score = 0; app.title = true; loadLevel(0); } }]);
+  lbEndRun(app.world.score); lbMountOver(app.world.score);
 }
 function saveBest() {
   var s = Math.max(app.score, app.world ? app.world.score : 0);
@@ -1579,6 +1758,8 @@ btnSwap.addEventListener('pointerdown', function (e) { e.preventDefault(); e.sto
 btnSwap.addEventListener('contextmenu', function (e) { e.preventDefault(); });
 global.addEventListener('keydown', function (e) {
   audio.unlock();
+  // typing a name (or pressing keys on the leaderboard form) must never trigger game hotkeys
+  if (e.target && e.target.closest && e.target.closest('.lb')) return;
   var overlayUp = !overlay.classList.contains('hidden');
   if (e.code === 'Escape') {
     e.preventDefault();
@@ -1634,6 +1815,75 @@ function handleEvents() {
     else if (e.type === 'lost') { audio.lose(); addShake(14); app.overTimer = 1.6; }
     else if (e.type === 'won') { audio.win(); app.overTimer = 1.0; }
   }
+}
+
+/* ---------- Tylilo Arcade leaderboard UI (hidden entirely off tylilo.com) ---------- */
+var NAME_KEY = 'popSpiral.playerName';
+var board = PopBoard.create({
+  enabled: PopBoard.hostOk(global.location), fetch: function (u, o) { return global.fetch(u, o); },
+  now: function () { return Date.now(); }, setTimeout: function (f, ms) { return global.setTimeout(f, ms); },
+  clearTimeout: function (t) { global.clearTimeout(t); }, onChange: function () { if (lbRefresh) lbRefresh(); }
+});
+var lbRefresh = null, runOpen = false;
+function lbBeginRun() { if (!runOpen) { runOpen = true; board.beginRun(); } }
+function lbEndRun(score) { runOpen = false; board.endRun(score); }
+function lbHtml(id) { return board.enabled ? '<div class="lb" id="' + id + '"></div>' : ''; }
+function lbRows(scores, n) {
+  if (!scores || !scores.length) return '';
+  return '<ol class="lbList">' + scores.slice(0, n).map(function (s) {
+    return '<li><span class="lbName">' + esc(s.name == null ? '' : s.name) + '</span><span class="lbScore">' + esc(s.score == null ? '' : s.score) + '</span></li>'; }).join('') + '</ol>';
+}
+function lbLoadTop(host, n, after) {
+  board.top(n).then(function (scores) {
+    if (!host.isConnected) return;
+    var html = lbRows(scores, n);
+    var box = host.querySelector('.lbTop'); if (!box) return;
+    box.innerHTML = html ? '<div class="lbHead">Top scores</div>' + html : '';
+    if (after) after();
+  });
+}
+function lbMountTitle() {
+  var host = $('lbTitle'); if (!host) return;
+  host.innerHTML = '<div class="lbTop"></div>'; lbRefresh = null;
+  lbLoadTop(host, 5);
+}
+function lbMountOver(score) {
+  var host = $('lbOver'); if (!host) return;
+  var name = ''; try { name = localStorage.getItem(NAME_KEY) || ''; } catch (e) {}
+  var mode = '', busy = false;
+  host.innerHTML = '<div class="lbTop"></div><div class="lbSave"></div>';
+  var box = host.querySelector('.lbSave');
+  function setMsg(t, err) { var m = box.querySelector('.lbMsg'); if (m) { m.textContent = t || ''; m.className = 'lbMsg' + (err ? ' err' : ''); } }
+  function render() {
+    if (!host.isConnected) { if (lbRefresh === render) lbRefresh = null; return; }
+    var want = board.saved() ? 'saved' : (board.unreachable() ? 'down' : 'form');
+    if (want === mode) return;
+    mode = want;
+    if (want === 'saved') box.innerHTML = '<div class="lbMsg ok">Saved! Thanks for playing.</div>';
+    else if (want === 'down') box.innerHTML = '<div class="lbMsg err">Couldn\'t reach the leaderboard</div>';
+    else {
+      box.innerHTML = '<label class="lbLabel" for="lbName">Save your score (optional)</label><div class="lbForm">' +
+        '<input id="lbName" type="text" maxlength="' + PopBoard.NAME_MAX + '" placeholder="Your name" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="done" aria-label="Your name, 1 to 12 characters">' +
+        '<button type="button" class="ui lbBtn" id="lbSave">Save</button></div><div class="lbMsg" role="status" aria-live="polite"></div>';
+      var inp = $('lbName'), btn = $('lbSave'); inp.value = name;
+      function go() {
+        if (busy) return; busy = true; btn.disabled = true; var nm = inp.value.trim(); name = nm; setMsg('');
+        board.submit(nm, function (s) { setMsg(s === 'waiting' ? 'Saving… almost there' : 'Connecting…'); }).then(function (r) {
+          busy = false;
+          if (!host.isConnected) return;
+          if (r.ok) {
+            try { localStorage.setItem(NAME_KEY, nm); } catch (e) {}
+            mode = ''; render(); lbLoadTop(host, 5);
+          } else if (r.code === 'unreachable') { mode = ''; render(); }
+          else { var b2 = $('lbSave'); if (b2) b2.disabled = false; setMsg(r.msg, true); }
+        });
+      }
+      btn.addEventListener('click', function (e) { e.stopPropagation(); audio.unlock(); go(); });
+      inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); go(); } else if (e.key === 'Escape') inp.blur(); });
+      inp.addEventListener('input', function () { name = inp.value; });
+    }
+  }
+  lbRefresh = render; render(); lbLoadTop(host, 5);
 }
 
 /* ---------- Rendering ---------- */
