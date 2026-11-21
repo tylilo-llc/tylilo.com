@@ -76,6 +76,8 @@
   .whatsnew-body li{margin:0 0 4px}
   .whatsnew-body code{font-size:.92em;background:rgba(120,200,255,.12);padding:0 4px;border-radius:4px}
   #whatsNew .btns{flex:none;margin-top:12px}
+  #settings .arcade-row{margin-top:12px}
+  #leaveConfirm{z-index:30}
 </style>
 </head>
 <body>
@@ -103,6 +105,9 @@
       <select id="cbMode"><option value="off">Off</option><option value="deuteranopia">Deuteranopia</option><option value="protanopia">Protanopia</option><option value="tritanopia">Tritanopia</option></select></div>
     <div class="row"><label for="symbols">Symbols on marbles</label><span class="switch"><input type="checkbox" id="symbols"><span></span></span></div>
     <div id="palettePreview" aria-hidden="true"></div>
+    <div class="btns arcade-row">
+      <button type="button" class="ui" id="btnBackToArcade">Back to Arcade</button>
+    </div>
     <div class="foot">
       <span class="note" id="settingsVersion"></span>
       <span><button class="ui" id="btnWhatsNew">What's New</button> <button class="ui" id="btnReset">Defaults</button> <button class="ui primary" id="btnCloseSettings">Resume</button></span>
@@ -117,8 +122,48 @@
     <div class="btns"><button class="ui primary" id="btnCloseWhatsNew">Close</button></div>
   </div>
 </div>
+<div id="leaveConfirm" class="overlay hidden">
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="leaveConfirmTitle" aria-describedby="leaveConfirmMsg">
+    <h2 id="leaveConfirmTitle">Leave this run?</h2>
+    <p class="sub" id="leaveConfirmMsg">Progress on this level will be lost.</p>
+    <div class="btns">
+      <button type="button" class="ui" id="btnLeaveRun">Leave</button>
+      <button type="button" class="ui primary" id="btnStayRun">Stay</button>
+    </div>
+  </div>
+</div>
 <script>
 var POP_SPIRAL_CHANGELOG = [
+  {
+    "version": "0.2.2",
+    "date": "2026-11-21",
+    "sections": [
+      {
+        "heading": "Added",
+        "items": [
+          "Level 4, *Hairpin Pass*: a new Catmull-Rom switchback track. Orbs enter along the top, wind down and up three hairpin columns on the left, run along the bottom, then climb four hairpin columns on the right and exit at the innermost one. It follows the difficulty curve for level 4 and is a small step harder than *Twin Coil* on every setting: 75 orbs (was 73), speed 39.7 (was 39.3), wait before new orbs after the track is cleared 1.17 s (was 1.18), opening rush to 20.6% of the track (was 20.4%), fewer same-color repeats (0.389, was 0.393), and fewer specials (0.068, was 0.069). The track is about as long as Twin Coil's (4939 px vs 4973), so the front reaches the exit about 2 seconds sooner after the opening rush. The exit is also farther from the turret (about 200 px vs 141), and the hairpins hide the far columns behind the near ones. Still 4 colors, and specials last the whole round.",
+          "On harder levels, specials no longer stay on the same ball for the whole round. Each level has a data-driven `powerLife` (seconds on the ball; `0` means the whole round), a `powerWarn` blink window, and a `powerGap` before a new special can attach to a different unpowered ball on the track. Levels 1–8 keep `powerLife` 0; from level 9 it starts at 20 seconds and shrinks to about 8 seconds by level 50. The special blinks for its last few seconds (dims steadily with reduced motion). Popping it during the warning still activates it. Spawn-time `powerChance` rolls are unchanged, and timers are not slowed by Slowdown.",
+          "A \"Back to Arcade\" button on the title screen and in the pause/settings menu goes to `/arcade/` in the same tab. If a run is in progress, an in-game confirm asks first (\"Leave this run? Progress on this level will be lost.\") with Leave and Stay; Stay or Esc cancels. The button is not available while actively playing (only from the title screen or after opening pause/settings), and there is no hotkey for it."
+        ]
+      },
+      {
+        "heading": "Changed",
+        "items": [
+          "Gentler difficulty ramp planned across 50 levels; levels 2-3 eased. *Serpent Run* and *Twin Coil* now use 4 colors (were 5 and 6), 72 and 73 orbs (were 95 and 120), and speeds 38 and 39.3 (were 42 and 50). New levels follow the same curve, reaching 5 colors at level 12 and 6 at level 31."
+        ]
+      },
+      {
+        "heading": "Tests",
+        "items": [
+          "Unit tests check that level 4 loads with its path on screen and clear of the turret, matches its curve values, and is no easier than level 3 on any setting. The bot simulation clears it.",
+          "Browser check verifies that level 4 loads and plays, and that What's New shows 0.2.2 at the top.",
+          "Unit tests cover whole-round vs finite lifetime, expiry that does not move the special to another ball, the warning window, activation during the warning, mid-chain reattach after `powerGap`, timers that ignore Slowdown, and that finite `powerLife` never increases from one level to the next.",
+          "Browser check verifies the Back to Arcade button on the title and pause screens, that the mid-run confirm appears and Stay or Esc cancels it, and that Leave navigates to `/arcade/`.",
+          "Unit tests check that the 50-level difficulty curve never gets easier on any setting, that each step is small, that levels 1–3 match their curve values, and that `powerLife` reaches 8 seconds at level 50."
+        ]
+      }
+    ]
+  },
   {
     "version": "0.2.1",
     "date": "2026-11-21",
@@ -218,7 +263,7 @@ var POP_SPIRAL_CHANGELOG = [
 /* =====================================================================
  *  PURE LOGIC (no DOM) — exposed as global.PopLogic for unit tests
  * ===================================================================== */
-var VERSION = '0.2.1';
+var VERSION = '0.2.2';
 var CFG = {
   W: 1000, H: 700, R: 16, SPACING: 32, PROJ_SPEED: 700, MUZZLE: 40,
   GAP_EPS: 4, COMPRESS_SPEED: 560, MATCH_MIN: 3, INSERT_TIME: 0.13,
@@ -243,25 +288,97 @@ var PALETTES = {
 };
 var SYMBOLS = ['circle', 'triangle', 'square', 'diamond', 'star', 'cross'];
 
+/* powerLife: seconds a special stays on one ball; 0 = the whole round.
+ * Schedule (1-based): 0 through level 8; from level 9 start at 20s and shrink
+ * steadily to 8s at level 50 (the planned last level), never longer than the
+ * previous finite value. powerWarn defaults to 3s; powerGap is the minimum
+ * seconds between mid-chain attaches and is used only when powerLife > 0. */
+var MAX_LEVELS = 50;
+function powerLifeForLevel(n) {
+  if (n <= 8) return 0;
+  if (n >= MAX_LEVELS) return 8;
+  return 20 - 12 * (n - 9) / (MAX_LEVELS - 9);
+}
+
+/* Difficulty curve, planned as if all 50 levels already exist (see README
+ * "Difficulty curve"). Linear in t = (n-1)/49 from level 1 (Lazy Spiral,
+ * unchanged) to level 50, the hardest point we still consider beatable:
+ *  - speed 34 -> 54 px/s on the reference path length (Lazy Spiral, 3890 px).
+ *    Marbles enter at speed/SPACING, so inflow goes 1.06 -> 1.69 orbs/s; at
+ *    54 px/s the front of a 4400 px track crawls the post-rush 70% in ~57 s,
+ *    which still leaves ~0.6 s per orb to aim and fire (shot flight <1 s).
+ *  - totalMarbles 70 -> 150; spawnInterval (wait after the track is cleared)
+ *    1.2 -> 0.75 s; rushTo (opening rush, fraction of path) 0.20 -> 0.30.
+ *  - sameChance 0.40 -> 0.22 and powerChance 0.07 -> 0.04 (less help).
+ *  - colors 4 through level 11, 5 for levels 12-30, 6 (palette max) from 31.
+ * Every parameter is monotone, so a later level is never easier on any axis.
+ * levelSpeedForPath scales the curve speed by sqrt(pathLength / 3890) so a
+ * longer track (more time before the end) runs a little faster and a shorter
+ * one a little slower, keeping overall difficulty on the curve. */
+var CURVE_REF_PATH = 3890;
+function roundStep(v, step) { return Math.round(v / step) * step; }
+function difficultyForLevel(n) {
+  n = Math.max(1, Math.min(MAX_LEVELS, Math.round(n)));
+  var t = (n - 1) / (MAX_LEVELS - 1);
+  return {
+    level: n,
+    speed: +roundStep(34 + 20 * t, 0.1).toFixed(1),
+    totalMarbles: Math.round(70 + 80 * t),
+    colors: n <= 11 ? 4 : n <= 30 ? 5 : 6,
+    spawnInterval: +roundStep(1.2 - 0.45 * t, 0.01).toFixed(2),
+    rushTo: +roundStep(0.2 + 0.1 * t, 0.001).toFixed(3),
+    sameChance: +roundStep(0.4 - 0.18 * t, 0.001).toFixed(3),
+    powerChance: +roundStep(0.07 - 0.03 * t, 0.001).toFixed(3),
+    powerLife: +powerLifeForLevel(n).toFixed(1)
+  };
+}
+var DIFFICULTY_CURVE = [];
+for (var dn = 1; dn <= MAX_LEVELS; dn++) DIFFICULTY_CURVE.push(difficultyForLevel(dn));
+function levelSpeedForPath(n, pathLength) {
+  return +(difficultyForLevel(n).speed * Math.sqrt(pathLength / CURVE_REF_PATH)).toFixed(1);
+}
+
 var LEVELS = [
   { name: 'Lazy Spiral', colors: 4, totalMarbles: 70, spawnInterval: 1.2, speed: 34, rushTo: 0.2,
     sameChance: 0.4, powerChance: 0.07, powerUps: ['slow', 'reverse', 'bomb', 'aim'],
+    powerLife: 0, powerWarn: 3, powerGap: 8,
     shooter: { x: 500, y: 350 },
     theme: { bg1: '#163056', bg2: '#060b18', rail: '#6c84b8', groove: '#1b2946', accent: '#5fd3ff' },
     path: { type: 'spiral', cx: 500, cy: 350, rOuter: 320, rInner: 140, turns: 2.25, a0: Math.PI * 0.95, sx: 1.38, sy: 1, wobble: 0, wobbleFreq: 0, samples: 1800 } },
-  { name: 'Serpent Run', colors: 5, totalMarbles: 95, spawnInterval: 1.0, speed: 42, rushTo: 0.18,
-    sameChance: 0.35, powerChance: 0.06, powerUps: ['slow', 'reverse', 'bomb', 'aim'],
+  // Levels 2+ take their values from difficultyForLevel(n); speed = levelSpeedForPath(n, path length).
+  { name: 'Serpent Run', colors: 4, totalMarbles: 72, spawnInterval: 1.19, speed: 38, rushTo: 0.202,
+    sameChance: 0.396, powerChance: 0.069, powerUps: ['slow', 'reverse', 'bomb', 'aim'],
+    powerLife: 0, powerWarn: 3, powerGap: 8,
     shooter: { x: 500, y: 350 },
     theme: { bg1: '#2a1846', bg2: '#0a0614', rail: '#a07ccf', groove: '#24173a', accent: '#ff8be0' },
     path: { type: 'catmull', samplesPerSeg: 90, points: [
       [40, 70], [500, 60], [900, 75], [950, 200], [930, 450], [880, 630], [500, 645], [120, 630], [60, 450],
       [80, 230], [200, 160], [500, 150], [790, 175], [830, 350], [780, 520], [500, 545], [230, 520],
       [180, 380], [260, 280], [380, 255]] } },
-  { name: 'Twin Coil', colors: 6, totalMarbles: 120, spawnInterval: 0.9, speed: 50, rushTo: 0.16,
-    sameChance: 0.3, powerChance: 0.065, powerUps: ['slow', 'reverse', 'bomb', 'aim'],
+  { name: 'Twin Coil', colors: 4, totalMarbles: 73, spawnInterval: 1.18, speed: 39.3, rushTo: 0.204,
+    sameChance: 0.393, powerChance: 0.069, powerUps: ['slow', 'reverse', 'bomb', 'aim'],
+    powerLife: 0, powerWarn: 3, powerGap: 8,
     shooter: { x: 500, y: 350 },
     theme: { bg1: '#0f3a34', bg2: '#03100e', rail: '#6fc9a8', groove: '#123029', accent: '#7dffc8' },
-    path: { type: 'spiral', cx: 500, cy: 350, rOuter: 318, rInner: 122, turns: 2.9, a0: -Math.PI * 0.5, sx: 1.4, sy: 1, wobble: 9, wobbleFreq: 23, samples: 2600, dir: -1 } }
+    path: { type: 'spiral', cx: 500, cy: 350, rOuter: 318, rInner: 122, turns: 2.9, a0: -Math.PI * 0.5, sx: 1.4, sy: 1, wobble: 9, wobbleFreq: 23, samples: 2600, dir: -1 } },
+  // Hairpin Pass: Catmull-Rom switchbacks. Enters along the top, three hairpin columns down the left,
+  // a run along the bottom, then four hairpin columns up the right, ending at the innermost one.
+  // Length 4939 px (about Twin Coil's), loop gap 63 px; the exit is about 200 px from the turret.
+  { name: 'Hairpin Pass', colors: 4, totalMarbles: 75, spawnInterval: 1.17, speed: 39.7, rushTo: 0.206,
+    sameChance: 0.389, powerChance: 0.068, powerUps: ['slow', 'reverse', 'bomb', 'aim'],
+    powerLife: 0, powerWarn: 3, powerGap: 8,
+    shooter: { x: 500, y: 350 },
+    theme: { bg1: '#4a2c14', bg2: '#140a04', rail: '#d6a064', groove: '#3a2412', accent: '#ffb347' },
+    path: { type: 'catmull', samplesPerSeg: 40, points: [
+      [700, 42], [627, 42], [554, 42], [481, 42], [408, 42], [334, 42], [261, 42], [188, 42], [115, 42], [93, 48], [76, 64],
+      [70, 87], [70, 163], [70, 238], [70, 314], [70, 389], [70, 465], [70, 540], [83, 572], [115, 585], [147, 572], [160, 540],
+      [160, 475], [160, 410], [160, 345], [160, 280], [160, 215], [160, 150], [173, 118], [205, 105], [237, 118], [250, 150], [250, 224],
+      [250, 298], [250, 373], [250, 447], [250, 521], [250, 595], [254, 616], [266, 634], [284, 646], [305, 650], [376, 650], [448, 650],
+      [519, 650], [590, 650], [661, 650], [733, 650], [804, 650], [875, 650], [896, 646], [914, 634], [926, 616], [930, 595], [930, 521],
+      [930, 447], [930, 373], [930, 298], [930, 224], [930, 150], [917, 118], [885, 105], [853, 118], [840, 150], [840, 215], [840, 280],
+      [840, 345], [840, 410], [840, 475], [840, 540], [827, 572], [795, 585], [763, 572], [750, 540], [750, 475], [750, 410], [750, 345],
+      [750, 280], [750, 215], [750, 150], [737, 118], [705, 105], [673, 118], [660, 150], [660, 214], [660, 278], [660, 342], [660, 406],
+      [660, 470]] } }
 ];
 
 function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
@@ -405,7 +522,8 @@ function createWorld(levelIndex, opts) {
     rushing: true, speedScale: 1, effects: { slow: 0, reverse: 0, aim: 0 },
     projectile: null, pending: [], events: [],
     shooter: { x: L.shooter.x, y: L.shooter.y, angle: -Math.PI / 2, current: 0, next: 0 },
-    score: opts.score || 0, streak: 0, maxDepth: 0, state: 'PLAYING', time: 0, shotsFired: 0
+    score: opts.score || 0, streak: 0, maxDepth: 0, state: 'PLAYING', time: 0, shotsFired: 0,
+    lastPowerAttach: 0
   };
   w.shooter.current = pickShooterColor(w);
   w.shooter.next = pickShooterColor(w);
@@ -418,10 +536,47 @@ function newMarble(w, d) {
   w.runLen = c === w.lastColor ? w.runLen + 1 : 1; w.lastColor = c;
   var power = null;
   if (w.spawned > 6 && L.powerUps.length && w.rng() < L.powerChance) power = L.powerUps[Math.floor(w.rng() * L.powerUps.length)];
-  return { id: w.nextId++, color: c, d: d, power: power, x: 0, y: 0, rushV: 0 };
+  return makeMarble(w, c, d, power);
+}
+function powerLifeOf(L) { return (L && L.powerLife) || 0; }
+function powerWarnOf(L) { return (L && L.powerWarn != null) ? L.powerWarn : 3; }
+function powerGapOf(L) { return (L && L.powerGap) || 0; }
+function givePower(w, marble, kind) {
+  marble.power = kind || null;
+  var life = powerLifeOf(w.level);
+  marble.powerT = (marble.power && life > 0) ? life : null;
+  return marble;
+}
+function clearPower(marble) { marble.power = null; marble.powerT = null; return marble; }
+function powerWarning(w, m) { return !!(m && m.power && m.powerT != null && m.powerT <= powerWarnOf(w.level)); }
+function isOnTrack(w, m) { return m.d > 0 && m.d < w.path.length; }
+function tryAttachPower(w) {
+  var L = w.level, candidates = [], i, pick, kind;
+  if (!L.powerUps || !L.powerUps.length) return false;
+  for (i = 0; i < w.chain.length; i++) {
+    if (!w.chain[i].power && isOnTrack(w, w.chain[i])) candidates.push(w.chain[i]);
+  }
+  if (!candidates.length) return false;
+  pick = candidates[Math.floor(w.rng() * candidates.length)];
+  kind = L.powerUps[Math.floor(w.rng() * L.powerUps.length)];
+  givePower(w, pick, kind);
+  return true;
+}
+/* Countdown on-ball timers (raw dt, not slowed) and maybe attach a new special. */
+function updatePowers(w, dt) {
+  var L = w.level, m = w.chain, i;
+  for (i = 0; i < m.length; i++) {
+    if (m[i].power && m[i].powerT != null) {
+      m[i].powerT -= dt;
+      if (m[i].powerT <= 0) clearPower(m[i]);
+    }
+  }
+  if (powerLifeOf(L) > 0 && (w.time - (w.lastPowerAttach || 0) >= powerGapOf(L))) {
+    if (tryAttachPower(w)) w.lastPowerAttach = w.time;
+  }
 }
 function makeMarble(w, color, d, power) {
-  return { id: w.nextId++, color: color, d: d, power: power || null, x: 0, y: 0, rushV: 0 };
+  return givePower(w, { id: w.nextId++, color: color, d: d, power: null, powerT: null, x: 0, y: 0, rushV: 0 }, power || null);
 }
 function spawnStep(w, dt) {
   var L = w.level, m = w.chain, S = CFG.SPACING;
@@ -609,6 +764,7 @@ function stepWorld(w, dt) {
   }
   if (w.state !== 'PLAYING') return;
   for (var k in w.effects) w.effects[k] = Math.max(0, w.effects[k] - dt);
+  updatePowers(w, dt);
   var contacts = updateChain(w, currentSpeed(w) * dt, dt);
   spawnStep(w, dt);
   updatePositions(w);
@@ -654,7 +810,10 @@ var PopLogic = {
   createWorld: createWorld, makeMarble: makeMarble, spawnStep: spawnStep, updateChain: updateChain,
   updatePositions: updatePositions, insertMarble: insertMarble, insertSide: insertSide, resolveAt: resolveAt,
   findHit: findHit, rayCast: rayCast, fire: fire, swap: swap, stepProjectile: stepProjectile, stepWorld: stepWorld,
-  currentSpeed: currentSpeed, indexOfId: indexOfId
+  currentSpeed: currentSpeed, indexOfId: indexOfId, powerLifeForLevel: powerLifeForLevel,
+  MAX_LEVELS: MAX_LEVELS, DIFFICULTY_CURVE: DIFFICULTY_CURVE, difficultyForLevel: difficultyForLevel, levelSpeedForPath: levelSpeedForPath, CURVE_REF_PATH: CURVE_REF_PATH,
+  powerLifeOf: powerLifeOf, powerWarnOf: powerWarnOf, powerGapOf: powerGapOf, givePower: givePower,
+  clearPower: clearPower, powerWarning: powerWarning, tryAttachPower: tryAttachPower, updatePowers: updatePowers
 };
 global.PopLogic = PopLogic;
 
@@ -914,7 +1073,8 @@ function showReady() {
       '<div class="copyright" id="titleCopyright">' + copyrightLine() + '</div>',
       [{ label: 'Play', primary: true, action: startPlaying },
        { label: 'Settings', action: function () { openSettings(); } },
-       { label: "What's New", action: function () { openWhatsNew(); } }]);
+       { label: "What's New", action: function () { openWhatsNew(); } },
+       { label: 'Back to Arcade', action: function () { requestBackToArcade(); } }]);
   } else {
     showOverlay('<h2>Level ' + (app.levelIndex + 1) + ' &middot; ' + esc(L.name) + '</h2><p class="sub">' + L.totalMarbles + ' orbs &middot; ' + L.colors + ' colors</p>' +
       '<div class="stat">Score: <b>' + app.score + '</b></div><p class="sub">Click to start</p>',
@@ -997,12 +1157,17 @@ function openSettings() {
   syncSettingsUI(); show(settingsEl); updateButtons();
 }
 function closeSettings() {
+  if (leaveConfirmOpen()) return;
   hide(settingsEl);
   if (settingsFromPause) { app.paused = false; settingsFromPause = false; }
   updateButtons();
 }
 function settingsOpen() { return !settingsEl.classList.contains('hidden'); }
-btnGear.addEventListener('click', function (e) { e.stopPropagation(); if (settingsOpen()) closeSettings(); else openSettings(); });
+btnGear.addEventListener('click', function (e) {
+  e.stopPropagation();
+  if (leaveConfirmOpen()) { closeLeaveConfirm(); return; }
+  if (settingsOpen()) closeSettings(); else openSettings();
+});
 
 /* ---------- What's New (never opens automatically) ---------- */
 function copyrightLine() { return '\u00a9 ' + new Date().getFullYear() + ' Tylilo, LLC'; }
@@ -1047,6 +1212,32 @@ $('btnCloseWhatsNew').addEventListener('click', function () { closeWhatsNew(); }
 $('btnWhatsNew').addEventListener('click', function () { openWhatsNew(); });
 whatsNewEl.addEventListener('click', function (e) { if (e.target === whatsNewEl) closeWhatsNew(); });
 
+/* ---------- Back to Arcade (no hotkey; only title + settings/pause) ---------- */
+var leaveConfirmEl = document.getElementById('leaveConfirm');
+function leaveConfirmOpen() { return !leaveConfirmEl.classList.contains('hidden'); }
+function runInProgress() { return app.state === 'PLAYING'; }
+function goToArcade() { window.location.href = '/arcade/'; }
+function closeLeaveConfirm() {
+  hide(leaveConfirmEl);
+  var btn = $('btnBackToArcade');
+  if (btn && settingsOpen()) btn.focus();
+}
+function openLeaveConfirm() {
+  audio.unlock();
+  show(leaveConfirmEl);
+  var stay = $('btnStayRun');
+  if (stay) stay.focus();
+}
+function requestBackToArcade() {
+  audio.unlock();
+  if (runInProgress()) openLeaveConfirm();
+  else goToArcade();
+}
+$('btnBackToArcade').addEventListener('click', function (e) { e.stopPropagation(); requestBackToArcade(); });
+$('btnLeaveRun').addEventListener('click', function (e) { e.stopPropagation(); audio.unlock(); goToArcade(); });
+$('btnStayRun').addEventListener('click', function (e) { e.stopPropagation(); audio.unlock(); closeLeaveConfirm(); });
+leaveConfirmEl.addEventListener('click', function (e) { if (e.target === leaveConfirmEl) closeLeaveConfirm(); });
+
 /* ---------- Input ---------- */
 
 var touchAiming = false;
@@ -1075,15 +1266,17 @@ global.addEventListener('keydown', function (e) {
   var overlayUp = !overlay.classList.contains('hidden');
   if (e.code === 'Escape') {
     e.preventDefault();
-    if (whatsNewOpen()) closeWhatsNew();
+    if (leaveConfirmOpen()) closeLeaveConfirm();
+    else if (whatsNewOpen()) closeWhatsNew();
     else if (settingsOpen()) closeSettings();
     else if (app.state === 'PLAYING' || app.state === 'READY') openSettings();
   } else if (e.code === 'Space') {
-    if (settingsOpen() || whatsNewOpen()) return;
+    if (leaveConfirmOpen() || settingsOpen() || whatsNewOpen()) return;
     e.preventDefault();
     if (canAct()) doSwap(); else if (overlayUp && primaryAction && !e.repeat) primaryAction();
   } else if (e.code === 'Enter' || e.code === 'NumpadEnter') {
-    if (!settingsOpen() && !whatsNewOpen() && overlayUp && primaryAction) { e.preventDefault(); primaryAction(); }
+    if (leaveConfirmOpen() || settingsOpen() || whatsNewOpen()) return;
+    if (overlayUp && primaryAction) { e.preventDefault(); primaryAction(); }
   }
 });
 global.addEventListener('resize', resize);
@@ -1259,12 +1452,17 @@ function drawChain(w, t) {
     var x = mm.x, y = mm.y;
     if (mm.ins) { var k = clamp(mm.ins.t / CFG.INSERT_TIME, 0, 1); k = 1 - (1 - k) * (1 - k); x = mm.ins.x0 + (mm.x - mm.ins.x0) * k; y = mm.ins.y0 + (mm.y - mm.ins.y0) * k; }
     if (mm.power) {
-      var P = POWERUPS[mm.power], pulse = reduced() ? 0.6 : 0.5 + 0.5 * Math.sin(t * 6 + mm.id);
-      ctx.save(); ctx.shadowColor = P.color; ctx.shadowBlur = 10 + 8 * pulse; ctx.globalAlpha = 0.6 + 0.4 * pulse;
-      ctx.strokeStyle = P.color; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, (CFG.R + 3) * sc, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+      var P = POWERUPS[mm.power], warn = powerWarning(w, mm), showGlow = true, pulse;
+      if (warn && reduced()) pulse = 0.28;
+      else if (warn) { showGlow = (Math.floor(t * 5) % 2) === 0; pulse = 1; }
+      else pulse = reduced() ? 0.6 : 0.5 + 0.5 * Math.sin(t * 6 + mm.id);
+      if (showGlow) {
+        ctx.save(); ctx.shadowColor = P.color; ctx.shadowBlur = 10 + 8 * pulse; ctx.globalAlpha = 0.6 + 0.4 * pulse;
+        ctx.strokeStyle = P.color; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, (CFG.R + 3) * sc, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+      }
     }
     drawOrb(mm.color, x, y, sc, al);
-    if (mm.power && sc > 0.6) {
+    if (mm.power && sc > 0.6 && (!powerWarning(w, mm) || reduced() || (Math.floor(t * 5) % 2) === 0)) {
       if (settings.symbols) {
         ctx.fillStyle = 'rgba(0,0,0,0.75)'; ctx.beginPath(); ctx.arc(x + 11, y - 11, 7.5, 0, Math.PI * 2); ctx.fill();
         drawPowerIcon(ctx, mm.power, x + 11, y - 11, 5.5, reduced() ? 0 : t);
