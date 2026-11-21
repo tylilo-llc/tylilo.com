@@ -294,13 +294,8 @@ function tylilo_admin_setup_code(): string
     if (is_string($env) && $env !== '') {
         return $env;
     }
-    $file = tylilo_turnstile_dir() . '/admin-setup.php';
-    if (!is_file($file)) {
-        return '';
-    }
-    $value = include $file;
 
-    return is_string($value) ? $value : '';
+    return tylilo_private_php_value('admin-setup.php');
 }
 
 function tylilo_admin_has_admin(): bool

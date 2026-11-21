@@ -147,12 +147,30 @@ jobs:
               -T "$work/admin-setup.php" \
               "ftp://${FTP_SERVER}/${dest}"
           }
-          if upload "tylilo-data/admin-setup.php"; then
-            echo "Stored the admin setup code outside the web root."
+          web="${FTP_SERVER_DIR%/}"
+          parent=$(dirname "$web")
+          if [ "$parent" = "." ] || [ "$parent" = "/" ]; then
+            sibling="tylilo-data/admin-setup.php"
           else
-            echo "Could not store the setup code beside the site. Trying the blocked data directory."
-            upload "${FTP_SERVER_DIR}data/admin-setup.php"
-            echo "Stored the admin setup code in the blocked data directory."
+            sibling="${parent}/tylilo-data/admin-setup.php"
+          fi
+          dests=(
+            "$sibling"
+            "${FTP_SERVER_DIR}tylilo-data/admin-setup.php"
+            "${FTP_SERVER_DIR}data/admin-setup.php"
+          )
+          stored=0
+          for dest in "${dests[@]}"; do
+            if upload "$dest"; then
+              echo "Stored the admin setup code at ${dest}."
+              stored=$((stored + 1))
+            else
+              echo "Could not store the admin setup code at ${dest}."
+            fi
+          done
+          if [ "$stored" -eq 0 ]; then
+            echo "The admin setup code was not stored. /admin/setup cannot create the first account."
+            exit 1
           fi
           rm -rf "$work"
           echo "The setup code was not printed."

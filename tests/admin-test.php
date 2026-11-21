@@ -98,6 +98,33 @@ $columns = array_column($pdo->query('PRAGMA table_info(users)')->fetchAll(PDO::F
 $roles = $pdo->query('SELECT role FROM users ORDER BY id')->fetchAll(PDO::FETCH_COLUMN);
 check(in_array('role', $columns, true) && $roles === ['admin', 'member'], 'SQLite users table stores admin and member roles');
 
+$setupDoc = $dir . '-doc/public_html';
+$savedDataDir = getenv('TYLILO_DATA_DIR');
+$savedHome = getenv('HOME');
+putenv('ADMIN_SETUP_CODE');
+putenv('TYLILO_DATA_DIR');
+putenv('HOME=' . $dir . '-empty-home');
+$_SERVER['HOME'] = $dir . '-empty-home';
+$_SERVER['DOCUMENT_ROOT'] = $setupDoc;
+if (!is_dir($setupDoc . '/data') && !mkdir($setupDoc . '/data', 0700, true) && !is_dir($setupDoc . '/data')) {
+    throw new RuntimeException('Could not create the setup fixture.');
+}
+file_put_contents($setupDoc . '/data/admin-setup.php', "<?php\nreturn 'from-data';\n");
+check(tylilo_admin_setup_code() === 'from-data', 'the setup code is read from data/ when that is the only copy');
+if (!is_dir(dirname($setupDoc) . '/tylilo-data') && !mkdir(dirname($setupDoc) . '/tylilo-data', 0700, true) && !is_dir(dirname($setupDoc) . '/tylilo-data')) {
+    throw new RuntimeException('Could not create the parent setup fixture.');
+}
+file_put_contents(dirname($setupDoc) . '/tylilo-data/admin-setup.php', "<?php\nreturn 'from-parent';\n");
+check(tylilo_admin_setup_code() === 'from-parent', 'the setup code prefers the parent of the web root');
+putenv('ADMIN_SETUP_CODE=correct-horse-battery');
+if (is_string($savedDataDir) && $savedDataDir !== '') {
+    putenv('TYLILO_DATA_DIR=' . $savedDataDir);
+}
+if (is_string($savedHome) && $savedHome !== '') {
+    putenv('HOME=' . $savedHome);
+    $_SERVER['HOME'] = $savedHome;
+}
+
 $svg = tylilo_admin_qr_svg('otpauth://totp/Tylilo:ryan?secret=GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ&issuer=Tylilo');
 check(str_starts_with($svg, '<svg') && !str_contains($svg, 'chart.googleapis') && !str_contains($svg, 'api.qrserver'), 'the QR code is drawn locally');
 
