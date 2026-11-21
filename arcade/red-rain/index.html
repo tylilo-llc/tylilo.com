@@ -2,6 +2,27 @@
 <!--
   RED RAIN - changelog
   ====================
+  v2.2.7 (2026-11-21)
+  - Leaderboard fix (Ryan's 1,011,970 Easy run on v2.2.6 never reached the board; the live boards were still
+    empty). The server would have accepted it (score cap 5,000,000; token valid 6 h; the run was under an
+    hour). The game lost it: every way off the game-over screen - CHANGE DIFFICULTY, "tap to play again"
+    anywhere outside the save panel, Enter/Space - silently dropped an unsaved score, and QUIT / MAIN MENU
+    from the pause screen ended the run with no save prompt at all (it kept only the local high score).
+  - Game over: with a qualifying score not yet saved or skipped, the first leave press only shows "Your score
+    is NOT saved yet. SUBMIT saves it, SKIP drops it. Tap again to leave anyway."; a second press within 4 s
+    leaves. Saved, skipped and short runs leave on the first press as before.
+  - Pause > MAIN MENU > QUIT on a run of 30 s+ (real site only) now ends the run on a RUN ENDED game-over
+    screen with the save panel; CHANGE DIFFICULTY then goes to the title. Shorter runs / local file: as before.
+    The pause Back to Arcade confirm says the score won't be saved and points to MAIN MENU.
+  - Run tokens expire 6 h after op:start: a token 5 min from expiry is replaced before submitting, and a
+    server "Start a game before saving a score." reply gets a fresh token and an automatic resend (up to 3
+    times; playedMs is capped at the new token's age, so the first resend waits ~30 s). Real server errors
+    are shown as sent (or "error <HTTP status>" when the reply isn't JSON).
+  - Every submit now sends version (VERSION, e.g. "2.2.7") and level (the wave the run ended on, a JSON
+    integer 1-999), per the tylilo.com API (AGENTS.md, PR #27). Ryan approved both (11:59 / 12:00 ET).
+  - No new localStorage keys. The only stored leaderboard data is the last name used (redRainLbName); there
+    is no device or player ID.
+
   v2.2.6 (2026-11-21)
   - UDLR launch splash (Ryan's request): the shared UDLR splash (/workspace/brand/udlr-splash/udlr-splash.js,
     md5 49be43c7bc1f844f6fa52edbebeef58d, the version Ryan approved; inlined unchanged between the
@@ -670,7 +691,7 @@ try {
 <script>
 (() => {
 'use strict';
-const VERSION = '2.2.6';   // MAJOR.MINOR.BUILD - BUILD +1 per shipped release, never reset
+const VERSION = '2.2.7';   // MAJOR.MINOR.BUILD - BUILD +1 per shipped release, never reset
 document.title = 'Red Rain v' + VERSION;
 // ---------- helpers ----------
 const canvas = document.getElementById('c');
@@ -1678,7 +1699,7 @@ window.addEventListener('keydown', e => {
   }
   else if (key === 'enter' || key === ' ') {
     initAudio();
-    if (G.state === 'title' || (G.state === 'gameover' && G.stateT > 1)) newGame();
+    if (G.state === 'title' || (G.state === 'gameover' && G.stateT > 1 && !lbLeaveBlocked())) newGame();
     else if (G.state === 'shop') startWave();
     e.preventDefault();
   }
@@ -1723,7 +1744,7 @@ function helpContent() {
     ['WHAT\'S NEW button', 'See what changed in each version (title and pause screens)'],
     ['Pinch (two fingers)', 'Zoom in for a closer look; pinch out to return'],
     ['BACK TO ARCADE button', 'Leave for the Tylilo Arcade (title and pause screens; asks first during a run)'],
-    ['Name box (game over)', 'Optional: save a run of 30 s or more to the Arcade leaderboard; SKIP or tap outside to move on'],
+    ['Name box (game over)', 'Optional: save a run of 30 s or more to the Arcade leaderboard; SKIP drops it (leaving asks first if it isn\'t saved)'],
     ['Tap (at launch)', 'Skips the UDLR intro'],
   ]) : [
     ['Click / tap', 'Fire an interceptor at that point'],
@@ -1802,6 +1823,10 @@ function drawHelp() {
 // Player-facing release notes, newest first, written from the changelog. Opens ONLY from the
 // WHAT'S NEW button or the W key - never automatically.
 const WHATS_NEW = [
+  { v: '2.2.7', d: '2026-11-21', items: [
+    'Leaderboard fix: leaving the game-over screen no longer throws away a score you haven\'t saved. The first tap warns you; tap again to leave anyway.',
+    'Quitting a run from the pause menu now takes you to the game-over screen so you can still save your score.',
+    'Very long runs can still be saved, and saved scores now include the wave you reached.' ] },
   { v: '2.2.6', d: '2026-11-21', items: [
     'New UDLR intro: each time the game opens, the letters of the UDLR logo slide in one at a time, then the title screen appears.',
     'Any key, click or tap skips it straight to the title - that press never starts a game by accident.' ] },
@@ -2063,13 +2088,17 @@ function goTitle() {
   lbDrop();
   setState('title');
 }
+// v2.2.7: a run long enough for the leaderboard (on the real site) is worth offering to save when it is quit
+const runSaveable = () => !!G.lbRun && G.lbRun.state !== 'none' && !G.lbRun.dead && (G.runMs || 0) >= Math.max(LB_MIN_MS, G.lbRun.minPlayedMs || 0) && G.score > 0;
 function quitToMenu() {
+  const toGameOver = runSaveable();   // v2.2.7: QUIT used to drop a long run's score without a save prompt
   saveHi();   // keep a beaten high score for this difficulty
   for (const q of G.particles) if (P_POOL.length < 1200) P_POOL.push(q);   // recycle into the particle pool
   for (const k of ['enemies', 'bombers', 'drones', 'shots', 'crates', 'nukes', 'explosions', 'particles', 'beams', 'markers', 'floaters', 'schedule']) G[k].length = 0;
   G.fw = null; G.bplane = null; G.bplaneCrash = null; G.build = null; G.auto = null; G.bonus = null;
   G.quake = null; G.shake = 0; G.flash = 0; G.banner = 0; G.drag = null; G.finale = null;
   G.quitConfirm = false; G.helpOpen = false; G.optOpen = false; G.wnOpen = false; G.prevState = null;
+  if (toGameOver) { G.overReason = 'quit'; setState('gameover'); lbOnGameOver(); return; }   // save panel, then CHANGE DIFFICULTY -> title
   lbDrop();
   setState('title');   // music follows the state: calm title mood
 }
@@ -2098,6 +2127,8 @@ const LB_API = '/api/scores.php', LB_GAME = 'red-rain', LB_MIN_MS = 30000, LB_MA
 const LB_BOARD = { easy: 'easy', normal: 'normal', expert: 'expert', insane: 'insane' };   // difficulty key -> board
 const LB_BACKOFF = [2000, 4000, 8000, 16000, 30000];   // then every 30 s
 const LB_START_TIMEOUT = 8000, LB_SUBMIT_TIMEOUT = 15000, LB_AGE_MARGIN = 250;
+// v2.2.7: the server's run tokens expire 6 h after op:start; replace ours 5 min early (an endless run can outlast it)
+const LB_TOKEN_TTL = 6 * 3600 * 1000, LB_TOKEN_SAFE = LB_TOKEN_TTL - 5 * 60 * 1000, LB_REFRESH_MAX = 3;
 const lbInput = document.getElementById('lbName');
 const LB = {
   available: () => /^https?:$/.test(location.protocol) && typeof fetch === 'function',
@@ -2145,22 +2176,38 @@ const LB = {
   },
   kill(run) { if (run) { run.dead = true; clearTimeout(run.timer); run.timer = 0; } },
   tokenAge: run => run && run.token ? performance.now() - run.tokenAt : 0,
+  // v2.2.7: drop a token that is about to expire (or that the server called expired) and ask for a new one
+  freshen(run, force) {
+    if (!run || run.dead || !run.token) return false;
+    if (!force && LB.tokenAge(run) < LB_TOKEN_SAFE) return false;
+    if ((run.refreshes = (run.refreshes || 0) + 1) > LB_REFRESH_MAX) return false;
+    run.token = null; run.tokenAt = 0; run.state = 'pending'; run.fails = 0;
+    LB.requestToken(run);
+    return true;
+  },
   // ms until the token is old enough to submit (0 = now); Infinity = no token yet
   waitMs(run) { if (!run || !run.token) return Infinity; return Math.max(0, Math.max(LB_MIN_MS, run.minPlayedMs) + LB_AGE_MARGIN - LB.tokenAge(run)); },
-  async submit(run, name, score, playedMs) {
+  async submit(run, name, score, playedMs, level) {
     if (!run || !run.token) return { ok: false, retry: true, msg: 'Couldn\'t reach the leaderboard.' };
+    if (LB.freshen(run)) return { ok: false, requeue: true };   // v2.2.7: token about to expire - get a new one first
     if (navigator.onLine === false) return { ok: false, retry: true, msg: 'Couldn\'t save score. You seem to be offline.' };
     // playedMs is clamped to the token's real age (measured from when it arrived, so never over the server's view)
     const pm = Math.max(0, Math.floor(Math.min(playedMs, LB.tokenAge(run))));
     let r;
-    try { r = await LB.post({ op: 'submit', game: LB_GAME, board: run.board, name, score, playedMs: pm, token: run.token }, LB_SUBMIT_TIMEOUT); }
+    // v2.2.7: version (string, 1-16 of [A-Za-z0-9._-]) and level (the wave the run ended on, JSON integer 1-999)
+    const body = { op: 'submit', game: LB_GAME, board: run.board, name, score, playedMs: pm, version: VERSION, level: lbLevel(level), token: run.token };
+    try { r = await LB.post(body, LB_SUBMIT_TIMEOUT); }
     catch (e) { return { ok: false, retry: true, msg: 'Couldn\'t save score. Check your connection and try again.' }; }
     if (r.ok) { run.token = null; return { ok: true, rank: Number(r.data.rank) || 0 }; }   // tokens are single use
-    if (r.status === 429) return { ok: false, retry: true, msg: 'Try again later.' };
+    if (r.status === 429) return { ok: false, retry: true, msg: (r.data && r.data.error) ? String(r.data.error).slice(0, 140) : 'Too many scores from this network. Try again in a few minutes.' };
     const m = r.data && (r.data.error || r.data.message);
-    return { ok: false, retry: true, msg: m ? String(m).slice(0, 140) : 'Couldn\'t save score.' };
+    // v2.2.7: an expired / already-used token gets the server's "Start a game..." 400: fetch a fresh token and resend
+    if (r.status === 400 && m && /start a game/i.test(String(m)) && LB.freshen(run, true)) return { ok: false, requeue: true };
+    return { ok: false, retry: true, msg: m ? String(m).slice(0, 140) : 'Couldn\'t save score (error ' + r.status + ').' };
   },
 };
+// v2.2.7: wave number for the leaderboard: always a whole number 1-999 (the server rejects 0, strings and floats)
+const lbLevel = w => { const n = Math.round(Number(w)); return Number.isFinite(n) ? Math.min(999, Math.max(1, n)) : 1; };
 window.addEventListener('online', () => { LB.retryNow(G.lbRun); if (G.lb) LB.retryNow(G.lb.run); });
 const lbCleanName = v => String(v || '').replace(/[^\p{L}\p{N} .'\-!?,]/gu, '').replace(/\s+/g, ' ').trim().slice(0, 12);
 let lbSavedName = '';
@@ -2175,15 +2222,29 @@ function lbDrop() { LB.kill(G.lbRun); if (G.lb) LB.kill(G.lb.run); G.lbRun = nul
 // run ended (dying -> gameover): decide what the game-over panel shows
 function lbOnGameOver() {
   const run = G.lbRun; G.lbRun = null;
-  const L = { run, score: clamp(Math.round(G.score || 0), 0, LB_MAX_SCORE), playedMs: Math.round(G.runMs || 0), mode: 'hidden', msg: '', retry: true, busy: false, queued: false, name: '' };
+  const L = { run, score: clamp(Math.round(G.score || 0), 0, LB_MAX_SCORE), playedMs: Math.round(G.runMs || 0), level: lbLevel(G.wave), mode: 'hidden', msg: '', retry: true, busy: false, queued: false, name: '', leaveAt: -1 };
   G.lb = L;
   if (!run || run.state === 'none') return;   // local file: no leaderboard
   const minMs = Math.max(LB_MIN_MS, run.minPlayedMs || 0);
   if (L.playedMs < minMs) { L.mode = 'note'; L.msg = 'Runs under ' + Math.round(minMs / 1000) + ' seconds can\'t go on the Arcade leaderboard.'; LB.kill(run); return; }
   L.mode = 'entry';   // always offer it on the real site - even with no token yet (we keep trying)
   lbInput.value = lbSavedName;
+  LB.freshen(run);   // v2.2.7: a token near its 6 h expiry is replaced now
   LB.retryNow(run);
 }
+// v2.2.7: a qualifying score that is not saved yet (and not skipped). Leaving the game-over screen used to drop it
+// silently - CHANGE DIFFICULTY, 'tap to play again' anywhere outside the panel, or Enter/Space all did.
+const lbUnsaved = () => G.state === 'gameover' && !!G.lb && !!G.lb.run && !G.lb.run.dead && (G.lb.mode === 'entry' || G.lb.mode === 'sending' || G.lb.queued || G.lb.busy || (G.lb.mode === 'error' && G.lb.retry));
+// true = blocked: the first leave press only warns; a second press within 4 s really leaves (and drops the score)
+function lbLeaveBlocked() {
+  if (!lbUnsaved()) return false;
+  const L = G.lb;
+  if (L.leaveAt >= 0 && G.time - L.leaveAt < 4) return false;
+  L.leaveAt = G.time;
+  return true;
+}
+const lbLeaveWarn = () => G.lb && G.lb.leaveAt >= 0 && G.time - G.lb.leaveAt < 4 && lbUnsaved()
+  ? (G.lb.queued || G.lb.busy ? 'Still saving - leave now and it is lost. ' : 'Your score is NOT saved yet. SUBMIT saves it, SKIP drops it. ') + (isTouch ? 'Tap again to leave anyway.' : 'Press again to leave anyway.') : '';
 // status line under the name box when there is no message of its own
 function lbStatus(L) {
   if (!L || !L.run) return null;
@@ -2208,11 +2269,14 @@ function lbSubmit() {
 // every frame: send a queued score once the token exists and is old enough
 function lbTick() {
   const L = G.lb;
-  if (!L || !L.queued || L.busy || G.state !== 'gameover' || LB.waitMs(L.run) > 0) return;
+  if (!L || !L.queued || L.busy || G.state !== 'gameover') return;
+  LB.freshen(L.run);   // v2.2.7
+  if (LB.waitMs(L.run) > 0) return;
   L.queued = false; L.busy = true;
-  LB.submit(L.run, L.name, L.score, L.playedMs).catch(() => ({ ok: false, retry: true, msg: 'Couldn\'t save score.' })).then(r => {
+  LB.submit(L.run, L.name, L.score, L.playedMs, L.level).catch(() => ({ ok: false, retry: true, msg: 'Couldn\'t save score.' })).then(r => {
     L.busy = false;
     if (G.lb !== L) return;   // the player already moved on
+    if (r.requeue) { L.mode = 'sending'; L.msg = ''; L.queued = true; return; }   // v2.2.7: new token on its way, resend then
     if (r.ok) { L.mode = 'done'; L.msg = 'Saved to the Arcade leaderboard' + (r.rank ? ' - #' + r.rank + ' on ' + (DIFFS[L.run.board] ? DIFFS[L.run.board].name : L.run.board) : '') + '!'; LB.kill(L.run); SFX.buy(); }
     else { L.mode = 'error'; L.retry = true; L.msg = r.msg; }
   });
@@ -2282,8 +2346,8 @@ function handleClick(p) {
         break;
       }
       if (document.activeElement === lbInput) lbInput.blur();
-      if (GO.btn && inRect({ x: p.cx, y: p.cy }, padRect(GO.btn, 4))) { goTitle(); break; }
-      if (G.stateT > 1) newGame();
+      if (GO.btn && inRect({ x: p.cx, y: p.cy }, padRect(GO.btn, 4))) { if (!lbLeaveBlocked()) goTitle(); break; }
+      if (G.stateT > 1 && !lbLeaveBlocked()) newGame();   // v2.2.7: an unsaved score asks first
       break;
     }
   }
@@ -2423,7 +2487,7 @@ G._dbg = { waveSpec: n => waveSpec(n), fireAt: (x, y) => fireAt(x, y), startWave
   fireworks: () => G.fw ? { t: G.fw.t, rockets: G.fw.rockets.length, sparks: G.fw.sparks.length } : null, spawnNuke: (x, y) => spawnNuke(x, y), nukeImpact: (x, y) => nukeImpact(x, y), nukeDirectR: () => NUKE_DIRECT_R(), nukeBurstY: () => nukeBurstY(), spawnMissile: (t, x, y, tg) => spawnMissile(t, x, y, tg), impact: (x, y) => impact(x, y), inShield: (x, y) => !!inShield(x, y),
   fsSupported, toggleFullscreen: () => toggleFullscreen(), fsRect: () => fsRect(),
   music: () => ({ on: musicOn, built: !!music, step: music ? music.step : 0, ctx: actx ? actx.state : 'none', bus: music ? music.bus.gain.value : 0, muted, stored: (() => { try { return localStorage.getItem('redReignMusic'); } catch (e) { return 'n/a'; } })() }), setMusic: on => setMusic(on) };
-G._dbg.lbUi = () => ({ queued: G.lb ? G.lb.queued : null, busy: G.lb ? G.lb.busy : null, tok: (r => r ? { has: !!r.token, age: LB.tokenAge(r), wait: LB.waitMs(r), tries: r.tries, state: r.state, dead: r.dead } : null)(G.lbRun || (G.lb && G.lb.run)), status: G.lb ? lbStatus(G.lb) : null, mode: G.lb ? G.lb.mode : null, msg: G.lb ? G.lb.msg : '', playedMs: G.lb ? G.lb.playedMs : null, score: G.lb ? G.lb.score : null, run: G.lbRun ? { state: G.lbRun.state, board: G.lbRun.board } : (G.lb && G.lb.run ? { state: G.lb.run.state, board: G.lb.run.board } : null), ui: GO.lb, btn: GO.btn, runMs: G.runMs, input: { display: lbInput.style.display, value: lbInput.value, disabled: lbInput.disabled } });   // v2.2.4 test hook
+G._dbg.lbUi = () => ({ warn: lbLeaveWarn(), level: G.lb ? G.lb.level : null, refreshes: (r => r ? r.refreshes || 0 : 0)(G.lbRun || (G.lb && G.lb.run)), queued: G.lb ? G.lb.queued : null, busy: G.lb ? G.lb.busy : null, tok: (r => r ? { has: !!r.token, age: LB.tokenAge(r), wait: LB.waitMs(r), tries: r.tries, state: r.state, dead: r.dead } : null)(G.lbRun || (G.lb && G.lb.run)), status: G.lb ? lbStatus(G.lb) : null, mode: G.lb ? G.lb.mode : null, msg: G.lb ? G.lb.msg : '', playedMs: G.lb ? G.lb.playedMs : null, score: G.lb ? G.lb.score : null, run: G.lbRun ? { state: G.lbRun.state, board: G.lbRun.board } : (G.lb && G.lb.run ? { state: G.lb.run.state, board: G.lb.run.board } : null), ui: GO.lb, btn: GO.btn, runMs: G.runMs, input: { display: lbInput.style.display, value: lbInput.value, disabled: lbInput.disabled } });   // v2.2.4 test hook
 
 // ---------- update ----------
 // ---------- 1,000,000 celebration fireworks (purely visual: never touches gameplay lists) ----------
@@ -4365,7 +4429,8 @@ function drawPause() {
     panel(px, py, pw, ph, 0.97);
     const toArcade = G.quitConfirm === 'arcade';
     txt(toArcade ? 'Leave to the Arcade?' : 'Quit to main menu?', b.cx, py + 18 + qS * 0.6, qS, '#fff', 'center', 'bold', pw - 20);
-    txt('Progress in this run will be lost.', b.cx, py + 18 + qS * 1.4 + sS * 0.9, sS, '#ffb3a0', 'center', 'normal', pw - 20);
+    const qMsg = !runSaveable() ? 'Progress in this run will be lost.' : toArcade ? 'This run\'s score won\'t be saved - use MAIN MENU to save it.' : 'The run ends here - you can save your score next.';   // v2.2.7
+    txt(qMsg, b.cx, py + 18 + qS * 1.4 + sS * 0.9, sS, '#ffb3a0', 'center', 'normal', pw - 20);
     const by = py + ph - bh - 16;
     PAUSEUI.quit = { x: b.cx - 7 - cbw, y: by, w: cbw, h: bh };
     PAUSEUI.cancel = { x: b.cx + 7, y: by, w: cbw, h: bh };
@@ -4478,8 +4543,8 @@ function drawGameOver() {
   if (totalOf() > avail) drop.add(1);   // then the reason line
   let y = Math.max(top, b.cy - totalOf() / 2);
   const line = (s, i, col, w = 'bold') => { if (drop.has(i)) return; txt(s, b.cx, y + sizes[i] / 2, sizes[i], col, 'center', w, b.w); y += sizes[i] + gap * (i === 4 ? 2 : i === 0 ? 0.5 : 1); };
-  line('THE CITIES HAVE FALLEN', 0, '#ff3b2f');
-  line(G.overReason === 'turrets' ? 'All turrets destroyed' : 'All cities destroyed', 1, '#ffb3a0');
+  line(G.overReason === 'quit' ? 'RUN ENDED' : 'THE CITIES HAVE FALLEN', 0, '#ff3b2f');
+  line(G.overReason === 'quit' ? 'You quit the run' : G.overReason === 'turrets' ? 'All turrets destroyed' : 'All cities destroyed', 1, '#ffb3a0');
   line('Score: ' + G.score, 2, '#fff');
   line(DF().name + '  \u00b7  reached wave ' + G.wave + '  \u00b7  ' + G.kills + ' kills', 3, '#ddd', 'normal');
   const best = G.score >= hiScores[curDiff()] && G.score > 0;
@@ -4508,8 +4573,9 @@ function drawGameOver() {
       if (notReady) ctx.restore();
       drawMenuBtn(GO.lb.skip, 'SKIP', false);
       const stt = L.msg ? null : lbStatus(L);
-      const hint = L.msg || (stt && stt.t) || (isTouch ? 'Optional - tap the box to type a name (up to 12).' : 'Optional - click the box or press Tab, type a name, Enter to save.');
-      txt(hint, b.cx, by + fh + pS * 0.95, pS, L.msg ? msgCol : stt ? stt.c : '#bbb', 'center', 'normal', pw - 2 * pad);
+      const warn = lbLeaveWarn();   // v2.2.7
+      const hint = warn || L.msg || (stt && stt.t) || (isTouch ? 'Optional - tap the box to type a name (up to 12).' : 'Optional - click the box or press Tab, type a name, Enter to save.');
+      txt(hint, b.cx, by + fh + pS * 0.95, pS, warn ? '#ffd166' : L.msg ? msgCol : stt ? stt.c : '#bbb', 'center', warn ? 'bold' : 'normal', pw - 2 * pad);
     } else {
       txt(L.msg, b.cx, py + panelH / 2, pS, msgCol, 'center', L.mode === 'done' ? 'bold' : 'normal', pw - 2 * pad);
     }
