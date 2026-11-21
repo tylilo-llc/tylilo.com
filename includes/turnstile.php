@@ -54,25 +54,25 @@ function tylilo_turnstile_dir(): string
 }
 
 /**
- * Every place the deploy may have written the secret, most private first.
- * Missing directories are skipped. open_basedir makes is_file() false there.
+ * Directories where deploy may have written a private PHP file, most private first.
+ * Missing directories are skipped later. open_basedir makes is_file() false there.
  *
  * @return list<string>
  */
-function tylilo_turnstile_secret_candidates(): array
+function tylilo_private_dirs(): array
 {
-    $paths = [];
-    $add = static function (string $path) use (&$paths): void {
-        $path = rtrim(str_replace('\\', '/', $path), '/');
-        if ($path === '' || str_contains($path, "\0")) {
+    $dirs = [];
+    $add = static function (string $dir) use (&$dirs): void {
+        $dir = rtrim(str_replace('\\', '/', $dir), '/');
+        if ($dir === '' || $dir === '/' || $dir === '.' || str_contains($dir, "\0")) {
             return;
         }
-        $paths[$path] = $path;
+        $dirs[$dir] = $dir;
     };
 
     $fromEnv = getenv('TYLILO_DATA_DIR');
     if (is_string($fromEnv) && $fromEnv !== '') {
-        $add($fromEnv . '/turnstile.php');
+        $add($fromEnv);
     }
 
     $doc = $_SERVER['DOCUMENT_ROOT'] ?? '';
@@ -80,10 +80,10 @@ function tylilo_turnstile_secret_candidates(): array
         $doc = rtrim($doc, '/');
         $parent = dirname($doc);
         if ($parent !== '/' && $parent !== $doc && $parent !== '.' && $parent !== '') {
-            $add($parent . '/tylilo-data/turnstile.php');
+            $add($parent . '/tylilo-data');
         }
-        $add($doc . '/tylilo-data/turnstile.php');
-        $add($doc . '/data/turnstile.php');
+        $add($doc . '/tylilo-data');
+        $add($doc . '/data');
     }
 
     $homes = [];
@@ -102,28 +102,40 @@ function tylilo_turnstile_secret_candidates(): array
         }
     }
     foreach (array_unique($homes) as $home) {
-        $add(rtrim($home, '/') . '/tylilo-data/turnstile.php');
+        $add(rtrim($home, '/') . '/tylilo-data');
     }
 
     $site = dirname(__DIR__);
     $siteParent = dirname($site);
     if ($siteParent !== '/' && $siteParent !== $site && $siteParent !== '.' && $siteParent !== '') {
-        $add($siteParent . '/tylilo-data/turnstile.php');
+        $add($siteParent . '/tylilo-data');
     }
-    $add($site . '/tylilo-data/turnstile.php');
-    $add($site . '/data/turnstile.php');
+    $add($site . '/tylilo-data');
+    $add($site . '/data');
 
-    return array_values($paths);
+    return array_values($dirs);
 }
 
-function tylilo_turnstile_secret(): string
+/**
+ * @return list<string>
+ */
+function tylilo_private_file_candidates(string $filename): array
 {
-    $env = getenv('TURNSTILE_SECRET');
-    if (is_string($env) && $env !== '') {
-        return $env;
+    $filename = str_replace('\\', '/', $filename);
+    if ($filename === '' || str_contains($filename, "\0") || str_contains($filename, '/') || str_contains($filename, '..')) {
+        return [];
+    }
+    $files = [];
+    foreach (tylilo_private_dirs() as $dir) {
+        $files[] = $dir . '/' . $filename;
     }
 
-    foreach (tylilo_turnstile_secret_candidates() as $file) {
+    return $files;
+}
+
+function tylilo_private_php_value(string $filename): string
+{
+    foreach (tylilo_private_file_candidates($filename) as $file) {
         if (!is_file($file)) {
             continue;
         }
@@ -134,6 +146,24 @@ function tylilo_turnstile_secret(): string
     }
 
     return '';
+}
+
+/**
+ * @return list<string>
+ */
+function tylilo_turnstile_secret_candidates(): array
+{
+    return tylilo_private_file_candidates('turnstile.php');
+}
+
+function tylilo_turnstile_secret(): string
+{
+    $env = getenv('TURNSTILE_SECRET');
+    if (is_string($env) && $env !== '') {
+        return $env;
+    }
+
+    return tylilo_private_php_value('turnstile.php');
 }
 
 /**

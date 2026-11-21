@@ -121,6 +121,60 @@ jobs:
           rm -rf "$work"
           echo "The secret value was not printed."
 
+      - name: Upload the admin setup code
+        if: steps.ftp.outputs.ready == 'true'
+        env:
+          ADMIN_SETUP_CODE: ${{ secrets.ADMIN_SETUP_CODE }}
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_SERVER_DIR: ${{ steps.ftp.outputs.dir }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ADMIN_SETUP_CODE}" ]; then
+            echo "ADMIN_SETUP_CODE is not set."
+            echo "The first admin cannot be created until that repository secret exists."
+            echo "The code was not printed."
+            exit 0
+          fi
+          umask 077
+          work=$(mktemp -d)
+          php -r 'file_put_contents($argv[1], "<?php\n\ndeclare(strict_types=1);\n\nreturn ".var_export(getenv("ADMIN_SETUP_CODE"), true).";\n");' "$work/admin-setup.php"
+          upload() {
+            local dest="$1"
+            curl --silent --show-error --ftp-ssl --ssl-reqd --ftp-pasv --ftp-create-dirs \
+              --user "${FTP_USERNAME}:${FTP_PASSWORD}" \
+              -T "$work/admin-setup.php" \
+              "ftp://${FTP_SERVER}/${dest}"
+          }
+          web="${FTP_SERVER_DIR%/}"
+          parent=$(dirname "$web")
+          if [ "$parent" = "." ] || [ "$parent" = "/" ]; then
+            sibling="tylilo-data/admin-setup.php"
+          else
+            sibling="${parent}/tylilo-data/admin-setup.php"
+          fi
+          dests=(
+            "$sibling"
+            "${FTP_SERVER_DIR}tylilo-data/admin-setup.php"
+            "${FTP_SERVER_DIR}data/admin-setup.php"
+          )
+          stored=0
+          for dest in "${dests[@]}"; do
+            if upload "$dest"; then
+              echo "Stored the admin setup code at ${dest}."
+              stored=$((stored + 1))
+            else
+              echo "Could not store the admin setup code at ${dest}."
+            fi
+          done
+          if [ "$stored" -eq 0 ]; then
+            echo "The admin setup code was not stored. /admin/setup cannot create the first account."
+            exit 1
+          fi
+          rm -rf "$work"
+          echo "The setup code was not printed."
+
       - name: Deploy to HostM
         if: steps.ftp.outputs.ready == 'true'
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -155,4 +209,8 @@ jobs:
             **/scripts/**
             **/scripts/**/**
             **/data/**
+            **/admin.sqlite
+            **/admin.json
+            **/admin-ip.salt
+            **/admin-setup.php
             **/tests/**
