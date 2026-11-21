@@ -254,6 +254,8 @@ jobs:
             **/scripts/**
             **/scripts/**/**
             **/data/**
+            **/feedback-files/**
+            **/idea-images/**
             **/admin.sqlite
             **/admin.json
             **/admin-ip.salt

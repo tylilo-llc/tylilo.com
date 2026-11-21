@@ -1179,3 +1179,52 @@ main form button.btn {
 
 .invite-copy { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
 .invite-copy input { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .9rem; }
+
+#attachments-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.2rem;
+}
+
+#attachments-list li {
+  margin: 0;
+  font-weight: 700;
+}
+
+input[type="file"] {
+  padding: 0.45rem 0;
+  border: 0;
+  background: transparent;
+  min-height: 2.75rem;
+}
+
+.feedback-files {
+  list-style: none;
+  margin: 0.85rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.feedback-files li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.feedback-thumb {
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.feedback-thumb img {
+  width: 8rem;
+  height: 8rem;
+  object-fit: cover;
+  border-radius: 0.85rem;
+  background: var(--chip-bg);
+}
