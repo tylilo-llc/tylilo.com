@@ -42,6 +42,9 @@ require __DIR__ . '/includes/head.php';
           <li>Text and controls keep enough contrast in light and dark.</li>
           <li>Animation is reduced when your device asks for that.</li>
         </ul>
+        <h2>Games in the Arcade</h2>
+        <p>The Arcade pages, menus, and leaderboards follow the same standard as the rest of the site. The games themselves are different. Many depend on fast reactions, precise timing, color, motion, and sound, and some of those can't change without changing the game.</p>
+        <p>In our UDLR games, we put playability first. We add accessibility features where they fit, like keyboard controls, pause, and sound toggles, but we won't add one if it would make the game worse to play. If something in a game gets in your way, please tell us anyway. We read every note.</p>
       </article>
     </div>
   </main>
