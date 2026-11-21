@@ -689,6 +689,22 @@ html.otr-standalone body {
 .otr-btn:hover,
 .otr-speed:hover { filter: brightness(1.08); }
 
+.otr-btn:disabled,
+.otr-btn:disabled:hover {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: none;
+}
+
+.otr-caption-status {
+  margin: 0.6rem 0 0;
+  color: var(--otr-muted);
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
+.otr-caption-status:not([hidden]) { display: block; }
+
 .otr-btn-primary {
   background: var(--otr-btn2-bg);
   color: var(--otr-btn2-text);
@@ -723,8 +739,8 @@ html.otr-standalone body {
 
 .otr-seek::-webkit-slider-thumb {
   appearance: none;
-  width: 1.15rem;
-  height: 1.15rem;
+  width: 1.5rem;
+  height: 1.5rem;
   border-radius: 50%;
   background: var(--otr-track-fill);
   border: 2px solid var(--otr-card-bg);
@@ -732,8 +748,8 @@ html.otr-standalone body {
 }
 
 .otr-seek::-moz-range-thumb {
-  width: 1.15rem;
-  height: 1.15rem;
+  width: 1.5rem;
+  height: 1.5rem;
   border-radius: 50%;
   background: var(--otr-track-fill);
   border: 2px solid var(--otr-card-bg);
@@ -883,10 +899,10 @@ html.otr-standalone body {
 /* Tylilo host overrides
    ---------------------
    Map player colors onto the site tokens in /assets/css/styles.css so the
-   header's Light / Dark / Auto switch and this player stay on one theme.
-   Brand navy stays #0A3161 through --navy. Caption, seek-track, and series
-   ring tokens are left as defined above (including the dark-theme gold track).
-   Keep this block last: it has to win over the theme blocks higher up. */
+   header's theme switch and this player stay on one theme. Brand navy stays
+   #0A3161 through --navy. Caption, seek-track, and series-ring tokens stay
+   as defined above, including the dark-theme gold track.
+   Keep this block last so it wins over the theme blocks higher up. */
 html[data-theme] .otr-player {
   --otr-navy: var(--navy, #0A3161);
   --otr-navy-deep: var(--navy-deep, #072448);
@@ -926,26 +942,31 @@ html[data-theme] .otr-player {
   margin: 0 0 0.85rem;
 }
 
-/* Same focus ring as assets/css/styles.css (:focus-visible). Uses the site
-   --focus and --focus-halo tokens, including the gold ring on the navy hero.
-   Comes last so it wins over the seek control's outline: none. */
+/* Same focus ring as assets/css/styles.css, including the gold ring on the hero. */
 .otr-player :focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 3px;
   box-shadow: 0 0 0 2px var(--focus-halo);
 }
 
-.otr-seek {
-  min-height: 1.5rem;
-  height: 1.5rem;
+/* Show notes hold long URLs. The desktop columns are capped, so those strings
+   paint past the card. On a narrow screen the column is minmax(auto, 1fr), so
+   the same string widens the card past the screen. This belongs in upstream
+   player.css next to .otr-notes. The card grows with the wrapped text. */
+.otr-stage,
+.otr-library,
+.otr-card,
+.otr-notes,
+.otr-notes dl,
+.otr-notes dl > * {
+  min-width: 0;
+  max-width: 100%;
 }
 
-.otr-seek::-webkit-slider-thumb {
-  width: 1.5rem;
-  height: 1.5rem;
+.otr-notes {
+  overflow-wrap: anywhere;
 }
 
-.otr-seek::-moz-range-thumb {
-  width: 1.5rem;
-  height: 1.5rem;
+@media (max-width: 860px) {
+  .otr-layout { grid-template-columns: minmax(0, 1fr); }
 }

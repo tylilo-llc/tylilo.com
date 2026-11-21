@@ -20,6 +20,7 @@
     series: null,
     episode: null,
     captionsOn: loadCaptionsPref(),
+    captionsUnavailable: false,
     cues: [],
     cueText: "",
     seeking: false
@@ -54,6 +55,30 @@
     const mm = h ? String(m).padStart(2, "0") : String(m);
     const ss = String(s).padStart(2, "0");
     return h ? h + ":" + mm + ":" + ss : mm + ":" + ss;
+  }
+
+  function spokenUnit(n, singular, plural) {
+    return n + " " + (n === 1 ? singular : plural);
+  }
+
+  function formatDurationSpoken(seconds) {
+    const n = Math.max(0, Math.round(Number(seconds) || 0));
+    const h = Math.floor(n / 3600);
+    const m = Math.floor((n % 3600) / 60);
+    const s = n % 60;
+    const parts = [];
+    if (h) parts.push(spokenUnit(h, "hour", "hours"));
+    parts.push(spokenUnit(m, "minute", "minutes"));
+    parts.push(spokenUnit(s, "second", "seconds"));
+    return parts.join(" ");
+  }
+
+  function updateSeekValueText() {
+    const seek = $("otr-seek");
+    if (!seek) return;
+    const current = Number(seek.value) || 0;
+    const dur = Number(seek.max) || 0;
+    seek.setAttribute("aria-valuetext", formatDurationSpoken(current) + " of " + formatDurationSpoken(dur));
   }
 
   function formatAirDate(iso) {
@@ -214,14 +239,39 @@
     renderCaptions(cueAt(media ? media.currentTime : 0));
   }
 
+  function setCaptionNotice(msg) {
+    const el = $("otr-caption-status");
+    if (!el) return;
+    if (!msg) {
+      el.hidden = true;
+      el.textContent = "";
+      return;
+    }
+    el.hidden = false;
+    el.textContent = msg;
+  }
+
+  function updateCcButton() {
+    const btn = $("otr-cc");
+    if (!btn) return;
+    const on = state.captionsOn && !state.captionsUnavailable;
+    btn.disabled = !!state.captionsUnavailable;
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+    btn.setAttribute("aria-label", on ? "CC, captions on" : "CC, captions off");
+    btn.title = state.captionsUnavailable
+      ? "Captions unavailable for this episode"
+      : (on ? "CC, captions on" : "CC, captions off");
+  }
+
   function setCaptionsOn(on) {
+    if (state.captionsUnavailable) {
+      updateCcButton();
+      renderCaptions("");
+      return;
+    }
     state.captionsOn = !!on;
     try { localStorage.setItem(CC_KEY, state.captionsOn ? "on" : "off"); } catch (e) {}
-    const btn = $("otr-cc");
-    if (btn) {
-      btn.setAttribute("aria-pressed", state.captionsOn ? "true" : "false");
-      btn.setAttribute("aria-label", state.captionsOn ? "CC, captions on" : "CC, captions off");
-    }
+    updateCcButton();
     const media = $("otr-media");
     if (media && media.textTracks) {
       for (let i = 0; i < media.textTracks.length; i++) {
@@ -229,6 +279,20 @@
       }
     }
     updateCaptionBox();
+  }
+
+  function markCaptionsUnavailable() {
+    state.captionsUnavailable = true;
+    state.captionsOn = false;
+    setCaptionNotice("Captions unavailable for this episode");
+    updateCcButton();
+    renderCaptions("");
+    const media = $("otr-media");
+    if (media && media.textTracks) {
+      for (let i = 0; i < media.textTracks.length; i++) {
+        media.textTracks[i].mode = "hidden";
+      }
+    }
   }
 
   function artworkFor(series, episode) {
@@ -477,9 +541,14 @@
     $("otr-seek").max = String(found.episode.duration_seconds || 0);
     $("otr-seek").value = "0";
     $("otr-time").textContent = "0:00";
+    updateSeekValueText();
     renderNotes(found.series, found.episode);
     state.cues = [];
     state.cueText = "";
+    state.captionsUnavailable = false;
+    setCaptionNotice("");
+    state.captionsOn = loadCaptionsPref();
+    updateCcButton();
     renderCaptions("");
 
     const audio = mediaUrl(found.episode.files && found.episode.files.audio);
@@ -508,6 +577,21 @@
     }
     media.load();
 
+    const captionWatch = { fetchOk: null, trackOk: captions ? null : false };
+    const settleCaptions = () => {
+      if (state.episode !== found.episode) return;
+      if (captionWatch.fetchOk === true || captionWatch.trackOk === true) {
+        if (state.captionsUnavailable) {
+          state.captionsUnavailable = false;
+          setCaptionNotice("");
+          setCaptionsOn(loadCaptionsPref());
+        }
+        return;
+      }
+      if (captionWatch.fetchOk === false && captionWatch.trackOk === false) {
+        markCaptionsUnavailable();
+      }
+    };
     if (captions) {
       fetch(captions)
         .then((res) => {
@@ -515,9 +599,32 @@
           return res.text();
         })
         .then((text) => {
-          if (state.episode === found.episode) state.cues = parseVtt(text);
+          if (state.episode !== found.episode) return;
+          state.cues = parseVtt(text);
+          captionWatch.fetchOk = true;
+          settleCaptions();
         })
-        .catch(() => {});
+        .catch(() => {
+          if (state.episode !== found.episode) return;
+          captionWatch.fetchOk = false;
+          settleCaptions();
+        });
+      const trackEl = media.querySelector("track");
+      if (trackEl) {
+        trackEl.addEventListener("load", () => {
+          captionWatch.trackOk = true;
+          settleCaptions();
+        });
+        trackEl.addEventListener("error", () => {
+          captionWatch.trackOk = false;
+          settleCaptions();
+        });
+      } else {
+        captionWatch.trackOk = false;
+        settleCaptions();
+      }
+    } else {
+      markCaptionsUnavailable();
     }
 
     const startAt = readPos(found.episode);
@@ -591,6 +698,7 @@
     }
     $("otr-time").textContent = formatDuration(media.currentTime || 0);
     $("otr-duration").textContent = formatDuration(dur);
+    updateSeekValueText();
   }
 
   function updateMediaSession() {
@@ -645,6 +753,7 @@
     seek.addEventListener("input", () => {
       state.seeking = true;
       $("otr-time").textContent = formatDuration(Number(seek.value) || 0);
+      updateSeekValueText();
     });
     seek.addEventListener("change", () => {
       media.currentTime = Number(seek.value) || 0;
@@ -691,26 +800,24 @@
 
   function bindKeyboard() {
     document.addEventListener("keydown", (e) => {
-      if (!document.querySelector(".otr-player")) return;
       const target = e.target;
-      if (!target || !target.closest || !target.closest(".otr-player")) return;
-      if (target.closest("a, .theme, .skip-link")) return;
-      const tag = (target.tagName) || "";
-      const isField = tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA";
+      if (!(target instanceof Element)) return;
+      const player = target.closest(".otr-player");
+      if (!player) return;
+
+      if (target.closest(".otr-theme")) return;
+      if (target.closest("a")) return;
+      if (target.closest("input, select, textarea, [contenteditable]:not([contenteditable='false'])")) return;
+
+      const button = target.closest("button");
+      if (button && !button.closest(".otr-controls")) return;
+      if (button && (e.key === " " || e.code === "Space" || e.key === "Enter")) return;
+
       if (e.key === " " || e.code === "Space" || e.key === "k" || e.key === "K") {
-        if (tag === "BUTTON" || tag === "SELECT" || (tag === "INPUT" && e.target.type !== "range")) return;
-        if (tag === "INPUT" && e.target.type === "range" && e.key !== " " && e.code !== "Space") return;
-        if (e.key === " " || e.code === "Space") {
-          e.preventDefault();
-          togglePlay();
-        } else if (!isField) {
-          e.preventDefault();
-          togglePlay();
-        }
+        e.preventDefault();
+        togglePlay();
         return;
       }
-      if (isField && tag === "INPUT" && e.target.type === "range") return;
-      if (isField && tag === "SELECT") return;
       if (e.key === "ArrowLeft") { e.preventDefault(); skip(e.shiftKey ? -SKIP : -10); }
       else if (e.key === "ArrowRight") { e.preventDefault(); skip(e.shiftKey ? SKIP : 10); }
       else if (e.key === "j" || e.key === "J") { e.preventDefault(); skip(-SKIP); }

@@ -103,11 +103,11 @@ otradio/player.js          Catalog, playback, captions
 otradio/assets/fonts/      Nunito for this page
 ```
 
-The catalog address is the `CATALOG_URL` constant at the top of `otradio/player.js`. Episode audio, captions, and artwork resolve from the catalog’s `public_base_url`, which is `https://pub-a3eee908554d4a948d807c160caa454e.r2.dev`. That origin is allowed in the content security policy for this page only (`connect-src` for the catalog and caption files, `media-src` for audio and WebVTT tracks, `img-src` for artwork). Other pages are unchanged.
+The catalog address is the `CATALOG_URL` constant at the top of `otradio/player.js`. Episode audio, captions, and artwork resolve from the catalog’s `public_base_url`, which is `https://pub-a3eee908554d4a948d807c160caa454e.r2.dev`. That origin is allowed in the content security policy for this page only (`connect-src` for the catalog and caption files, `media-src` for audio and WebVTT tracks, `img-src` for artwork). Other pages are unchanged. If a different media host is used later, allow that origin in the same three directives.
 
-The header’s Light / Dark / Auto switch is the only theme control. It uses the `tylilo-theme` value in this browser and sets `data-theme` on the page before the first paint, the same way the homepage does. Player colors are wired to the site’s tokens at the bottom of `player.css` (for example `--otr-navy` follows `--navy`, which stays `#0A3161`). The player’s own theme buttons are not on the page.
+The header’s theme switch is the only theme control. It uses the `tylilo-theme` value in this browser and sets `data-theme` on the page before the first paint, the same way the homepage does. Player colors are wired to the site’s tokens at the bottom of `player.css` (for example `--otr-navy` follows `--navy`, which stays `#0A3161`). The player’s own theme buttons are not on the page.
 
-Captions start on. The CC button turns them off for this browser. The footer links here, next to Accessibility, and the page is listed in `sitemap.xml`.
+Captions start on. The CC button turns them off for this browser. If a caption file cannot be loaded, the player says so and disables that button. Show notes wrap inside their card, including long web addresses. The footer links here, next to Accessibility, and the page is listed in `sitemap.xml`.
 
 ## Deploy to HostM
 
