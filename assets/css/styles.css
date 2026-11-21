@@ -463,7 +463,72 @@ h2 {
   .arcade-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
-.game-slot { min-width: 0; }
+.game-slot {
+  min-width: 0;
+  align-self: start;
+}
+
+.score-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 2.75rem;
+  margin-top: 0.45rem;
+  padding: 0.55rem 0.75rem;
+  border: 2px solid var(--field-border);
+  border-radius: 999px;
+  background: var(--card-bg);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+}
+
+.score-body {
+  margin-top: 0.45rem;
+  padding: 0.75rem 0.8rem 0.85rem;
+  border-radius: 1rem;
+  background: var(--card-bg);
+  color: var(--ink);
+}
+
+.score-board {
+  margin: 0.7rem 0 0.2rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.score-board:first-child { margin-top: 0; }
+
+.score-status {
+  margin: 0;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.score-status:empty { display: none; }
+
+.score-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.score-row {
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+  gap: 0.35rem;
+  align-items: baseline;
+  padding: 0.2rem 0;
+  font-weight: 700;
+}
+
+.score-name { overflow-wrap: anywhere; }
+
+.score-value { font-variant-numeric: tabular-nums; }
 
 .game-tile {
   position: relative;

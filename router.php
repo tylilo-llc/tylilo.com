@@ -21,6 +21,10 @@ if (str_contains($uri, "\0") || str_contains($uri, '..')) {
 }
 
 $path = __DIR__ . $uri;
+if (preg_match('#^/(?:data|tests|includes|scripts)(?:/|$)#', $uri) || $uri === '/config.php' || $uri === '/router.php') {
+    http_response_code(403);
+    exit;
+}
 require_once __DIR__ . '/config.php';
 if ($uri === '/otradio/index.php' && TYLILO_OTRADIO_ENABLED) {
     header('Location: /otradio/', true, 301);

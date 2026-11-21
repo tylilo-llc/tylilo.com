@@ -96,3 +96,5 @@ jobs:
             **/router.php
             **/scripts/**
             **/scripts/**/**
+            **/data/**
+            **/tests/**

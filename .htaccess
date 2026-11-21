@@ -16,6 +16,8 @@ AddDefaultCharset UTF-8
   RewriteEngine On
   RewriteRule ^includes/ - [F,L]
   RewriteRule ^scripts/ - [F,L]
+  RewriteRule ^data/ - [F,L]
+  RewriteRule ^tests/ - [F,L]
   RewriteRule ^config\.php$ - [F,L]
   RewriteRule ^router\.php$ - [F,L]
   RewriteCond %{THE_REQUEST} \s/+accessibility\.php[\s?] [NC]

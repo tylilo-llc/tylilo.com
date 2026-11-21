@@ -5,7 +5,7 @@ declare(strict_types=1);
 require __DIR__ . '/includes/bootstrap.php';
 
 $pageTitle = 'Privacy — Tylilo';
-$pageDescription = 'What tylilo.com collects: the contact form, one session cookie, and settings the browser keeps on your device.';
+$pageDescription = 'What tylilo.com collects: the contact form, one session cookie, settings the browser keeps on your device, and names saved to the arcade leaderboard.';
 $pageCanonical = TYLILO_URL . '/privacy';
 $pageRobots = 'index, follow';
 $contactEmail = TYLILO_CONTACT_EMAIL;
@@ -46,7 +46,11 @@ require __DIR__ . '/includes/head.php';
 
         <h2>Saved on your device</h2>
         <p>If you pick Light, Dark, or Auto, the browser stores that choice in local storage under <code>tylilo-theme</code>. It stays on your device. The site does not send it to us.</p>
-        <p>Arcade games save their settings and high scores the same way, in this browser’s local storage. Red Rain stores music and mute, difficulty, options, and high scores. Solitaire stores its draw mode under <code>klondike.draw</code>, its stats under <code>klondike.stats</code> (games played and won, streaks, best score and time for each draw mode, and whether a game is in progress; no personal data), and sound on or off under <code>klondike.muted</code>. Pop Spiral stores a best score under <code>popSpiral.best</code> and its settings under <code>popSpiral.settings.v1</code>. Jungle Rescue stores options under <code>jungleRescueOpts</code>, difficulty (0–2) under <code>jungleRescueDiff</code>, an all-time high score under <code>jungleRescueHi</code>, best distance for each stage under <code>jungleRescueBestDist</code> and <code>jungleRescueBestDist2</code> through <code>jungleRescueBestDist20</code>, the highest unlocked stage under <code>jungleRescueUnlocked</code>, difficulties beaten under <code>jungleRescueBeat</code>, and collectible cards under <code>jungleRescueCards</code>. Options → Reset Progress clears the unlocked stage, the beaten difficulties, and the cards. Jungle Rescue does not use session storage, cookies, or IndexedDB. None of that is sent to us. The games load no outside resources.</p>
+        <p>Arcade games save their settings and high scores the same way, in this browser’s local storage. Red Rain stores music and mute, difficulty, options, and high scores. Solitaire stores its draw mode under <code>klondike.draw</code>, its stats under <code>klondike.stats</code> (games played and won, streaks, best score and time for each draw mode, and whether a game is in progress; no personal data), and sound on or off under <code>klondike.muted</code>. Pop Spiral stores a best score under <code>popSpiral.best</code> and its settings under <code>popSpiral.settings.v1</code>. Jungle Rescue stores options under <code>jungleRescueOpts</code>, difficulty (0–2) under <code>jungleRescueDiff</code>, an all-time high score under <code>jungleRescueHi</code>, best distance for each stage under <code>jungleRescueBestDist</code> and <code>jungleRescueBestDist2</code> through <code>jungleRescueBestDist20</code>, the highest unlocked stage under <code>jungleRescueUnlocked</code>, difficulties beaten under <code>jungleRescueBeat</code>, and collectible cards under <code>jungleRescueCards</code>. Options → Reset Progress clears the unlocked stage, the beaten difficulties, and the cards. Jungle Rescue does not use session storage, cookies, or IndexedDB. None of that on-device storage is sent to us. The games load no outside resources.</p>
+
+        <h2>Arcade leaderboard</h2>
+        <p>The arcade can also keep a shared list of top scores on this site. That is separate from the on-device scores above. When a game submits a score, the browser sends the name you choose, the score, the game, the board, and how long that game ran to <code>/api/scores.php</code> on tylilo.com. We store the name, score, game, board, and the time it was saved so anyone can read the top scores on the Arcade page. We do not ask for an email address or create an account for this.</p>
+        <p>To slow down repeated submissions, we store a hash of the network address with the time of the save, not the address itself. That hash cannot be turned back into the address, and we delete it after it is no longer needed for the limit. We also store a hash of a single-use start token so the same game cannot be saved twice. The leaderboard does not set a cookie.</p>
 
         <h2>What we don’t add</h2>
         <p>The site code does not include analytics, ads, or third-party tracking scripts. Fonts are files on this site, not a font service.</p>
@@ -55,8 +59,8 @@ require __DIR__ . '/includes/head.php';
         <p>The site is hosted on HostM. Like most web hosts, their servers may keep ordinary access logs, such as an IP address, browser type, and the time of a visit. This site’s pages do not turn on a separate analytics log.</p>
 
         <h2>Asking about your information</h2>
-        <p>You can ask what we have from a message you sent, ask us to correct it, or ask us to delete it. Use the <a href="/#contact">contact form</a> or email <a href="mailto:<?= tylilo_e($contactEmail) ?>"><?= tylilo_e($contactEmail) ?></a>.</p>
-        <p>If you are in the UK or the European Economic Area, you can make those requests about the message you sent us. If you are in California, you can ask us to tell you what we have from that message and to delete it. We do not sell personal information.</p>
+        <p>You can ask what we have from a message you sent or from a name on the leaderboard, ask us to correct it, or ask us to delete it. Use the <a href="/#contact">contact form</a> or email <a href="mailto:<?= tylilo_e($contactEmail) ?>"><?= tylilo_e($contactEmail) ?></a>.</p>
+        <p>If you are in the UK or the European Economic Area, you can make those requests about the message you sent us or a leaderboard name. If you are in California, you can ask us to tell you what we have from that message or name and to delete it. We do not sell personal information.</p>
         <p>This site is not directed at children under 13, and we do not knowingly collect information from them.</p>
 
         <h2>Changes</h2>

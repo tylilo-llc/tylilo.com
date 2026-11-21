@@ -31,9 +31,61 @@ Each game is one folder, `/arcade/<slug>/index.html`. The list on `/arcade/` is 
 
 Every game opens in a new window. The template adds `target="_blank"`, `rel="noopener"`, visually hidden text “(opens in a new window)”, and a decorative window icon. That is the default when `newWindow` is omitted. Do not turn it off for a game. The homepage Arcade tile is the exception: it opens `/arcade/` in the same tab.
 
-A Top scores control, if one is added later, goes in the article under the tile link, not inside the link.
+Each tile has a Top scores button in the article, after the link, not inside it. It loads `/api/scores.php` and shows that game’s boards. The button’s accessible name includes the game title.
 
-Game files come from their own maintainers. Drop the new `index.html` in unchanged. Do not edit it in this repo. Games may keep settings and high scores in the browser’s local storage and must not load outside resources. When a game stores something new, describe it on `/privacy` under “Saved on your device” and update the effective date if the policy text changes.
+Game files come from their own maintainers. Drop the new `index.html` in unchanged. Do not edit it in this repo. Games may keep settings and high scores in the browser’s local storage and must not load outside resources. When a game stores something new, or starts submitting to the leaderboard, describe it on `/privacy` and update the effective date if the policy text changes.
+
+## Leaderboard API
+
+`/api/scores.php` is the shared leaderboard for game bots. It is same-origin JSON. `GET` is public. `POST` must come from this host: the browser sends `Origin` on a page fetch, and a non-browser bot must send `Origin` or `Referer` whose host matches the request `Host`. There is no cookie and no account. Storage is a SQLite file when PHP has PDO SQLite, otherwise a flocked JSON file. It is written to `tylilo-data/` next to the site root when that directory is outside the web root, or to `data/` inside the site (which `.htaccess` does not serve). The deploy excludes `data/` and `tests/`. Set `TYLILO_DATA_DIR` to move it. Do not commit the data directory. The raw network address is not stored. A HMAC of it is kept for at most 10 minutes of rate-limit history.
+
+Slugs and boards:
+
+| Game | `game` | Boards | Order | Unit | Range | Minimum play |
+| --- | --- | --- | --- | --- | --- | --- |
+| Solitaire | `solitaire` | `draw-1`, `draw-3` | higher wins | points | 0–20000 | 20 seconds |
+| Red Rain | `red-rain` | `easy`, `normal`, `expert`, `insane` | higher wins | points | 0–5000000 | 30 seconds |
+| Pop Spiral | `pop-spiral` | `default` | higher wins | points | 0–5000000 | 20 seconds |
+| Jungle Rescue | `jungle-rescue` | `default` | higher wins | points | 0–5000000 | 20 seconds |
+| Jungle Rescue | `jungle-rescue` | `time` | lower wins | seconds | 1–7200 | 20 seconds |
+
+`default` on Jungle Rescue is the all-time score. `time` is a completion time in whole seconds.
+
+Read the top scores:
+
+`GET /api/scores.php?game=solitaire&board=draw-1&limit=10`
+
+`board` is optional. Omit it to get every board for that game. `limit` defaults to 10 and is capped at 25. A missing game or board is HTTP 404.
+
+```json
+{"ok":true,"game":"solitaire","limit":10,"boards":[{"board":"draw-1","label":"Draw 1","order":"desc","unit":"points","scores":[{"name":"Ada","score":1500,"at":"2026-11-21T12:00:00+00:00"}]}]}
+```
+
+Start a run, once, when the run begins:
+
+`POST /api/scores.php` with `Content-Type: application/json`
+
+```json
+{"op":"start","game":"solitaire","board":"draw-1"}
+```
+
+```json
+{"ok":true,"token":"<signed>","minPlayedMs":20000,"game":"solitaire","board":"draw-1"}
+```
+
+The token is `<base64url payload>.<hex hmac-sha256>`. It is tied to that game and board, lasts 6 hours, and works once. `minPlayedMs` is the shortest run this board will accept.
+
+Save the score after the run has lasted at least that long in real time:
+
+```json
+{"op":"submit","game":"solitaire","board":"draw-1","name":"Ada","score":1500,"playedMs":45000,"token":"<signed>"}
+```
+
+`score` and `playedMs` are whole numbers. `playedMs` must be at least `minPlayedMs`, must not be longer than the token’s age plus 15 seconds, and the token itself must already be at least `minPlayedMs` old. `name` is 1–12 characters: letters, numbers, spaces, and `. ' - ! ? ,`. A fixed word list rejects names after a leetspeak fold (`0`→o, `1`→i, `3`→e, `4`→a, `5`→s, `@`→a, `$`→s, symbols removed, repeated letters collapsed). The check is on the whole name and on each word, not on a substring, so ordinary words that merely contain a fragment still pass. If `board` is omitted on submit it defaults to `default`, which Solitaire and Red Rain do not have.
+
+Success is HTTP 200: `{"ok":true,"rank":1,"scores":[...]}` where `scores` is the top 10 for that board and `rank` counts every stored row, not just the top 10. The site keeps the best 100 rows per board. One network can save 5 scores in 10 minutes, across every game. The sixth is HTTP 429.
+
+Other errors are `{"ok":false,"error":"<plain sentence>"}` with HTTP 400 (name, score, token, or play time), 403 (cross-site POST), 404 (unknown game or board), 405 (not GET or POST), 413 (body over 4096 bytes), or 500 (storage failure). `GET` does not require `Origin`.
 
 The homepage links to `/arcade/` from the tile between About and Contact. The footer does too.
 
