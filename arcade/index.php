@@ -83,7 +83,7 @@ require __DIR__ . '/../includes/head.php';
         <article class="game-slot">
           <a class="game-tile" href="<?= tylilo_e($game['href']) ?>"<?php if ($opensNewWindow): ?> target="_blank" rel="noopener"<?php endif; ?>>
             <span class="game-tile-art">
-              <img src="<?= tylilo_e($game['art']) ?>" alt="" width="200" height="150">
+              <img src="<?= tylilo_e(tylilo_asset($game['art'])) ?>" alt="" width="200" height="150">
             </span>
             <span class="game-tile-name"><?= tylilo_e($game['title']) ?></span>
 <?php if ($opensNewWindow): ?>
