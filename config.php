@@ -22,7 +22,7 @@ if (PHP_SAPI !== 'cli' && realpath((string) ($_SERVER['SCRIPT_FILENAME'] ?? ''))
 const TYLILO_CONTACT_EMAIL = 'hello@tylilo.com';
 
 const TYLILO_SITE_NAME = 'Tylilo';
-const TYLILO_LEGAL_NAME = 'Tylilo LLC';
+const TYLILO_LEGAL_NAME = 'Tylilo, LLC';
 const TYLILO_YEAR = '2026';
 const TYLILO_URL = 'https://tylilo.com';
 

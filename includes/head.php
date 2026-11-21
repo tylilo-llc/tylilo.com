@@ -8,7 +8,7 @@ if (!defined('TYLILO_BOOTSTRAPPED')) {
 }
 
 $pageTitle = $pageTitle ?? TYLILO_SITE_NAME;
-$pageDescription = $pageDescription ?? 'Tylilo LLC. Placeholder homepage for a company and studio site.';
+$pageDescription = $pageDescription ?? 'Tylilo, LLC. Placeholder homepage for a company and studio site.';
 $pageRobots = $pageRobots ?? 'index, follow';
 $pageCanonical = $pageCanonical ?? '';
 $nonce = tylilo_e($cspNonce);

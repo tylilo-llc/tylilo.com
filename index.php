@@ -64,22 +64,18 @@ require __DIR__ . '/includes/head.php';
       </section>
 
       <section class="arcade-home" aria-labelledby="arcade-home-heading">
-        <div class="card">
-          <p class="kicker">Play</p>
-          <h2 id="arcade-home-heading">Play a round.</h2>
-          <p class="muted">Solitaire, Red Rain, and Pop Spiral, in the browser.</p>
-          <a class="btn" href="/arcade/">
-            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="22" height="22">
-              <path fill="currentColor" d="M8 7.4h8c2.55 0 4.35 1.85 4.15 4.35l-.35 2.7c-.28 1.7-1.75 2.95-3.45 2.95-1.05 0-2.05-.5-2.65-1.35L12.9 15h-1.8l-.8 1.05c-.6.85-1.6 1.35-2.65 1.35-1.7 0-3.17-1.25-3.45-2.95l-.35-2.7C3.65 9.25 5.45 7.4 8 7.4z"/>
-              <path fill="var(--btn2-bg)" d="M7.15 10.55h1.2v1.15h1.15v1.2H8.35v1.15h-1.2V12.9H6v-1.2h1.15z"/>
-              <circle cx="15.15" cy="11.35" r=".72" fill="var(--btn2-bg)"/>
-              <circle cx="16.85" cy="12.9" r=".72" fill="var(--btn2-bg)"/>
-              <circle cx="15.15" cy="14.45" r=".72" fill="var(--btn2-bg)"/>
-              <circle cx="13.45" cy="12.9" r=".72" fill="var(--btn2-bg)"/>
-            </svg>
-            Arcade
-          </a>
-        </div>
+        <h2 id="arcade-home-heading" class="arcade-home-heading">Arcade</h2>
+        <a class="arcade-tile" href="/arcade/">
+          <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="40" height="40">
+            <path fill="currentColor" d="M8 7.4h8c2.55 0 4.35 1.85 4.15 4.35l-.35 2.7c-.28 1.7-1.75 2.95-3.45 2.95-1.05 0-2.05-.5-2.65-1.35L12.9 15h-1.8l-.8 1.05c-.6.85-1.6 1.35-2.65 1.35-1.7 0-3.17-1.25-3.45-2.95l-.35-2.7C3.65 9.25 5.45 7.4 8 7.4z"/>
+            <path fill="var(--btn2-bg)" d="M7.15 10.55h1.2v1.15h1.15v1.2H8.35v1.15h-1.2V12.9H6v-1.2h1.15z"/>
+            <circle cx="15.15" cy="11.35" r=".72" fill="var(--btn2-bg)"/>
+            <circle cx="16.85" cy="12.9" r=".72" fill="var(--btn2-bg)"/>
+            <circle cx="15.15" cy="14.45" r=".72" fill="var(--btn2-bg)"/>
+            <circle cx="13.45" cy="12.9" r=".72" fill="var(--btn2-bg)"/>
+          </svg>
+          Arcade
+        </a>
       </section>
 
       <section class="contact-block" id="contact" aria-labelledby="contact-heading">
