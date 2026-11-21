@@ -858,8 +858,23 @@ details summary {
 dialog.card {
   border: 0;
   margin: auto;
+  background: var(--card-bg);
   color: var(--ink);
   width: min(36rem, calc(100% - 2rem));
+}
+
+.session-warn {
+  background: var(--card-bg);
+  color: var(--ink);
+}
+
+.session-warn p {
+  margin: 0.7rem 0;
+}
+
+.form-status:not(.error):not(.success) {
+  background: var(--chip-bg);
+  color: var(--ink);
 }
 
 dialog::backdrop {

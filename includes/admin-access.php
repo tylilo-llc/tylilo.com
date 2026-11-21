@@ -8,6 +8,8 @@ if (!defined('TYLILO_BOOTSTRAPPED')) {
 }
 
 const TYLILO_ADMIN_IDLE = 1800;
+const TYLILO_ADMIN_ABSOLUTE = 43200;
+const TYLILO_ADMIN_WARN = 120;
 const TYLILO_ADMIN_INVITE_TTL = 604800;
 
 function tylilo_admin_default_permissions(bool $leaderboards = false): array
@@ -326,14 +328,51 @@ function tylilo_admin_touch_session(): void
     $now = time();
     $last = $_SESSION['admin_last_seen'] ?? 0;
     $last = is_int($last) ? $last : 0;
-    if (!empty($_SESSION['admin_user_id']) && $last > 0 && ($now - $last) > TYLILO_ADMIN_IDLE) {
-        unset($_SESSION['admin_user_id'], $_SESSION['admin_pending_id']);
+    $login = $_SESSION['admin_login_at'] ?? 0;
+    $login = is_int($login) ? $login : 0;
+    $signedIn = !empty($_SESSION['admin_user_id']);
+    $idleEnded = $signedIn && $last > 0 && ($now - $last) > TYLILO_ADMIN_IDLE;
+    $capEnded = $signedIn && ($login <= 0 || ($now - $login) > TYLILO_ADMIN_ABSOLUTE);
+    if ($idleEnded || $capEnded) {
+        $who = (int) $_SESSION['admin_user_id'];
+        unset($_SESSION['admin_user_id'], $_SESSION['admin_pending_id'], $_SESSION['admin_login_at'], $_SESSION['admin_session_version'], $_SESSION['admin_last_seen']);
+        $_SESSION['admin_notice'] = 'signed-out';
         $_SESSION['admin_csrf'] = bin2hex(random_bytes(32));
-        $last = 0;
+        tylilo_admin_log($who, '', $capEnded ? 'session-cap' : 'session-idle', 'Signed out');
+
+        return;
     }
-    if (!empty($_SESSION['admin_user_id']) || !empty($_SESSION['admin_pending_id'])) {
+    if ($signedIn || !empty($_SESSION['admin_pending_id'])) {
         $_SESSION['admin_last_seen'] = $now;
     }
+}
+
+function tylilo_admin_begin_session(array $account): void
+{
+    tylilo_session_start();
+    session_regenerate_id(true);
+    $now = time();
+    unset($_SESSION['admin_pending_id'], $_SESSION['admin_notice']);
+    $_SESSION['admin_user_id'] = (int) $account['id'];
+    $_SESSION['admin_last_seen'] = $now;
+    $_SESSION['admin_login_at'] = $now;
+    $_SESSION['admin_session_version'] = (int) ($account['session_version'] ?? 1);
+    $_SESSION['admin_csrf'] = bin2hex(random_bytes(32));
+}
+
+function tylilo_admin_end_session(string $notice = ''): void
+{
+    tylilo_session_start();
+    $_SESSION = [];
+    if ($notice !== '') {
+        $_SESSION['admin_notice'] = $notice;
+    }
+    session_regenerate_id(true);
+}
+
+function tylilo_admin_bump_session(array &$user): void
+{
+    $user['session_version'] = (int) ($user['session_version'] ?? 1) + 1;
 }
 
 function tylilo_admin_log(int $userId, string $username, string $action, string $detail): void

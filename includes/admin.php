@@ -128,11 +128,13 @@ function tylilo_admin_pdo(): PDO
             totp_secret TEXT NOT NULL DEFAULT \'\',
             totp_enabled INTEGER NOT NULL DEFAULT 0,
             recovery_hashes TEXT NOT NULL DEFAULT \'[]\',
-            created_at INTEGER NOT NULL
+            created_at INTEGER NOT NULL,
+            session_version INTEGER NOT NULL DEFAULT 1
         )'
     );
 
     tylilo_admin_migrate_user_table($pdo);
+    tylilo_admin_ensure_session_column($pdo);
 
     return $pdo;
 }
@@ -158,11 +160,12 @@ function tylilo_admin_migrate_user_table(PDO $pdo): void
             totp_secret TEXT NOT NULL DEFAULT \'\',
             totp_enabled INTEGER NOT NULL DEFAULT 0,
             recovery_hashes TEXT NOT NULL DEFAULT \'[]\',
-            created_at INTEGER NOT NULL
+            created_at INTEGER NOT NULL,
+            session_version INTEGER NOT NULL DEFAULT 1
         )'
     );
     $old = $pdo->query('SELECT * FROM users_legacy')->fetchAll();
-    $stmt = $pdo->prepare('INSERT INTO users (id, username, password_hash, role, disabled, permissions, totp_secret, totp_enabled, recovery_hashes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    $stmt = $pdo->prepare('INSERT INTO users (id, username, password_hash, role, disabled, permissions, totp_secret, totp_enabled, recovery_hashes, created_at, session_version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
     foreach ($old as $row) {
         $role = (string) $row['role'] === 'member' ? 'member' : 'owner';
         $stmt->execute([
@@ -176,9 +179,18 @@ function tylilo_admin_migrate_user_table(PDO $pdo): void
             (int) ($row['totp_enabled'] ?? 0),
             (string) ($row['recovery_hashes'] ?? '[]'),
             (int) ($row['created_at'] ?? time()),
+            (int) ($row['session_version'] ?? 1),
         ]);
     }
     $pdo->exec('DROP TABLE users_legacy');
+}
+
+function tylilo_admin_ensure_session_column(PDO $pdo): void
+{
+    $columns = array_column($pdo->query('PRAGMA table_info(users)')->fetchAll(), 'name');
+    if (!in_array('session_version', $columns, true)) {
+        $pdo->exec('ALTER TABLE users ADD COLUMN session_version INTEGER NOT NULL DEFAULT 1');
+    }
 }
 
 function tylilo_admin_with_sqlite(callable $change): array
@@ -216,7 +228,7 @@ function tylilo_admin_with_sqlite(callable $change): array
 
 function tylilo_admin_users_from_table(PDO $pdo): array
 {
-    $rows = $pdo->query('SELECT id, username, password_hash, role, disabled, permissions, totp_secret, totp_enabled, recovery_hashes, created_at FROM users ORDER BY id')->fetchAll();
+    $rows = $pdo->query('SELECT id, username, password_hash, role, disabled, permissions, totp_secret, totp_enabled, recovery_hashes, created_at, session_version FROM users ORDER BY id')->fetchAll();
     $users = [];
     foreach ($rows as $row) {
         $permissions = json_decode((string) ($row['permissions'] ?? '{}'), true);
@@ -231,6 +243,7 @@ function tylilo_admin_users_from_table(PDO $pdo): array
             'totp_enabled' => (int) $row['totp_enabled'],
             'recovery_hashes' => (string) $row['recovery_hashes'],
             'created_at' => (int) $row['created_at'],
+            'session_version' => (int) ($row['session_version'] ?? 1),
         ];
     }
 
@@ -240,7 +253,7 @@ function tylilo_admin_users_from_table(PDO $pdo): array
 function tylilo_admin_write_users(PDO $pdo, array $users): void
 {
     $pdo->exec('DELETE FROM users');
-    $stmt = $pdo->prepare('INSERT INTO users (id, username, password_hash, role, disabled, permissions, totp_secret, totp_enabled, recovery_hashes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    $stmt = $pdo->prepare('INSERT INTO users (id, username, password_hash, role, disabled, permissions, totp_secret, totp_enabled, recovery_hashes, created_at, session_version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
     foreach ($users as $user) {
         $role = (string) ($user['role'] ?? '');
         if ($role === 'admin') {
@@ -261,6 +274,7 @@ function tylilo_admin_write_users(PDO $pdo, array $users): void
             (int) ($user['totp_enabled'] ?? 0),
             (string) ($user['recovery_hashes'] ?? '[]'),
             (int) ($user['created_at'] ?? time()),
+            (int) ($user['session_version'] ?? 1),
         ]);
     }
 }
@@ -471,8 +485,13 @@ function tylilo_admin_current(): ?array
         return null;
     }
     $user = tylilo_admin_user_by_id($id);
-    if (!is_array($user) || (int) ($user['disabled'] ?? 0) === 1) {
-        unset($_SESSION['admin_user_id'], $_SESSION['admin_last_seen']);
+    $version = is_array($user) ? (int) ($user['session_version'] ?? 1) : 0;
+    $sessionVersion = $_SESSION['admin_session_version'] ?? null;
+    $sessionVersion = is_int($sessionVersion) ? $sessionVersion : 0;
+    $stale = !is_array($user) || (int) ($user['disabled'] ?? 0) === 1 || $sessionVersion !== $version;
+    if ($stale) {
+        unset($_SESSION['admin_user_id'], $_SESSION['admin_last_seen'], $_SESSION['admin_login_at'], $_SESSION['admin_session_version']);
+        $_SESSION['admin_notice'] = 'signed-out';
 
         return null;
     }

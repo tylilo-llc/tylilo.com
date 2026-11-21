@@ -41,11 +41,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             }
         }
             if ($accepted && is_array($account)) {
-            session_regenerate_id(true);
-            unset($_SESSION['admin_pending_id']);
-            $_SESSION['admin_user_id'] = (int) $account['id'];
-            $_SESSION['admin_last_seen'] = time();
-            $_SESSION['admin_csrf'] = bin2hex(random_bytes(32));
+            tylilo_admin_begin_session($account);
             tylilo_admin_log((int) $account['id'], (string) $account['username'], 'sign-in', 'Completed the second step');
             header('Location: /admin/', true, 303);
             exit;
@@ -77,10 +73,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                 header('Location: /admin/', true, 303);
                 exit;
             } else {
-                session_regenerate_id(true);
-                $_SESSION['admin_user_id'] = (int) $account['id'];
-                $_SESSION['admin_last_seen'] = time();
-                $_SESSION['admin_csrf'] = bin2hex(random_bytes(32));
+                tylilo_admin_begin_session($account);
                 tylilo_admin_log((int) $account['id'], (string) $account['username'], 'sign-in', 'Signed in');
                 header('Location: /admin/', true, 303);
                 exit;
@@ -105,6 +98,10 @@ if ($user !== null) {
 
 $sitekey = tylilo_turnstile_sitekey();
 $html = '<div class="card">';
+if (isset($_GET['out']) || (($_SESSION['admin_notice'] ?? '') === 'signed-out')) {
+    unset($_SESSION['admin_notice']);
+    $html .= '<div class="form-status" role="status"><p>You were signed out.</p></div>';
+}
 if (isset($_GET['ready'])) {
     $html .= '<div class="form-status success" role="status"><p>The admin account is ready. Sign in with the password you just chose.</p></div>';
 }
