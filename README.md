@@ -114,6 +114,8 @@ The header’s theme switch is the only theme control. It uses the `tylilo-theme
 
 Captions start on. The CC button turns them off for this browser. If a caption file cannot be loaded, the player says so and disables that button. Show notes turn a bare web address into a short link (an archived log, a public-domain license, or the site’s domain) and still wrap inside the card if a long word remains. None of that is linked from the public site while the flag above is `false`.
 
+While OTRadio is switched off with `TYLILO_OTRADIO_ENABLED` in `config.php`, `/privacy` does not mention it. Turning it back on requires restoring that privacy section: on-device storage of caption preference, playback speed, and episode position, plus catalog, audio, captions, and artwork loaded from `https://pub-a3eee908554d4a948d807c160caa454e.r2.dev`. Update the effective date on `/privacy` when you restore it.
+
 ## Deploy to HostM
 
 Pushes to `main` run **Deploy to HostM** (`.github/workflows/deploy.yml`). The workflow uploads the site over explicit FTPS, which is what HostM documents (FTP with TLS, port 21). You can also run it by hand from the Actions tab with **Run workflow**.

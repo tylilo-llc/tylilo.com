@@ -13,7 +13,7 @@ Every change to this site must meet WCAG 2.2 Level AA and stay easy for search e
 - Images have useful alt text. The theme switch has an accessible name and a pressed state.
 - Layout reflows at 320px wide and at 200% zoom without sideways scrolling. Tap targets are at least 24×24 CSS pixels, and 44×44 where the control can grow without breaking the layout.
 - `/accessibility` states the WCAG 2.2 AA target and how to report a barrier. Keep that page linked from the footer.
-- Every significant site change must review and update `/privacy`, including its effective date. Do this especially when forms, cookies, storage, analytics, embeds, or third-party services change.
+- Every significant site change must review and update `/privacy`, including its effective date. Do this especially when forms, cookies, storage, analytics, embeds, or third-party services change. Turning OTRadio back on is one of those changes: restore its privacy section (on-device caption, speed, and position storage, and media loaded from `pub-a3eee908554d4a948d807c160caa454e.r2.dev`) and update the effective date. The steps are in the README’s OTRadio section.
 
 ## SEO
 

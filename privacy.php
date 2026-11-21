@@ -5,7 +5,7 @@ declare(strict_types=1);
 require __DIR__ . '/includes/bootstrap.php';
 
 $pageTitle = 'Privacy — Tylilo';
-$pageDescription = 'What tylilo.com collects: the contact form, one session cookie, a theme setting saved on your device, and OTRadio files loaded from Cloudflare R2.';
+$pageDescription = 'What tylilo.com collects: the contact form, one session cookie, and a theme setting saved on your device.';
 $pageCanonical = TYLILO_URL . '/privacy';
 $pageRobots = 'index, follow';
 $contactEmail = TYLILO_CONTACT_EMAIL;
@@ -46,10 +46,6 @@ require __DIR__ . '/includes/head.php';
 
         <h2>Saved on your device</h2>
         <p>If you pick Light, Dark, or Auto, the browser stores that choice in local storage under <code>tylilo-theme</code>. It stays on your device. The site does not send it to us.</p>
-        <p>On the <a href="/otradio/">OTRadio</a> page, the browser can also remember whether captions are on, your playback speed, and how far you got in an episode. Those entries stay on your device too. Their names start with <code>otradio:</code>.</p>
-
-        <h2>OTRadio files</h2>
-        <p>OTRadio asks a Cloudflare R2 address, <code>pub-a3eee908554d4a948d807c160caa454e.r2.dev</code>, for its catalog. Audio, captions, and artwork are loaded from that same host, unless a catalog entry already contains a full web address. A request there can include your IP address, the same way any web request does. The rest of tylilo.com does not load that host.</p>
 
         <h2>What we don’t add</h2>
         <p>The site code does not include analytics, ads, or third-party tracking scripts. Fonts are files on this site, not a font service.</p>
