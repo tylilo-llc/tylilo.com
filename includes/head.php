@@ -82,7 +82,7 @@ $nonce = tylilo_e($cspNonce);
         "and": [
           {"href_matches": "/*"},
           {"not": {"href_matches": "/contact.php*"}},
-          {"not": {"selector_matches": "a[target=_blank]"}}
+          {"not": {"selector_matches": "a.game-tile"}}
         ]
       },
       "eagerness": "moderate"
@@ -91,7 +91,7 @@ $nonce = tylilo_e($cspNonce);
       "where": {
         "or": [
           {"href_matches": "/contact.php*"},
-          {"selector_matches": "a[target=_blank]"}
+          {"selector_matches": "a.game-tile"}
         ]
       },
       "eagerness": "moderate"
