@@ -54,7 +54,6 @@ require __DIR__ . '/includes/head.php';
         <img src="/assets/img/logo-round.webp" alt="Tylilo logo" width="168" height="168" fetchpriority="high">
       </div>
       <h1 class="tagline"><?= tylilo_e($tagline) ?></h1>
-      <a class="hero-cta" href="#contact">Say hello</a>
     </div>
   </header>
 
