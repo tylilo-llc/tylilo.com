@@ -113,6 +113,12 @@ The homepage links to `/arcade/` from the tile between About and Contact. The fo
 
 The player files in `otradio/` stay in the repo. While `TYLILO_OTRADIO_ENABLED` in `config.php` is `false`, `/otradio/` returns the site 404 page, sends `noindex`, is omitted from `sitemap.xml`, and is not linked from the footer. The script, stylesheet, and fonts under `otradio/` remain available. To publish the player again, set that flag to `true`, add `https://tylilo.com/otradio/` to `sitemap.xml`, and restore the OTRadio section on `/privacy`: on-device caption, speed, and position storage, plus catalog, audio, captions, and artwork loaded from `pub-a3eee908554d4a948d807c160caa454e.r2.dev`. Update the effective date on `/privacy` when you do. The footer link follows the flag.
 
+## Permanent URLs
+
+These files are linked from outside the site (for example Ryan's email signature) and must never be moved, renamed or deleted by a rebuild or redesign:
+
+- `/resources/Tylilo-Logo/Tylilo-Logo-Small.png`: the Tylilo logo, a 192px-wide transparent PNG shown at 96x36 in Ryan's email signature.
+
 ## Pre-merge checklist
 
 Run this before asking Ryan to merge:
