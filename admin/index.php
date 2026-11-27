@@ -105,6 +105,9 @@ if (isset($_GET['out']) || (($_SESSION['admin_notice'] ?? '') === 'signed-out'))
 if (isset($_GET['ready'])) {
     $html .= '<div class="form-status success" role="status"><p>The admin account is ready. Sign in with the password you just chose.</p></div>';
 }
+if (isset($_GET['reset'])) {
+    $html .= '<div class="form-status success" role="status"><p>Your password was changed. Sign in with the new password.</p></div>';
+}
 if ($error !== '') {
     $html .= '<div class="form-status error" id="form-status" role="alert" aria-live="assertive"><p>' . tylilo_e($error) . '</p></div>';
 }
@@ -119,7 +122,8 @@ if ($pending > 0) {
     $html .= '<h2>Sign in</h2><form method="post" action="/admin/">';
     $html .= '<input type="hidden" name="csrf" value="' . tylilo_e(tylilo_admin_csrf()) . '">';
     $html .= '<label for="username">Username</label><input id="username" name="username" type="text" autocomplete="username" required>';
-    $html .= '<label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" required>';
+    $html .= '<div class="field-head"><label for="password">Password</label><a href="/admin/forgot.php">Forgot password?</a></div>';
+    $html .= '<input id="password" name="password" type="password" autocomplete="current-password" required>';
     $html .= '<div class="turnstile-slot"><div class="cf-turnstile" data-sitekey="' . tylilo_e($sitekey) . '" data-action="login" data-theme="auto"></div></div>';
     $html .= '<button class="btn send" type="submit">Sign in</button></form>';
     if (!tylilo_admin_has_admin()) {

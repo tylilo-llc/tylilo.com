@@ -11,6 +11,7 @@ const TYLILO_ADMIN_IDLE = 1800;
 const TYLILO_ADMIN_ABSOLUTE = 43200;
 const TYLILO_ADMIN_WARN = 120;
 const TYLILO_ADMIN_INVITE_TTL = 604800;
+const TYLILO_ADMIN_RESET_TTL = 86400;
 
 function tylilo_admin_default_permissions(bool $leaderboards = false): array
 {
@@ -37,6 +38,9 @@ function tylilo_admin_permissions_from_post(): array
 function tylilo_admin_migrate(array $data): array
 {
     $data += tylilo_admin_blank();
+    if (!is_array($data['password_resets'] ?? null)) {
+        $data['password_resets'] = [];
+    }
     $ownerId = 0;
     foreach ($data['users'] as &$user) {
         if (($user['role'] ?? '') === 'admin') {
