@@ -501,6 +501,24 @@
 <script>
 var POP_SPIRAL_CHANGELOG = [
   {
+    "version": "0.2.6",
+    "date": "2026-11-27",
+    "sections": [
+      {
+        "heading": "Added",
+        "items": [
+          "Level 5, *Square Vortex*: a new rounded-square spiral (a superellipse drawn as a Catmull-Rom curve). Orbs enter at the middle of the left side and wind clockwise 2.4 times around the turret in squared-off loops, exiting above and to the right of it. It follows the difficulty curve for level 5 and is a small step harder than *Hairpin Pass*: 77 orbs (was 75), speed 39.9 (was 39.7), wait before new orbs after the track is cleared 1.16 s (was 1.17), opening rush to 20.8% of the track (was 20.6%), and fewer same-color repeats (0.385, was 0.389). Specials stay at 0.068 and last the whole round, and it's still 4 colors. The track is a little shorter (4888 px vs 4939), so the front reaches the exit about 2 seconds sooner after the opening rush (97.0 s vs 98.8 s). The inner loop stays at least 153 px from the turret, and phones get their own track for it as with every level."
+        ]
+      },
+      {
+        "heading": "Tests",
+        "items": [
+          "Unit tests check that level 5 loads with its path on screen and clear of the turret, matches its curve values, and is no easier than level 4 on any setting. The bot simulation clears it on desktop and phone tracks. The browser check loads and plays level 5 and confirms What's New lists it."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.2.5",
     "date": "2026-11-21",
     "sections": [
@@ -699,7 +717,7 @@ var POP_SPIRAL_CHANGELOG = [
 /* =====================================================================
  *  PURE LOGIC (no DOM) — exposed as global.PopLogic for unit tests
  * ===================================================================== */
-var VERSION = '0.2.5';
+var VERSION = '0.2.6';
 var CFG = {
   W: 1000, H: 700, R: 16, SPACING: 32, PROJ_SPEED: 700, MUZZLE: 40,
   GAP_EPS: 4, COMPRESS_SPEED: 560, MATCH_MIN: 3, INSERT_TIME: 0.13,
@@ -814,7 +832,29 @@ var LEVELS = [
       [930, 447], [930, 373], [930, 298], [930, 224], [930, 150], [917, 118], [885, 105], [853, 118], [840, 150], [840, 215], [840, 280],
       [840, 345], [840, 410], [840, 475], [840, 540], [827, 572], [795, 585], [763, 572], [750, 540], [750, 475], [750, 410], [750, 345],
       [750, 280], [750, 215], [750, 150], [737, 118], [705, 105], [673, 118], [660, 150], [660, 214], [660, 278], [660, 342], [660, 406],
-      [660, 470]] } }
+      [660, 470]] } },
+  // Square Vortex: a rounded-square spiral (superellipse, exponent 4) around the turret, 2.4 turns
+  // clockwise from the middle of the left side inward. Catmull-Rom through 123 points. Length 4888 px,
+  // loop gap about 65 px; the inner loop stays at least 153 px from the turret, exit about 270 px away.
+  { name: 'Square Vortex', colors: 4, totalMarbles: 77, spawnInterval: 1.16, speed: 39.9, rushTo: 0.208,
+    sameChance: 0.385, powerChance: 0.068, powerUps: ['slow', 'reverse', 'bomb', 'aim'],
+    powerLife: 0, powerWarn: 3, powerGap: 8,
+    shooter: { x: 500, y: 350 },
+    theme: { bg1: '#3a1030', bg2: '#10040d', rail: '#d48ab8', groove: '#2e0f26', accent: '#ff6fae' },
+    path: { type: 'catmull', samplesPerSeg: 40, points: [
+      [70, 350], [70, 310], [71, 270], [75, 230], [82, 191], [97, 154], [122, 122], [155, 99], [192, 84], [231, 75], [270, 70],
+      [310, 67], [350, 66], [390, 66], [431, 66], [471, 66], [511, 66], [551, 67], [591, 67], [631, 68], [671, 70], [711, 74],
+      [750, 81], [789, 91], [825, 108], [857, 132], [879, 165], [891, 203], [896, 243], [898, 283], [897, 323], [897, 363],
+      [897, 403], [894, 443], [888, 483], [874, 520], [850, 552], [816, 574], [779, 587], [739, 595], [699, 599], [659, 601],
+      [619, 601], [579, 601], [539, 601], [499, 601], [459, 601], [419, 600], [379, 599], [339, 597], [299, 593], [260, 586],
+      [222, 574], [187, 554], [159, 525], [143, 489], [136, 450], [135, 409], [135, 369], [136, 329], [137, 289], [141, 249],
+      [152, 211], [174, 178], [207, 156], [245, 143], [285, 136], [325, 133], [365, 131], [405, 131], [445, 132], [485, 132],
+      [525, 132], [565, 132], [605, 133], [645, 135], [685, 139], [724, 147], [762, 160], [796, 181], [819, 213], [830, 252],
+      [832, 292], [832, 332], [832, 372], [830, 412], [823, 451], [805, 487], [774, 512], [737, 525], [697, 532], [658, 535],
+      [617, 536], [577, 536], [537, 536], [497, 536], [457, 535], [417, 535], [377, 533], [337, 529], [298, 522], [260, 510],
+      [227, 487], [207, 453], [201, 413], [201, 373], [201, 333], [203, 293], [213, 254], [238, 224], [275, 208], [314, 200],
+      [354, 197], [394, 196], [434, 197], [474, 197], [514, 197], [554, 198], [594, 199], [634, 202], [674, 207], [712, 219],
+      [746, 240]] } }
 ];
 
 function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
