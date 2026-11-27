@@ -1,0 +1,224 @@
+/* Direction C — Hearth.
+   Warm and soft: rounded forms, clay and sage, a floating header, gentle elevation.
+   Light body #2C241F on #F6F0E9 is 13.46:1. Cream #FFF8F4 on #8E3F2C is 6.90:1.
+   Link #7A3424 on #FFFCF8 is 8.76:1. Dark body #F8F1EA on #1A1513 is 16.17:1.
+   Dark button #2C241F on #F0BBA8 is 8.98:1. Field border #8A6F60 on #FFFCF8 is 4.54:1 (UI needs 3:1). */
+
+html[data-direction="c"] {
+  --page: #F6F0E9;
+  --ink: #2C241F;
+  --muted: #5C4E45;
+  --card: #FFFCF8;
+  --line: #9A8478;
+  --btn-bg: #8E3F2C;
+  --btn-text: #FFF8F4;
+  --btn-border: 0;
+  --btn-shadow: 0 10px 22px rgba(142, 63, 44, 0.22);
+  --radius-btn: 999px;
+  --radius-card: 1.75rem;
+  --radius-tile: 1.45rem;
+  --radius-field: 1rem;
+  --radius-theme: 999px;
+  --field: #FFFCF8;
+  --field-border: #8A6F60;
+  --field-edge: 2px solid #8A6F60;
+  --placeholder: #5C4E45;
+  --focus: #8E3F2C;
+  --focus-halo: #F6F0E9;
+  --hero-bg: transparent;
+  --hero-text: #2C241F;
+  --footer-bg: transparent;
+  --footer-text: #5C4E45;
+  --footer-link: #7A3424;
+  --footer-align: center;
+  --footer-justify: center;
+  --tile-bg: #8E3F2C;
+  --tile-text: #FFF8F4;
+  --tile-border: 0;
+  --tile-shadow: 0 12px 26px rgba(142, 63, 44, 0.22);
+  --tile-art: #F3E4D6;
+  --kicker: #6B3222;
+  --kicker-bg: #F3E4D6;
+  --link: #7A3424;
+  --danger: #8C2F22;
+  --danger-bg: #FDE8E4;
+  --ok: #215C45;
+  --ok-bg: #E5F3EC;
+  --shadow-card: 0 16px 36px rgba(44, 36, 31, 0.06);
+  --card-border: 1px solid #9A8478;
+  --nav-border: 0;
+  --nav-current-bg: #8E3F2C;
+  --nav-current-text: #FFF8F4;
+  --theme-bg: #FFFCF8;
+  --theme-border: 0;
+  --theme-off: #2C241F;
+  --theme-on-bg: #8E3F2C;
+  --theme-on-text: #FFF8F4;
+  --font-body: Inter, "Segoe UI", Cantarell, system-ui, sans-serif;
+  --font-display: Inter, "Segoe UI", Cantarell, system-ui, sans-serif;
+  --heading-weight: 600;
+  --heading-tracking: -0.03em;
+  --max: 40rem;
+  --max-wide: 64rem;
+  --arcade-columns: repeat(3, minmax(0, 1fr));
+  color-scheme: light;
+  background:
+    radial-gradient(880px 420px at 110% -10%, #F3E4D6 0%, transparent 60%),
+    radial-gradient(720px 380px at -12% 8%, #E5EFE8 0%, transparent 58%),
+    #F6F0E9;
+}
+
+html[data-direction="c"][data-theme="dark"] {
+  --page: #1A1513;
+  --ink: #F8F1EA;
+  --muted: #D5C6BA;
+  --card: #271F1C;
+  --line: #8A7268;
+  --btn-bg: #F0BBA8;
+  --btn-text: #2C241F;
+  --btn-shadow: none;
+  --field: #211A18;
+  --field-border: #C4A898;
+  --field-edge: 2px solid #C4A898;
+  --placeholder: #D5C6BA;
+  --focus: #F0BBA8;
+  --focus-halo: #1A1513;
+  --hero-bg: transparent;
+  --hero-text: #F8F1EA;
+  --footer-bg: transparent;
+  --footer-text: #D5C6BA;
+  --footer-link: #F0BBA8;
+  --tile-bg: #F0BBA8;
+  --tile-text: #2C241F;
+  --tile-shadow: none;
+  --tile-art: #3A2C27;
+  --kicker: #F0BBA8;
+  --kicker-bg: #3A2A24;
+  --link: #F0BBA8;
+  --danger: #FFD0C8;
+  --danger-bg: #3A1E1C;
+  --ok: #C8F0D8;
+  --ok-bg: #143226;
+  --shadow-card: none;
+  --card-border: 1px solid #8A7268;
+  --nav-current-bg: #F0BBA8;
+  --nav-current-text: #2C241F;
+  --theme-bg: #271F1C;
+  --theme-off: #F8F1EA;
+  --theme-on-bg: #F0BBA8;
+  --theme-on-text: #2C241F;
+  color-scheme: dark;
+  background: #1A1513;
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-direction="c"][data-theme="auto"] {
+    --page: #1A1513;
+    --ink: #F8F1EA;
+    --muted: #D5C6BA;
+    --card: #271F1C;
+    --line: #8A7268;
+    --btn-bg: #F0BBA8;
+    --btn-text: #2C241F;
+    --btn-shadow: none;
+    --field: #211A18;
+    --field-border: #C4A898;
+    --field-edge: 2px solid #C4A898;
+    --placeholder: #D5C6BA;
+    --focus: #F0BBA8;
+    --focus-halo: #1A1513;
+    --hero-bg: transparent;
+    --hero-text: #F8F1EA;
+    --footer-bg: transparent;
+    --footer-text: #D5C6BA;
+    --footer-link: #F0BBA8;
+    --tile-bg: #F0BBA8;
+    --tile-text: #2C241F;
+    --tile-shadow: none;
+    --tile-art: #3A2C27;
+    --kicker: #F0BBA8;
+    --kicker-bg: #3A2A24;
+    --link: #F0BBA8;
+    --danger: #FFD0C8;
+    --danger-bg: #3A1E1C;
+    --ok: #C8F0D8;
+    --ok-bg: #143226;
+    --shadow-card: none;
+    --card-border: 1px solid #8A7268;
+    --nav-current-bg: #F0BBA8;
+    --nav-current-text: #2C241F;
+    --theme-bg: #271F1C;
+    --theme-off: #F8F1EA;
+    --theme-on-bg: #F0BBA8;
+    --theme-on-text: #2C241F;
+    color-scheme: dark;
+    background: #1A1513;
+  }
+}
+
+html[data-direction="c"] body {
+  background: transparent;
+  line-height: 1.65;
+}
+
+html[data-direction="c"] .hero {
+  padding: 0.85rem 0.85rem 0;
+}
+
+html[data-direction="c"] .top {
+  max-width: 860px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.3rem 0.4rem 0.3rem 1.15rem;
+  box-shadow: 0 10px 28px rgba(44, 36, 31, 0.06);
+}
+
+html[data-direction="c"][data-theme="dark"] .top,
+html[data-direction="c"][data-theme="auto"] .top {
+  box-shadow: none;
+}
+
+@media (prefers-color-scheme: light) {
+  html[data-direction="c"][data-theme="auto"] .top {
+    box-shadow: 0 10px 28px rgba(44, 36, 31, 0.06);
+  }
+}
+
+html[data-direction="c"] .hero-inner { text-align: center; padding-top: 2rem; }
+
+html[data-direction="c"] .logo-seal {
+  margin: 0 auto 1rem;
+  box-shadow: 0 16px 40px rgba(142, 63, 44, 0.16);
+}
+
+html[data-direction="c"][data-theme="dark"] .logo-seal { box-shadow: none; border: 1px solid var(--line); }
+
+html[data-direction="c"] .tagline {
+  font-size: clamp(2.3rem, 5vw, 3.3rem);
+}
+
+html[data-direction="c"] .kicker {
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
+}
+
+html[data-direction="c"] .about-card { margin-top: 1.35rem; }
+
+html[data-direction="c"] .arcade-grid { gap: 1.15rem; }
+
+html[data-direction="c"] .game-tile {
+  background: var(--card);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-card);
+}
+
+html[data-direction="c"] .arcade-home .arcade-tile {
+  background: var(--tile-bg);
+  color: var(--tile-text);
+  border: 0;
+  box-shadow: var(--tile-shadow);
+}
+
+html[data-direction="c"] .site-footer { padding-top: 0.5rem; }

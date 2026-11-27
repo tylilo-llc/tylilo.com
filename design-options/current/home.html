@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Tylilo</title>
+  <meta name="description" content="Tylilo, LLC makes UDLR games. Play free browser games in the Tylilo Arcade, or send us a message.">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="canonical" href="https://tylilo.com/">
+  <meta name="theme-color" content="#0A3161">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="preload" as="font" href="/assets/fonts/nunito-800.woff2" type="font/woff2" crossorigin>
+  <link rel="preload" as="font" href="/assets/fonts/nunito-500.woff2" type="font/woff2" crossorigin>
+  <script src="/design-options/js/current.js"></script>
+  <link rel="stylesheet" href="/assets/css/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="hero">
+    <div class="hero-shapes" aria-hidden="true"><span class="blob a"></span><span class="blob b"></span><span class="blob c"></span></div>
+    <div class="top">
+      <a class="wordmark" href="home.html" aria-label="Tylilo, home">Tylilo</a>
+      <div class="theme" role="group" aria-label="Theme">
+        <button type="button" data-theme-set="light" aria-pressed="false" aria-label="Light theme" title="Light theme"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2"/><path d="M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"/></g></svg></button>
+        <button type="button" data-theme-set="dark" aria-pressed="false" aria-label="Dark theme" title="Dark theme"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M14.6 3.1a8.2 8.2 0 1 0 6.3 12.8A7.1 7.1 0 0 1 14.6 3.1z"/></svg></button>
+        <button type="button" data-theme-set="auto" aria-pressed="true" aria-label="Auto theme (match device)" title="Auto theme (match device)"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="7.25" fill="none" stroke="currentColor" stroke-width="2"/><path fill="currentColor" d="M12 5.35a6.65 6.65 0 0 0 0 13.3V5.35z"/></svg></button>
+      </div>
+    </div>
+    <div class="hero-inner">
+      <div class="logo-seal"><img src="/assets/img/logo-round.webp" alt="Tylilo logo" width="168" height="168"></div>
+      <h1 class="tagline">Welcome!</h1>
+    </div>
+  </header>
+  <main id="main" tabindex="-1">
+    <div class="wrap">
+      <section class="arcade-home" aria-labelledby="arcade-home-heading">
+        <h2 id="arcade-home-heading" class="visually-hidden">Arcade</h2>
+        <a class="arcade-tile" href="arcade.html"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="64" height="64"><path fill="currentColor" d="M8 7.4h8c2.55 0 4.35 1.85 4.15 4.35l-.35 2.7c-.28 1.7-1.75 2.95-3.45 2.95-1.05 0-2.05-.5-2.65-1.35L12.9 15h-1.8l-.8 1.05c-.6.85-1.6 1.35-2.65 1.35-1.7 0-3.17-1.25-3.45-2.95l-.35-2.7C3.65 9.25 5.45 7.4 8 7.4z"/><path fill="var(--btn2-bg)" d="M7.15 10.55h1.2v1.15h1.15v1.2H8.35v1.15h-1.2V12.9H6v-1.2h1.15z"/><circle cx="15.15" cy="11.35" r=".72" fill="var(--btn2-bg)"/><circle cx="16.85" cy="12.9" r=".72" fill="var(--btn2-bg)"/><circle cx="15.15" cy="14.45" r=".72" fill="var(--btn2-bg)"/><circle cx="13.45" cy="12.9" r=".72" fill="var(--btn2-bg)"/></svg>Arcade</a>
+      </section>
+      <section class="contact-block" id="contact" aria-labelledby="contact-heading">
+        <div class="card">
+          <p class="kicker">Contact</p>
+          <h2 id="contact-heading">Drop us a line.</h2>
+          <p class="muted">Send a message with the form. We read it and reply by email.</p>
+          <form action="#contact" method="post" data-preview accept-charset="UTF-8" autocomplete="on">
+            <div class="hp" aria-hidden="true">
+              <label for="ty-extra">Leave this field empty</label>
+              <input id="ty-extra" type="text" name="ty_extra" tabindex="-1" autocomplete="off" aria-hidden="true" value="">
+            </div>
+            <div class="row">
+              <div>
+                <label for="name">Name <span class="visually-hidden">(required)</span></label>
+                <input id="name" name="name" type="text" autocomplete="name" placeholder="Your name" required maxlength="100">
+              </div>
+              <div>
+                <label for="email">Email <span class="visually-hidden">(required)</span></label>
+                <input id="email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="Your email" required maxlength="254">
+              </div>
+            </div>
+            <div>
+              <label for="message">Message <span class="visually-hidden">(required)</span></label>
+              <textarea id="message" name="message" placeholder="A short message" required maxlength="5000"></textarea>
+            </div>
+            <button class="btn send" type="submit">Send message</button>
+          </form>
+        </div>
+      </section>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <nav aria-label="Footer">
+      <a href="arcade.html">Arcade</a>
+      <a href="accessibility.html">Accessibility</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="admin.html" rel="nofollow">Sign in</a>
+    </nav>
+    <p>© 2026 Tylilo, LLC</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,213 @@
+/* Direction B — Cabinet.
+   Arcade-studio marquee: mono headlines, hazard stripe, hard offset shadows, red and yellow.
+   Light body #16140F on #F4F0E4 is 16.15:1. White on #C41230 is 6.04:1.
+   Yellow #FFD400 on #14120E is 13.07:1. Dark body #F6F1E4 on #100E0C is 17.08:1.
+   Black #16140F on #FFD400 is 12.86:1. */
+
+html[data-direction="b"] {
+  --page: #F4F0E4;
+  --ink: #16140F;
+  --muted: #3F3A32;
+  --card: #FFFDF6;
+  --line: #16140F;
+  --btn-bg: #C41230;
+  --btn-text: #FFFFFF;
+  --btn-border: 3px solid #16140F;
+  --btn-shadow: 4px 4px 0 #16140F;
+  --radius-btn: 0;
+  --radius-card: 0;
+  --radius-tile: 1.15rem;
+  --radius-field: 0;
+  --radius-theme: 0;
+  --field: #FFFDF6;
+  --field-border: #16140F;
+  --field-edge: 3px solid #16140F;
+  --placeholder: #3F3A32;
+  --focus: #14120E;
+  --focus-halo: #FFD400;
+  --hero-bg: #14120E;
+  --hero-text: #FFF6D8;
+  --footer-bg: #14120E;
+  --footer-text: #FFF6D8;
+  --footer-link: #FFF6D8;
+  --footer-align: center;
+  --footer-justify: center;
+  --tile-bg: #FFD400;
+  --tile-text: #16140F;
+  --tile-border: 3px solid #16140F;
+  --tile-shadow: 5px 5px 0 #16140F;
+  --tile-art: #14120E;
+  --kicker: #16140F;
+  --kicker-bg: #FFD400;
+  --link: #9E0E24;
+  --danger: #9E0E24;
+  --danger-bg: #FDE8E4;
+  --ok: #0E3B24;
+  --ok-bg: #E7F6EC;
+  --shadow-card: 6px 6px 0 #16140F;
+  --card-border: 3px solid #16140F;
+  --nav-border: 3px solid #16140F;
+  --nav-shadow: 3px 3px 0 #16140F;
+  --nav-current-bg: #FFD400;
+  --nav-current-text: #16140F;
+  --theme-bg: transparent;
+  --theme-border: 2px solid #FFD400;
+  --theme-off: #FFF6D8;
+  --theme-on-bg: #FFD400;
+  --theme-on-text: #16140F;
+  --font-body: "Segoe UI", "Liberation Sans", "Noto Sans", sans-serif;
+  --font-display: "Cascadia Mono", "JetBrains Mono", "Liberation Mono", ui-monospace, monospace;
+  --heading-weight: 700;
+  --heading-tracking: 0.04em;
+  --max: 44rem;
+  --max-wide: 72rem;
+  --arcade-columns: repeat(4, minmax(0, 1fr));
+  color-scheme: light;
+}
+
+html[data-direction="b"][data-theme="dark"] {
+  --page: #100E0C;
+  --ink: #F6F1E4;
+  --muted: #D4CBBA;
+  --card: #1C1915;
+  --line: #FFD400;
+  --btn-bg: #FFD400;
+  --btn-text: #16140F;
+  --btn-border: 3px solid #FFD400;
+  --btn-shadow: 4px 4px 0 #FFD400;
+  --field: #141210;
+  --field-border: #C8BBA0;
+  --field-edge: 3px solid #C8BBA0;
+  --placeholder: #D4CBBA;
+  --focus: #FFD400;
+  --focus-halo: #100E0C;
+  --hero-bg: #070605;
+  --hero-text: #FFF6D8;
+  --footer-bg: #070605;
+  --footer-text: #FFF6D8;
+  --footer-link: #FFF6D8;
+  --tile-bg: #FFD400;
+  --tile-text: #16140F;
+  --tile-border: 3px solid #FFD400;
+  --tile-shadow: 5px 5px 0 #5C4A00;
+  --tile-art: #070605;
+  --kicker: #16140F;
+  --kicker-bg: #FFD400;
+  --link: #FFD400;
+  --danger: #FFD0C8;
+  --danger-bg: #3A1E1C;
+  --ok: #C8F0D8;
+  --ok-bg: #143226;
+  --shadow-card: 6px 6px 0 #FFD400;
+  --card-border: 3px solid #FFD400;
+  --nav-border: 3px solid #FFD400;
+  --nav-shadow: 3px 3px 0 #5C4A00;
+  --nav-current-bg: #FFD400;
+  --nav-current-text: #16140F;
+  --theme-border: 2px solid #FFD400;
+  --theme-off: #FFF6D8;
+  --theme-on-bg: #FFD400;
+  --theme-on-text: #16140F;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-direction="b"][data-theme="auto"] {
+    --page: #100E0C;
+    --ink: #F6F1E4;
+    --muted: #D4CBBA;
+    --card: #1C1915;
+    --line: #FFD400;
+    --btn-bg: #FFD400;
+    --btn-text: #16140F;
+    --btn-border: 3px solid #FFD400;
+    --btn-shadow: 4px 4px 0 #FFD400;
+    --field: #141210;
+    --field-border: #C8BBA0;
+    --field-edge: 3px solid #C8BBA0;
+    --placeholder: #D4CBBA;
+    --focus: #FFD400;
+    --focus-halo: #100E0C;
+    --hero-bg: #070605;
+    --hero-text: #FFF6D8;
+    --footer-bg: #070605;
+    --footer-text: #FFF6D8;
+    --footer-link: #FFF6D8;
+    --tile-bg: #FFD400;
+    --tile-text: #16140F;
+    --tile-border: 3px solid #FFD400;
+    --tile-shadow: 5px 5px 0 #5C4A00;
+    --tile-art: #070605;
+    --kicker: #16140F;
+    --kicker-bg: #FFD400;
+    --link: #FFD400;
+    --danger: #FFD0C8;
+    --danger-bg: #3A1E1C;
+    --ok: #C8F0D8;
+    --ok-bg: #143226;
+    --shadow-card: 6px 6px 0 #FFD400;
+    --card-border: 3px solid #FFD400;
+    --nav-border: 3px solid #FFD400;
+    --nav-shadow: 3px 3px 0 #5C4A00;
+    --nav-current-bg: #FFD400;
+    --nav-current-text: #16140F;
+    --theme-border: 2px solid #FFD400;
+    --theme-off: #FFF6D8;
+    --theme-on-bg: #FFD400;
+    --theme-on-text: #16140F;
+    color-scheme: dark;
+  }
+}
+
+html[data-direction="b"] .hero {
+  background:
+    repeating-linear-gradient(90deg, #16140F 0 14px, #FFD400 14px 28px) left bottom / 100% 12px no-repeat,
+    var(--hero-bg);
+  padding-bottom: 2.6rem;
+}
+
+html[data-direction="b"] .wordmark {
+  color: #FFD400;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  font-size: 1.05rem;
+}
+
+html[data-direction="b"] .hero-inner { text-align: center; }
+
+html[data-direction="b"] .logo-seal {
+  margin: 0 auto 1rem;
+  border: 4px solid #FFD400;
+  box-shadow: 6px 6px 0 #FFD400;
+}
+
+html[data-direction="b"] .tagline {
+  font-size: clamp(2.2rem, 6vw, 3.8rem);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+html[data-direction="b"] .kicker {
+  padding: 0.25rem 0.5rem;
+  border: 2px solid #16140F;
+}
+
+html[data-direction="b"] h1,
+html[data-direction="b"] h2 { text-transform: uppercase; }
+
+html[data-direction="b"] .arcade-grid { gap: 1.15rem 1rem; }
+
+html[data-direction="b"] .game-tile-name {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.82rem;
+}
+
+html[data-direction="b"] .site-footer { margin-top: 0.5rem; }
+
+html[data-direction="b"] .prose a,
+html[data-direction="b"] .card a { color: var(--link); }
+
+@media (max-width: 420px) {
+  html[data-direction="b"] .wordmark { letter-spacing: 0.12em; }
+}

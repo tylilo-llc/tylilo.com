@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Design options — Tylilo</title>
+  <meta name="description" content="Local visual design previews for tylilo.com. These pages are not the live site.">
+  <meta name="robots" content="noindex, nofollow">
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Liberation Sans", system-ui, sans-serif;
+      font-size: 1.0625rem;
+      line-height: 1.55;
+      background: #F7F5F2;
+      color: #1C1915;
+    }
+    @media (prefers-color-scheme: dark) {
+      body { background: #161513; color: #F4F0E8; }
+      .card, .swatch-card { background: #241F1C; border-color: #8A8175; }
+      a { color: #F4F0E8; }
+    }
+    .skip {
+      position: absolute;
+      left: 1rem;
+      top: 0.75rem;
+      transform: translateY(-200%);
+      background: #0A3161;
+      color: #F4F0E6;
+      padding: 0.6rem 1rem;
+      text-decoration: none;
+      font-weight: 700;
+    }
+    .skip:focus { transform: none; outline: 3px solid #F4F0E6; outline-offset: 3px; }
+    main { max-width: 68rem; margin: 0 auto; padding: 2.5rem 1.25rem 3rem; }
+    h1 { font-size: clamp(2rem, 4vw, 2.6rem); line-height: 1.15; margin: 0 0 0.6rem; }
+    h2 { margin: 0 0 0.35rem; font-size: 1.45rem; }
+    p { margin: 0 0 0.8rem; }
+    .lead { max-width: 40rem; }
+    .grid { display: grid; gap: 1rem; margin-top: 1.5rem; }
+    @media (min-width: 800px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    .card, .swatch-card {
+      background: #FFFDF8;
+      border: 1px solid #6E675C;
+      padding: 1.1rem 1.15rem 1.2rem;
+    }
+    .card h2 { font-size: 1.25rem; }
+    .feel { color: #3F3A32; }
+    @media (prefers-color-scheme: dark) { .feel, .meta { color: #D5C6BA; } }
+    ul { margin: 0.6rem 0 0; padding-left: 1.15rem; }
+    li + li { margin-top: 0.3rem; }
+    a { color: #0A3161; font-weight: 700; }
+    a:focus-visible { outline: 3px solid #0A3161; outline-offset: 3px; }
+    .meta { font-size: 0.95rem; }
+    .swatches { display: flex; flex-wrap: wrap; gap: 0.45rem; margin: 0.7rem 0; }
+    .swatch { width: 2.75rem; height: 2.75rem; border: 1px solid #1C1915; }
+    .current { margin-top: 1.5rem; }
+    code { font-family: ui-monospace, "Cascadia Mono", monospace; font-size: 0.92em; }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <main id="main" tabindex="-1">
+    <h1>Design options</h1>
+    <p class="lead">Three local previews for tylilo.com. The live site is unchanged: these pages are not linked from it, and opening one does not change what tylilo.com serves.</p>
+    <p class="lead">From the site root, run <code>python3 -m http.server 8765</code> and open <code>/design-options/</code>. Add <code>?theme=dark</code> or <code>?theme=light</code> to any preview, or use the theme switch on the page. Arcade cover art is the current artwork, unchanged.</p>
+
+    <div class="grid">
+      <article class="card">
+        <h2>A · Quill</h2>
+        <p class="feel">A quiet editorial letterhead. Serif type, paper, hairline rules, and a narrow column.</p>
+        <p class="meta">Palatino / Liberation Serif. Light paper <span lang="zxx">#F3F0E8</span>, ink <span lang="zxx">#1C1915</span>, navy <span lang="zxx">#0A3161</span>. Dark <span lang="zxx">#141311</span> / <span lang="zxx">#F4F0E8</span>.</p>
+        <div class="swatches" aria-hidden="true">
+          <span class="swatch" style="background:#F3F0E8"></span>
+          <span class="swatch" style="background:#1C1915"></span>
+          <span class="swatch" style="background:#0A3161"></span>
+          <span class="swatch" style="background:#141311"></span>
+        </div>
+        <ul>
+          <li><a href="home.html?d=a&amp;theme=light">Homepage</a></li>
+          <li><a href="privacy.html?d=a&amp;theme=light">Privacy</a></li>
+          <li><a href="arcade.html?d=a&amp;theme=light">Arcade</a></li>
+          <li><a href="admin.html?d=a&amp;theme=light">Sign in</a></li>
+          <li><a href="dashboard.html?d=a&amp;theme=light">Dashboard sample</a></li>
+        </ul>
+      </article>
+      <article class="card">
+        <h2>B · Cabinet</h2>
+        <p class="feel">A bold arcade-studio marquee. Mono headlines, a hazard stripe, hard shadows, red and yellow.</p>
+        <p class="meta">Cascadia Mono headlines, Liberation Sans body. Marquee <span lang="zxx">#14120E</span>, yellow <span lang="zxx">#FFD400</span>, red <span lang="zxx">#C41230</span>, paper <span lang="zxx">#F4F0E4</span>.</p>
+        <div class="swatches" aria-hidden="true">
+          <span class="swatch" style="background:#14120E"></span>
+          <span class="swatch" style="background:#FFD400"></span>
+          <span class="swatch" style="background:#C41230"></span>
+          <span class="swatch" style="background:#F4F0E4"></span>
+        </div>
+        <ul>
+          <li><a href="home.html?d=b&amp;theme=light">Homepage</a></li>
+          <li><a href="privacy.html?d=b&amp;theme=light">Privacy</a></li>
+          <li><a href="arcade.html?d=b&amp;theme=light">Arcade</a></li>
+          <li><a href="admin.html?d=b&amp;theme=light">Sign in</a></li>
+          <li><a href="dashboard.html?d=b&amp;theme=light">Dashboard sample</a></li>
+        </ul>
+      </article>
+      <article class="card">
+        <h2>C · Hearth</h2>
+        <p class="feel">A warm, soft studio. Rounded forms, clay and sage, and a floating header.</p>
+        <p class="meta">Inter. Paper <span lang="zxx">#F6F0E9</span>, ink <span lang="zxx">#2C241F</span>, clay <span lang="zxx">#8E3F2C</span>, blush button in dark <span lang="zxx">#F0BBA8</span>.</p>
+        <div class="swatches" aria-hidden="true">
+          <span class="swatch" style="background:#F6F0E9"></span>
+          <span class="swatch" style="background:#2C241F"></span>
+          <span class="swatch" style="background:#8E3F2C"></span>
+          <span class="swatch" style="background:#E5EFE8"></span>
+        </div>
+        <ul>
+          <li><a href="home.html?d=c&amp;theme=light">Homepage</a></li>
+          <li><a href="privacy.html?d=c&amp;theme=light">Privacy</a></li>
+          <li><a href="arcade.html?d=c&amp;theme=light">Arcade</a></li>
+          <li><a href="admin.html?d=c&amp;theme=light">Sign in</a></li>
+          <li><a href="dashboard.html?d=c&amp;theme=light">Dashboard sample</a></li>
+        </ul>
+      </article>
+    </div>
+
+    <section class="card current" aria-labelledby="current-heading">
+      <h2 id="current-heading">Current design</h2>
+      <p>The live look, rendered with the production stylesheet (<code>assets/css/styles.css</code>) and the same page structure. Nunito, cream, and navy.</p>
+      <ul>
+        <li><a href="current/home.html?theme=light">Homepage</a></li>
+        <li><a href="current/privacy.html?theme=light">Privacy</a></li>
+        <li><a href="current/arcade.html?theme=light">Arcade</a></li>
+        <li><a href="current/admin.html?theme=light">Sign in</a></li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,227 @@
+/* Direction A — Quill.
+   Editorial letterhead: serif type, paper, hairline rules, wide masthead, narrow column.
+   Light body #1C1915 on #F3F0E8 is 15.38:1. Navy button #F4F0E6 on #0A3161 is 11.36:1.
+   Dark body #F4F0E8 on #141311 is 16.34:1. Muted #C9C1B4 on #141311 is 10.41:1. */
+
+html[data-direction="a"] {
+  --page: #F3F0E8;
+  --ink: #1C1915;
+  --muted: #4E483F;
+  --card: #FFFDF8;
+  --line: #6E675C;
+  --btn-bg: #0A3161;
+  --btn-text: #F4F0E6;
+  --btn-border: 1px solid #0A3161;
+  --btn-shadow: none;
+  --radius-btn: 2px;
+  --radius-card: 2px;
+  --radius-tile: 1.15rem;
+  --radius-field: 2px;
+  --radius-theme: 2px;
+  --field: #FFFDF8;
+  --field-border: #6E675C;
+  --field-edge: 2px solid #6E675C;
+  --placeholder: #4E483F;
+  --focus: #0A3161;
+  --focus-halo: #F3F0E8;
+  --hero-bg: #F3F0E8;
+  --hero-text: #1C1915;
+  --footer-bg: #F3F0E8;
+  --footer-text: #4E483F;
+  --footer-link: #0A3161;
+  --footer-align: left;
+  --footer-justify: flex-start;
+  --tile-bg: #0A3161;
+  --tile-text: #F4F0E6;
+  --tile-border: 1px solid #0A3161;
+  --tile-shadow: none;
+  --tile-art: #F7F4EE;
+  --kicker: #0A3161;
+  --kicker-bg: transparent;
+  --link: #0A3161;
+  --danger: #8C2F22;
+  --danger-bg: #FDE8E4;
+  --ok: #0E3B24;
+  --ok-bg: #E7F6EC;
+  --chip: #E7E1D4;
+  --shadow-card: none;
+  --card-border: 1px solid #6E675C;
+  --nav-border: 1px solid #6E675C;
+  --nav-current-bg: #0A3161;
+  --nav-current-text: #F4F0E6;
+  --theme-bg: transparent;
+  --theme-border: 1px solid #6E675C;
+  --theme-off: #1C1915;
+  --theme-on-bg: #0A3161;
+  --theme-on-text: #F4F0E6;
+  --font-body: Palatino, "Palatino Linotype", "Iowan Old Style", Georgia, "Liberation Serif", "DejaVu Serif", "Times New Roman", serif;
+  --font-display: Palatino, "Palatino Linotype", "Iowan Old Style", Georgia, "Liberation Serif", "DejaVu Serif", "Times New Roman", serif;
+  --heading-weight: 400;
+  --heading-tracking: -0.03em;
+  --max: 38rem;
+  --max-wide: 54rem;
+  --arcade-columns: repeat(2, minmax(0, 1fr));
+  color-scheme: light;
+}
+
+html[data-direction="a"][data-theme="dark"] {
+  --page: #141311;
+  --ink: #F4F0E8;
+  --muted: #C9C1B4;
+  --card: #211E1B;
+  --line: #8A8175;
+  --btn-bg: #F4F0E8;
+  --btn-text: #141311;
+  --btn-border: 1px solid #F4F0E8;
+  --field: #1A1816;
+  --field-border: #B3A898;
+  --field-edge: 2px solid #B3A898;
+  --placeholder: #C9C1B4;
+  --focus: #F4F0E8;
+  --focus-halo: #141311;
+  --hero-bg: #141311;
+  --hero-text: #F4F0E8;
+  --footer-bg: #141311;
+  --footer-text: #C9C1B4;
+  --footer-link: #F4F0E8;
+  --tile-bg: #F4F0E8;
+  --tile-text: #141311;
+  --tile-border: 1px solid #F4F0E8;
+  --tile-art: #2A2622;
+  --kicker: #F4F0E8;
+  --link: #F4F0E8;
+  --danger: #FFD0C8;
+  --danger-bg: #3A1E1C;
+  --ok: #C8F0D8;
+  --ok-bg: #143226;
+  --shadow-card: none;
+  --card-border: 1px solid #8A8175;
+  --nav-border: 1px solid #8A8175;
+  --nav-current-bg: #F4F0E8;
+  --nav-current-text: #141311;
+  --theme-border: 1px solid #8A8175;
+  --theme-off: #F4F0E8;
+  --theme-on-bg: #F4F0E8;
+  --theme-on-text: #141311;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-direction="a"][data-theme="auto"] {
+    --page: #141311;
+    --ink: #F4F0E8;
+    --muted: #C9C1B4;
+    --card: #211E1B;
+    --line: #8A8175;
+    --btn-bg: #F4F0E8;
+    --btn-text: #141311;
+    --btn-border: 1px solid #F4F0E8;
+    --field: #1A1816;
+    --field-border: #B3A898;
+    --field-edge: 2px solid #B3A898;
+    --placeholder: #C9C1B4;
+    --focus: #F4F0E8;
+    --focus-halo: #141311;
+    --hero-bg: #141311;
+    --hero-text: #F4F0E8;
+    --footer-bg: #141311;
+    --footer-text: #C9C1B4;
+    --footer-link: #F4F0E8;
+    --tile-bg: #F4F0E8;
+    --tile-text: #141311;
+    --tile-border: 1px solid #F4F0E8;
+    --tile-art: #2A2622;
+    --kicker: #F4F0E8;
+    --link: #F4F0E8;
+    --danger: #FFD0C8;
+    --danger-bg: #3A1E1C;
+    --ok: #C8F0D8;
+    --ok-bg: #143226;
+    --card-border: 1px solid #8A8175;
+    --nav-border: 1px solid #8A8175;
+    --nav-current-bg: #F4F0E8;
+    --nav-current-text: #141311;
+    --theme-border: 1px solid #8A8175;
+    --theme-off: #F4F0E8;
+    --theme-on-bg: #F4F0E8;
+    --theme-on-text: #141311;
+    color-scheme: dark;
+  }
+}
+
+html[data-direction="a"] body { font-size: 1.125rem; line-height: 1.65; }
+
+html[data-direction="a"] .hero {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 2.25rem;
+}
+
+html[data-direction="a"] .wordmark {
+  font-weight: 400;
+  font-size: 0.95rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+html[data-direction="a"] .hero-inner:has(.logo-seal) {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1.25rem 1.75rem;
+  align-items: end;
+  text-align: left;
+}
+
+html[data-direction="a"] .logo-seal {
+  width: 104px;
+  height: 104px;
+  margin: 0;
+  border: 1px solid var(--line);
+  box-shadow: none;
+}
+
+html[data-direction="a"] .tagline {
+  font-size: clamp(2.7rem, 6vw, 4.6rem);
+  font-weight: 400;
+}
+
+html[data-direction="a"] .hero-inner:has(.logo-seal) .tagline {
+  border-left: 1px solid var(--line);
+  padding-left: 1.35rem;
+}
+
+html[data-direction="a"] .kicker {
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  padding: 0;
+}
+
+html[data-direction="a"] .about-card { margin-top: 2.25rem; }
+
+html[data-direction="a"] .arcade-grid { gap: 1.75rem 1.5rem; padding-top: 1.75rem; }
+
+html[data-direction="a"] .game-tile-name { font-weight: 400; font-size: 1.15rem; }
+
+html[data-direction="a"] .site-footer {
+  border-top: 1px solid var(--line);
+  margin-top: 1rem;
+}
+
+html[data-direction="a"] label {
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 700px) {
+  html[data-direction="a"] .hero-inner:has(.logo-seal) {
+    grid-template-columns: 1fr;
+  }
+
+  html[data-direction="a"] .hero-inner:has(.logo-seal) .tagline {
+    border-left: 0;
+    padding-left: 0;
+    font-size: 2.6rem;
+  }
+}
