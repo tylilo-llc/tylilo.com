@@ -1,9 +1,9 @@
 /* Local design-preview switch. Not used by the live site.
-   Reads ?d=a|b|c and ?theme=light|dark|auto before CSS applies. */
+   Reads ?d=a|b|c|d|e|f and ?theme=light|dark|auto before CSS applies. */
 (function () {
   var params = new URLSearchParams(location.search);
   var direction = params.get("d");
-  if (direction !== "a" && direction !== "b" && direction !== "c") direction = "a";
+  if (direction !== "a" && direction !== "b" && direction !== "c" && direction !== "d" && direction !== "e" && direction !== "f") direction = "a";
   var theme = params.get("theme");
   if (theme !== "light" && theme !== "dark" && theme !== "auto") {
     try {
@@ -21,7 +21,10 @@
   var colors = {
     a: { light: "#F3F0E8", dark: "#141311" },
     b: { light: "#14120E", dark: "#070605" },
-    c: { light: "#F6F0E9", dark: "#1A1513" }
+    c: { light: "#F6F0E9", dark: "#1A1513" },
+    d: { light: "#FFFFFF", dark: "#0B1220" },
+    e: { light: "#071525", dark: "#050B14" },
+    f: { light: "#FAF8F4", dark: "#141210" }
   };
 
   function isDark(value) {

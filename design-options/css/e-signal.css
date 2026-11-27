@@ -1,0 +1,331 @@
+/* Direction E — Signal.
+   Dark hero and footer, light body: a premium software studio.
+   Hero text #F7F9FC on #071525 is 17.42:1. Hero muted #B7C6D8 on #071525 is 10.57:1.
+   Hero button #0A3161 on #F7F9FC is 12.25:1. Body #122033 on #F4F6F8 is 15.14:1.
+   Body muted #31465F on #F4F6F8 is 8.93:1. Body button #FFFFFF on #0A3161 is 12.92:1.
+   Dark body #E8EEF6 on #0E1726 is 15.39:1. Dark muted #B7C3D4 on #0E1726 is 10.07:1.
+   Dark button #0A3161 on #E7EEF8 is 11.07:1. */
+
+html[data-direction="e"] {
+  --page: #F4F6F8;
+  --ink: #122033;
+  --muted: #31465F;
+  --card: #FFFFFF;
+  --line: #5C6B80;
+  --btn-bg: #0A3161;
+  --btn-text: #FFFFFF;
+  --btn-border: 1px solid #0A3161;
+  --btn-shadow: none;
+  --btn-quiet-bg: transparent;
+  --btn-quiet-text: #0A3161;
+  --btn-quiet-border: 1px solid #0A3161;
+  --radius-btn: 4px;
+  --radius-card: 4px;
+  --radius-tile: 0;
+  --radius-field: 4px;
+  --radius-theme: 4px;
+  --field: #FFFFFF;
+  --field-border: #5C6B80;
+  --field-edge: 2px solid #5C6B80;
+  --placeholder: #31465F;
+  --focus: #0A3161;
+  --focus-halo: #F4F6F8;
+  --hero-bg: #071525;
+  --hero-text: #F7F9FC;
+  --hero-muted: #B7C6D8;
+  --bar: #071525;
+  --bar-text: #F7F9FC;
+  --bar-line: transparent;
+  --footer-bg: #071525;
+  --footer-text: #F7F9FC;
+  --footer-muted: #B7C6D8;
+  --footer-link: #F7F9FC;
+  --footer-line: #8FB0D4;
+  --footer-align: left;
+  --footer-justify: flex-start;
+  --tile-bg: transparent;
+  --tile-text: #122033;
+  --tile-border: 0;
+  --tile-shadow: none;
+  --tile-art: #E7EEF6;
+  --kicker: #0A3161;
+  --kicker-bg: transparent;
+  --eyebrow: #0A3161;
+  --link: #0A3161;
+  --nav-link: #F7F9FC;
+  --nav-current: #FFFFFF;
+  --shadow-card: none;
+  --card-border: 1px solid #5C6B80;
+  --nav-border: 1px solid #5C6B80;
+  --nav-shadow: none;
+  --nav-current-bg: #0A3161;
+  --nav-current-text: #FFFFFF;
+  --theme-bg: transparent;
+  --theme-border: 1px solid #8FB0D4;
+  --theme-off: #F7F9FC;
+  --theme-on-bg: #F7F9FC;
+  --theme-on-text: #0A3161;
+  --font-body: Inter, "Segoe UI", "Liberation Sans", "Noto Sans", system-ui, sans-serif;
+  --font-display: Inter, "Segoe UI", "Liberation Sans", "Noto Sans", system-ui, sans-serif;
+  --heading-weight: 600;
+  --heading-tracking: -0.03em;
+  --max: 1120px;
+  --max-wide: 1120px;
+  --arcade-columns: repeat(4, minmax(0, 1fr));
+  color-scheme: light;
+}
+
+html[data-direction="e"] .wordmark {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+html[data-direction="e"] .brand-mark {
+  box-shadow: 0 0 0 1px #F7F9FC;
+}
+
+html[data-direction="e"] .studio-hero {
+  padding-top: 72px;
+  padding-bottom: 88px;
+}
+
+html[data-direction="e"] .studio-hero .eyebrow {
+  color: #B7C6D8;
+}
+
+html[data-direction="e"] .studio-hero h1 {
+  max-width: 13em;
+  font-size: clamp(2.5rem, 5vw, 4rem);
+}
+
+html[data-direction="e"] .studio-hero .btn {
+  background: #F7F9FC;
+  color: #0A3161;
+  border-color: #F7F9FC;
+}
+
+html[data-direction="e"] .studio-hero .btn:hover {
+  background: #FFFFFF;
+  border-color: #FFFFFF;
+  color: #0A3161;
+}
+
+html[data-direction="e"] .studio-hero .btn-quiet {
+  background: transparent;
+  color: #F7F9FC;
+  border: 1px solid #F7F9FC;
+}
+
+html[data-direction="e"] .studio-hero .btn-quiet:hover {
+  background: #0A2548;
+  color: #F7F9FC;
+  border-color: #F7F9FC;
+}
+
+html[data-direction="e"] .studio-hero {
+  --focus: #F7F9FC;
+  --focus-halo: #071525;
+}
+
+html[data-direction="e"] .hero {
+  --focus: #F7F9FC;
+  --focus-halo: #071525;
+}
+
+html[data-direction="e"] .work article,
+html[data-direction="e"] .contact-block .card {
+  background: #FFFFFF;
+  border: 1px solid #5C6B80;
+  border-radius: 4px;
+  padding: 32px;
+}
+
+html[data-direction="e"] .featured {
+  background: #FFFFFF;
+}
+
+html[data-direction="e"] .about {
+  background: #F4F6F8;
+}
+
+html[data-direction="e"] .btn:hover,
+html[data-direction="e"] button.btn:hover {
+  background: #07264D;
+  border-color: #07264D;
+}
+
+html[data-direction="e"] .btn-quiet:hover {
+  background: #E7EEF6;
+  color: #0A3161;
+  border-color: #0A3161;
+}
+
+html[data-direction="e"] .skip-link:focus,
+html[data-direction="e"] .skip-link:focus-visible {
+  outline-color: #F7F9FC;
+  box-shadow: 0 0 0 2px #071525;
+}
+
+html[data-direction="e"][data-theme="dark"] {
+  --page: #0E1726;
+  --ink: #E8EEF6;
+  --muted: #B7C3D4;
+  --card: #162033;
+  --line: #8AA0B8;
+  --btn-bg: #E7EEF8;
+  --btn-text: #0A3161;
+  --btn-border: 1px solid #E7EEF8;
+  --btn-quiet-bg: transparent;
+  --btn-quiet-text: #E8EEF6;
+  --btn-quiet-border: 1px solid #E8EEF6;
+  --field: #0E1726;
+  --field-border: #8AA0B8;
+  --field-edge: 2px solid #8AA0B8;
+  --placeholder: #B7C3D4;
+  --focus: #E8EEF6;
+  --focus-halo: #0E1726;
+  --hero-bg: #050B14;
+  --hero-text: #F7F9FC;
+  --hero-muted: #B7C6D8;
+  --bar: #050B14;
+  --bar-text: #F7F9FC;
+  --bar-line: transparent;
+  --footer-bg: #050B14;
+  --footer-text: #F7F9FC;
+  --footer-muted: #B7C6D8;
+  --footer-link: #F7F9FC;
+  --footer-line: #8FB0D4;
+  --tile-art: #1A2436;
+  --kicker: #B7C6D8;
+  --eyebrow: #B7C6D8;
+  --link: #E8EEF6;
+  --nav-link: #F7F9FC;
+  --nav-current: #FFFFFF;
+  --card-border: 1px solid #8AA0B8;
+  --nav-border: 1px solid #8AA0B8;
+  --nav-current-bg: #E7EEF8;
+  --nav-current-text: #0A3161;
+  --theme-border: 1px solid #8FB0D4;
+  --theme-off: #F7F9FC;
+  --theme-on-bg: #F7F9FC;
+  --theme-on-text: #0A3161;
+  color-scheme: dark;
+}
+
+html[data-direction="e"][data-theme="dark"] .work article,
+html[data-direction="e"][data-theme="dark"] .contact-block .card,
+html[data-direction="e"][data-theme="dark"] .featured,
+html[data-direction="e"][data-theme="dark"] .about {
+  background: #162033;
+  color: #E8EEF6;
+}
+
+html[data-direction="e"][data-theme="dark"] .hero,
+html[data-direction="e"][data-theme="dark"] .studio-hero {
+  --focus: #F7F9FC;
+  --focus-halo: #050B14;
+}
+
+html[data-direction="e"][data-theme="dark"] .btn:hover,
+html[data-direction="e"][data-theme="dark"] button.btn:hover {
+  background: #FFFFFF;
+  border-color: #FFFFFF;
+  color: #0A3161;
+}
+
+html[data-direction="e"][data-theme="dark"] .studio-hero .btn {
+  background: #F7F9FC;
+  color: #0A3161;
+  border-color: #F7F9FC;
+}
+
+html[data-direction="e"][data-theme="dark"] .btn-quiet:hover,
+html[data-direction="e"][data-theme="dark"] .studio-hero .btn-quiet:hover {
+  background: #0A2548;
+  color: #F7F9FC;
+  border-color: #F7F9FC;
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-direction="e"][data-theme="auto"] {
+    --page: #0E1726;
+    --ink: #E8EEF6;
+    --muted: #B7C3D4;
+    --card: #162033;
+    --line: #8AA0B8;
+    --btn-bg: #E7EEF8;
+    --btn-text: #0A3161;
+    --btn-border: 1px solid #E7EEF8;
+    --btn-quiet-bg: transparent;
+    --btn-quiet-text: #E8EEF6;
+    --btn-quiet-border: 1px solid #E8EEF6;
+    --field: #0E1726;
+    --field-border: #8AA0B8;
+    --field-edge: 2px solid #8AA0B8;
+    --placeholder: #B7C3D4;
+    --focus: #E8EEF6;
+    --focus-halo: #0E1726;
+    --hero-bg: #050B14;
+    --hero-text: #F7F9FC;
+    --hero-muted: #B7C6D8;
+    --bar: #050B14;
+    --bar-text: #F7F9FC;
+    --bar-line: transparent;
+    --footer-bg: #050B14;
+    --footer-text: #F7F9FC;
+    --footer-muted: #B7C6D8;
+    --footer-link: #F7F9FC;
+    --footer-line: #8FB0D4;
+    --tile-art: #1A2436;
+    --kicker: #B7C6D8;
+    --eyebrow: #B7C6D8;
+    --link: #E8EEF6;
+    --nav-link: #F7F9FC;
+    --nav-current: #FFFFFF;
+    --card-border: 1px solid #8AA0B8;
+    --nav-border: 1px solid #8AA0B8;
+    --nav-current-bg: #E7EEF8;
+    --nav-current-text: #0A3161;
+    --theme-border: 1px solid #8FB0D4;
+    --theme-off: #F7F9FC;
+    --theme-on-bg: #F7F9FC;
+    --theme-on-text: #0A3161;
+    color-scheme: dark;
+  }
+
+  html[data-direction="e"][data-theme="auto"] .work article,
+  html[data-direction="e"][data-theme="auto"] .contact-block .card,
+  html[data-direction="e"][data-theme="auto"] .featured,
+  html[data-direction="e"][data-theme="auto"] .about {
+    background: #162033;
+    color: #E8EEF6;
+  }
+
+  html[data-direction="e"][data-theme="auto"] .hero,
+  html[data-direction="e"][data-theme="auto"] .studio-hero {
+    --focus: #F7F9FC;
+    --focus-halo: #050B14;
+  }
+
+  html[data-direction="e"][data-theme="auto"] .btn:hover,
+  html[data-direction="e"][data-theme="auto"] button.btn:hover {
+    background: #FFFFFF;
+    border-color: #FFFFFF;
+    color: #0A3161;
+  }
+
+  html[data-direction="e"][data-theme="auto"] .studio-hero .btn {
+    background: #F7F9FC;
+    color: #0A3161;
+    border-color: #F7F9FC;
+  }
+
+  html[data-direction="e"][data-theme="auto"] .btn-quiet:hover,
+  html[data-direction="e"][data-theme="auto"] .studio-hero .btn-quiet:hover {
+    background: #0A2548;
+    color: #F7F9FC;
+    border-color: #F7F9FC;
+  }
+}

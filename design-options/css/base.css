@@ -1,6 +1,7 @@
 /* Shared skeleton for the local design previews.
    Loaded only from /design-options/. The live site does not link this file.
-   Visual decisions live in a-quill.css, b-cabinet.css, and c-hearth.css. */
+   Visual decisions live in one CSS file per direction.
+   Elements used only by D, E, and F stay hidden until pro.css shows them. */
 
 *,
 *::before,
@@ -557,6 +558,14 @@ th {
   html[data-direction] .arcade-grid {
     grid-template-columns: var(--arcade-columns);
   }
+}
+
+.brand-mark,
+.site-nav,
+.studio,
+.footer-pro,
+.site-footer .legal-sign {
+  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -35,7 +35,7 @@
     .skip:focus { transform: none; outline: 3px solid #F4F0E6; outline-offset: 3px; }
     main { max-width: 68rem; margin: 0 auto; padding: 2.5rem 1.25rem 3rem; }
     h1 { font-size: clamp(2rem, 4vw, 2.6rem); line-height: 1.15; margin: 0 0 0.6rem; }
-    h2 { margin: 0 0 0.35rem; font-size: 1.45rem; }
+    h2 { margin: 2rem 0 0.75rem; font-size: 1.45rem; }
     p { margin: 0 0 0.8rem; }
     .lead { max-width: 40rem; }
     .grid { display: grid; gap: 1rem; margin-top: 1.5rem; }
@@ -45,7 +45,7 @@
       border: 1px solid #6E675C;
       padding: 1.1rem 1.15rem 1.2rem;
     }
-    .card h2 { font-size: 1.25rem; }
+    .card h2, .card h3 { margin: 0 0 0.35rem; font-size: 1.25rem; }
     .feel { color: #3F3A32; }
     @media (prefers-color-scheme: dark) { .feel, .meta { color: #D5C6BA; } }
     ul { margin: 0.6rem 0 0; padding-left: 1.15rem; }
@@ -63,12 +63,13 @@
   <a class="skip" href="#main">Skip to content</a>
   <main id="main" tabindex="-1">
     <h1>Design options</h1>
-    <p class="lead">Three local previews for tylilo.com. The live site is unchanged: these pages are not linked from it, and opening one does not change what tylilo.com serves.</p>
-    <p class="lead">From the site root, run <code>python3 -m http.server 8765</code> and open <code>/design-options/</code>. Add <code>?theme=dark</code> or <code>?theme=light</code> to any preview, or use the theme switch on the page. Arcade cover art is the current artwork, unchanged.</p>
+    <p class="lead">Six local previews for tylilo.com. A, B, and C are the first set. D, E, and F are a more professional company site, kept in the same harness. The live site is unchanged: these pages are not linked from it, and opening one does not change what tylilo.com serves.</p>
+    <p class="lead">From the site root, run <code>python3 -m http.server 8765</code> and open <code>/design-options/</code>. Add <code>?d=a</code> through <code>?d=f</code>, and <code>?theme=dark</code> or <code>?theme=light</code>, or use the theme switch on the page. Arcade cover art is the current artwork, unchanged.</p>
+    <h2>First set</h2>
 
     <div class="grid">
       <article class="card">
-        <h2>A · Quill</h2>
+        <h3>A · Quill</h3>
         <p class="feel">A quiet editorial letterhead. Serif type, paper, hairline rules, and a narrow column.</p>
         <p class="meta">Palatino / Liberation Serif. Light paper <span lang="zxx">#F3F0E8</span>, ink <span lang="zxx">#1C1915</span>, navy <span lang="zxx">#0A3161</span>. Dark <span lang="zxx">#141311</span> / <span lang="zxx">#F4F0E8</span>.</p>
         <div class="swatches" aria-hidden="true">
@@ -86,7 +87,7 @@
         </ul>
       </article>
       <article class="card">
-        <h2>B · Cabinet</h2>
+        <h3>B · Cabinet</h3>
         <p class="feel">A bold arcade-studio marquee. Mono headlines, a hazard stripe, hard shadows, red and yellow.</p>
         <p class="meta">Cascadia Mono headlines, Liberation Sans body. Marquee <span lang="zxx">#14120E</span>, yellow <span lang="zxx">#FFD400</span>, red <span lang="zxx">#C41230</span>, paper <span lang="zxx">#F4F0E4</span>.</p>
         <div class="swatches" aria-hidden="true">
@@ -104,7 +105,7 @@
         </ul>
       </article>
       <article class="card">
-        <h2>C · Hearth</h2>
+        <h3>C · Hearth</h3>
         <p class="feel">A warm, soft studio. Rounded forms, clay and sage, and a floating header.</p>
         <p class="meta">Inter. Paper <span lang="zxx">#F6F0E9</span>, ink <span lang="zxx">#2C241F</span>, clay <span lang="zxx">#8E3F2C</span>, blush button in dark <span lang="zxx">#F0BBA8</span>.</p>
         <div class="swatches" aria-hidden="true">
@@ -119,6 +120,65 @@
           <li><a href="arcade.html?d=c&amp;theme=light">Arcade</a></li>
           <li><a href="admin.html?d=c&amp;theme=light">Sign in</a></li>
           <li><a href="dashboard.html?d=c&amp;theme=light">Dashboard sample</a></li>
+        </ul>
+      </article>
+    </div>
+
+    <h2>Professional set</h2>
+    <p class="lead">Same pages, with a top navigation bar, a company homepage, document pages, and a clean admin. Light, dark, and auto still switch from the theme control.</p>
+    <div class="grid">
+      <article class="card">
+        <h3>D · Meridian</h3>
+        <p class="feel">Crisp and corporate. Wide margins, hairline rules, and navy used with restraint.</p>
+        <p class="meta">Inter. White <span lang="zxx">#FFFFFF</span>, ink <span lang="zxx">#122033</span>, navy <span lang="zxx">#0A3161</span>. Dark <span lang="zxx">#0B1220</span> / <span lang="zxx">#F4F7FB</span>.</p>
+        <div class="swatches" aria-hidden="true">
+          <span class="swatch" style="background:#FFFFFF"></span>
+          <span class="swatch" style="background:#122033"></span>
+          <span class="swatch" style="background:#0A3161"></span>
+          <span class="swatch" style="background:#0B1220"></span>
+        </div>
+        <ul>
+          <li><a href="home.html?d=d&amp;theme=light">Homepage</a></li>
+          <li><a href="privacy.html?d=d&amp;theme=light">Privacy</a></li>
+          <li><a href="arcade.html?d=d&amp;theme=light">Arcade</a></li>
+          <li><a href="admin.html?d=d&amp;theme=light">Sign in</a></li>
+          <li><a href="dashboard.html?d=d&amp;theme=light">Dashboard sample</a></li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>E · Signal</h3>
+        <p class="feel">A dark hero and footer around a light body, in the manner of a premium software studio.</p>
+        <p class="meta">Inter. Hero <span lang="zxx">#071525</span>, hero text <span lang="zxx">#F7F9FC</span>, body <span lang="zxx">#F4F6F8</span>, navy <span lang="zxx">#0A3161</span>.</p>
+        <div class="swatches" aria-hidden="true">
+          <span class="swatch" style="background:#071525"></span>
+          <span class="swatch" style="background:#F7F9FC"></span>
+          <span class="swatch" style="background:#F4F6F8"></span>
+          <span class="swatch" style="background:#0A3161"></span>
+        </div>
+        <ul>
+          <li><a href="home.html?d=e&amp;theme=light">Homepage</a></li>
+          <li><a href="privacy.html?d=e&amp;theme=light">Privacy</a></li>
+          <li><a href="arcade.html?d=e&amp;theme=light">Arcade</a></li>
+          <li><a href="admin.html?d=e&amp;theme=light">Sign in</a></li>
+          <li><a href="dashboard.html?d=e&amp;theme=light">Dashboard sample</a></li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>F · Edition</h3>
+        <p class="feel">Modern editorial. A large serif headline, a sans-serif text, and a strict grid.</p>
+        <p class="meta">Georgia / Liberation Serif headlines, Inter text. Paper <span lang="zxx">#FAF8F4</span>, ink <span lang="zxx">#1A1814</span>, navy <span lang="zxx">#0A3161</span>. Dark <span lang="zxx">#141210</span> / <span lang="zxx">#F7F4EE</span>.</p>
+        <div class="swatches" aria-hidden="true">
+          <span class="swatch" style="background:#FAF8F4"></span>
+          <span class="swatch" style="background:#1A1814"></span>
+          <span class="swatch" style="background:#0A3161"></span>
+          <span class="swatch" style="background:#141210"></span>
+        </div>
+        <ul>
+          <li><a href="home.html?d=f&amp;theme=light">Homepage</a></li>
+          <li><a href="privacy.html?d=f&amp;theme=light">Privacy</a></li>
+          <li><a href="arcade.html?d=f&amp;theme=light">Arcade</a></li>
+          <li><a href="admin.html?d=f&amp;theme=light">Sign in</a></li>
+          <li><a href="dashboard.html?d=f&amp;theme=light">Dashboard sample</a></li>
         </ul>
       </article>
     </div>

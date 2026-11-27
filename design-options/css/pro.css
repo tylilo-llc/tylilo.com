@@ -1,0 +1,576 @@
+/* Shared layout for directions D, E, and F.
+   Color, type, and the parts that make each direction distinct live in
+   d-meridian.css, e-signal.css, and f-edition.css.
+   Spacing stays on an 8px grid. */
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) {
+  scroll-padding-top: 80px;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) body {
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) main {
+  padding-bottom: 0;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .hero {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: 0;
+  background: var(--bar);
+  color: var(--bar-text);
+  border-bottom: 1px solid var(--bar-line);
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .hero-shapes,
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .hero-inner:has(.logo-seal),
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .arcade-home,
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .footer-simple {
+  display: none;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  max-width: 1120px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 8px 16px;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .brand-mark {
+  display: block;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  border-radius: 8px;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  min-height: 48px;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  color: var(--bar-text);
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 8px;
+  flex: 1 1 100%;
+  order: 3;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .site-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 8px 8px;
+  color: var(--nav-link);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  line-height: 1.2;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .site-nav a[aria-current="page"] {
+  color: var(--nav-current);
+  border-bottom-color: var(--nav-current);
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .theme {
+  margin-left: auto;
+  flex: 0 0 auto;
+  background: var(--theme-bg);
+  border: var(--theme-border);
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .hero-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 8px 16px 16px;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .hero-inner .tagline {
+  margin: 0;
+  font-size: 1.75rem;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .studio {
+  display: block;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .studio:not(.studio-hero) {
+  padding: 64px 0;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .studio-inner,
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .wrap,
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .wrap.wide,
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .wrap.solo {
+  max-width: 1120px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .wrap.solo {
+  max-width: 760px;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .studio-hero {
+  background: var(--hero-bg);
+  color: var(--hero-text);
+  padding: 64px 0 56px;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .eyebrow {
+  margin: 0 0 16px;
+  color: var(--eyebrow);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .studio-hero h1 {
+  max-width: 16em;
+  margin: 0 0 24px;
+  font-size: clamp(2.25rem, 4.5vw, 3.5rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .lede {
+  max-width: 38rem;
+  margin: 0 0 32px;
+  color: var(--hero-muted);
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .btn,
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) button.btn {
+  min-height: 48px;
+  padding: 8px 24px;
+  box-shadow: none;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .btn-quiet {
+  background: var(--btn-quiet-bg);
+  color: var(--btn-quiet-text);
+  border: var(--btn-quiet-border);
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .studio h2 {
+  margin: 0 0 24px;
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .section-head h2 {
+  margin: 0;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .text-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  color: var(--link);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .work-grid {
+  display: grid;
+  gap: 32px;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .work-index {
+  margin: 0 0 8px;
+  color: var(--eyebrow);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1.4;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .work-grid h3 {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .work-grid p:last-child,
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .about p:last-child {
+  margin-bottom: 0;
+  max-width: 40rem;
+  color: var(--muted);
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .about-lead {
+  max-width: 36rem;
+  margin: 0 0 16px;
+  color: var(--ink);
+  font-size: 1.25rem;
+  line-height: 1.45;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .feature-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .feature-row a {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 48px;
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .feature-row img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  background: var(--tile-art);
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .feature-name {
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+  text-align: center;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .kicker {
+  margin: 0 0 8px;
+  padding: 0;
+  background: transparent;
+  color: var(--eyebrow);
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .card {
+  box-shadow: none;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .contact-block {
+  padding: 16px 0 80px;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .contact-block .card {
+  padding: 32px;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .wrap:has(.contact-block) {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) label {
+  margin-bottom: 8px;
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: 0;
+  font-size: 0.875rem;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) input,
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) textarea {
+  min-height: 48px;
+  border-radius: var(--radius-field);
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .prose.card,
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .arcade-lead.card {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 48px 0 16px;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .prose {
+  line-height: 1.7;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .prose h1,
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .arcade-lead h1 {
+  font-size: clamp(2.25rem, 4vw, 3rem);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  margin-bottom: 16px;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .prose h2 {
+  margin-top: 40px;
+  font-size: 1.375rem;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .arcade-grid {
+  gap: 32px 24px;
+  padding-top: 24px;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .game-tile {
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--ink);
+  overflow: visible;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .game-tile-art {
+  margin: 0;
+  border-radius: 0;
+  aspect-ratio: 4 / 3;
+  background: var(--tile-art);
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .game-tile-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .game-tile-name {
+  min-height: 48px;
+  padding: 8px 0 0;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .score-toggle {
+  min-height: 48px;
+  margin-top: 8px;
+  box-shadow: none;
+  font-weight: 600;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) main .wrap:has(.admin-nav),
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) main .wrap:has(> .card > form) {
+  padding-top: 32px;
+  padding-bottom: 64px;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) main .wrap:has(> .card > form) {
+  max-width: 440px;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) main .wrap:has(.arcade-lead) {
+  padding-top: 0;
+  padding-bottom: 64px;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .admin-nav a,
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .admin-nav button {
+  min-height: 48px;
+  box-shadow: none;
+  font-weight: 600;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .stack {
+  gap: 16px;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .footer-pro {
+  display: grid;
+  gap: 32px;
+  max-width: 1120px;
+  margin: 0 auto 32px;
+  padding: 0 16px;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .site-footer {
+  text-align: left;
+  padding: 48px 0 24px;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .site-footer p {
+  max-width: none;
+  margin: 0 0 8px;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .footer-pro nav {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  margin: 0;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .footer-name {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--footer-text);
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .footer-brand p:last-child {
+  max-width: 18rem;
+  color: var(--footer-muted);
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .footer-label {
+  margin: 0 0 8px;
+  color: var(--footer-muted);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .footer-pro a {
+  justify-content: flex-start;
+  min-height: 48px;
+  padding: 0;
+  font-weight: 600;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .legal {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 24px;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 16px 16px 0;
+  border-top: 1px solid var(--footer-line);
+  color: var(--footer-muted);
+  font-size: 0.9375rem;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .legal-sign {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+@media (min-width: 720px) {
+  html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .top,
+  html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .studio-inner,
+  html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .wrap,
+  html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .wrap.wide,
+  html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .wrap.solo,
+  html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .hero-inner,
+  html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .footer-pro,
+  html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .legal {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+
+  html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .footer-pro {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr);
+    gap: 48px;
+  }
+
+  html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .work-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 48px;
+  }
+}
+
+@media (min-width: 800px) {
+  html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .feature-row {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 24px;
+  }
+}
+
+@media (min-width: 960px) {
+  html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .site-nav {
+    flex: 1 1 auto;
+    order: 0;
+    padding-left: 16px;
+  }
+
+  html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) main .wrap:has(.admin-nav) {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 32px;
+    align-items: start;
+  }
+
+  html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .admin-nav {
+    flex-direction: column;
+    align-items: stretch;
+    position: sticky;
+    top: 88px;
+  }
+
+  html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .admin-nav a,
+  html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .admin-nav button {
+    justify-content: flex-start;
+  }
+}
+
+@media (forced-colors: active) {
+  html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .feature-row a,
+  html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .site-nav a,
+  html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .brand-mark {
+    border: 1px solid ButtonText;
+  }
+}

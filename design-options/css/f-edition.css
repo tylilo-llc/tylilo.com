@@ -1,0 +1,338 @@
+/* Direction F — Edition.
+   Modern editorial studio: a large serif headline, a sans-serif text, a strict grid.
+   Light body #1A1814 on #FAF8F4 is 16.71:1. Muted #3F3A32 on #FAF8F4 is 10.63:1.
+   Button #FFFFFF on #0A3161 is 12.92:1. Link #0A3161 on #FAF8F4 is 12.18:1.
+   Rule #6E675C on #FAF8F4 is 5.27:1. Dark body #F7F4EE on #141210 is 17.02:1.
+   Dark muted #C9BBA8 on #141210 is 9.93:1. Dark button #141210 on #F7F4EE is 17.02:1. */
+
+html[data-direction="f"] {
+  --page: #FAF8F4;
+  --ink: #1A1814;
+  --muted: #3F3A32;
+  --card: #FFFFFF;
+  --line: #6E675C;
+  --btn-bg: #0A3161;
+  --btn-text: #FFFFFF;
+  --btn-border: 1px solid #0A3161;
+  --btn-shadow: none;
+  --btn-quiet-bg: transparent;
+  --btn-quiet-text: #0A3161;
+  --btn-quiet-border: 1px solid #0A3161;
+  --radius-btn: 0;
+  --radius-card: 0;
+  --radius-tile: 0;
+  --radius-field: 0;
+  --radius-theme: 0;
+  --field: #FFFFFF;
+  --field-border: #6E675C;
+  --field-edge: 1px solid #6E675C;
+  --placeholder: #3F3A32;
+  --focus: #0A3161;
+  --focus-halo: #FAF8F4;
+  --hero-bg: #FAF8F4;
+  --hero-text: #1A1814;
+  --hero-muted: #3F3A32;
+  --bar: #FAF8F4;
+  --bar-text: #1A1814;
+  --bar-line: #6E675C;
+  --footer-bg: #FAF8F4;
+  --footer-text: #1A1814;
+  --footer-muted: #3F3A32;
+  --footer-link: #0A3161;
+  --footer-line: #6E675C;
+  --footer-align: left;
+  --footer-justify: flex-start;
+  --tile-bg: transparent;
+  --tile-text: #1A1814;
+  --tile-border: 0;
+  --tile-shadow: none;
+  --tile-art: #F3EFE8;
+  --kicker: #0A3161;
+  --kicker-bg: transparent;
+  --eyebrow: #0A3161;
+  --link: #0A3161;
+  --nav-link: #1A1814;
+  --nav-current: #0A3161;
+  --shadow-card: none;
+  --card-border: 1px solid #6E675C;
+  --nav-border: 1px solid #6E675C;
+  --nav-shadow: none;
+  --nav-current-bg: #0A3161;
+  --nav-current-text: #FFFFFF;
+  --theme-bg: transparent;
+  --theme-border: 1px solid #6E675C;
+  --theme-off: #1A1814;
+  --theme-on-bg: #0A3161;
+  --theme-on-text: #FFFFFF;
+  --font-body: Inter, "Segoe UI", "Liberation Sans", "Noto Sans", system-ui, sans-serif;
+  --font-display: Georgia, "Liberation Serif", "Times New Roman", serif;
+  --heading-weight: 700;
+  --heading-tracking: -0.03em;
+  --max: 1120px;
+  --max-wide: 1120px;
+  --arcade-columns: repeat(4, minmax(0, 1fr));
+  color-scheme: light;
+}
+
+html[data-direction="f"] .wordmark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.375rem;
+  letter-spacing: -0.03em;
+}
+
+html[data-direction="f"] .site-nav a,
+html[data-direction="f"] .btn,
+html[data-direction="f"] button.btn,
+html[data-direction="f"] label,
+html[data-direction="f"] .eyebrow,
+html[data-direction="f"] .kicker,
+html[data-direction="f"] .work-index,
+html[data-direction="f"] .footer-label,
+html[data-direction="f"] .score-toggle,
+html[data-direction="f"] .admin-nav a,
+html[data-direction="f"] .admin-nav button {
+  font-family: var(--font-body);
+}
+
+html[data-direction="f"] .studio-hero {
+  padding-top: 56px;
+  padding-bottom: 64px;
+}
+
+html[data-direction="f"] .studio-hero h1 {
+  max-width: none;
+  font-size: clamp(2.75rem, 6.4vw, 5.25rem);
+  line-height: 0.96;
+  font-weight: 700;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+}
+
+html[data-direction="f"] .studio h2,
+html[data-direction="f"] .prose h1,
+html[data-direction="f"] .arcade-lead h1,
+html[data-direction="f"] .hero-inner .tagline,
+html[data-direction="f"] .footer-name,
+html[data-direction="f"] .work-grid h3,
+html[data-direction="f"] .about-lead,
+html[data-direction="f"] .feature-name,
+html[data-direction="f"] .game-tile-name {
+  font-family: var(--font-display);
+}
+
+html[data-direction="f"] .work-index {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: #0A3161;
+}
+
+html[data-direction="f"] .work-grid h3 {
+  font-size: clamp(2rem, 3vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.05;
+}
+
+html[data-direction="f"] .about-lead {
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  line-height: 1.25;
+  max-width: 18em;
+}
+
+html[data-direction="f"] .feature-name,
+html[data-direction="f"] .game-tile-name {
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+html[data-direction="f"] .contact-block .card {
+  max-width: 40rem;
+  padding-left: 0;
+  padding-right: 0;
+  background: transparent;
+  border: 0;
+}
+
+html[data-direction="f"] .contact-block .card h2 {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 3vw, 2.75rem);
+  font-weight: 700;
+}
+
+html[data-direction="f"] .btn:hover,
+html[data-direction="f"] button.btn:hover {
+  background: #07264D;
+  border-color: #07264D;
+}
+
+html[data-direction="f"] .btn-quiet:hover {
+  background: #F3EFE8;
+  color: #0A3161;
+  border-color: #0A3161;
+}
+
+@media (min-width: 900px) {
+  html[data-direction="f"] .hero-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 0.7fr);
+    column-gap: 48px;
+    row-gap: 24px;
+    align-items: end;
+  }
+
+  html[data-direction="f"] .hero-layout .eyebrow,
+  html[data-direction="f"] .hero-layout h1 {
+    grid-column: 1 / -1;
+  }
+
+  html[data-direction="f"] .hero-layout .lede {
+    margin: 0;
+  }
+
+  html[data-direction="f"] .hero-layout .hero-actions {
+    justify-content: flex-end;
+  }
+
+  html[data-direction="f"] .work-grid {
+    gap: 64px;
+  }
+}
+
+html[data-direction="f"][data-theme="dark"] {
+  --page: #141210;
+  --ink: #F7F4EE;
+  --muted: #C9BBA8;
+  --card: #1C1916;
+  --line: #C9BBA8;
+  --btn-bg: #F7F4EE;
+  --btn-text: #141210;
+  --btn-border: 1px solid #F7F4EE;
+  --btn-quiet-bg: transparent;
+  --btn-quiet-text: #F7F4EE;
+  --btn-quiet-border: 1px solid #F7F4EE;
+  --field: #1C1916;
+  --field-border: #C9BBA8;
+  --field-edge: 1px solid #C9BBA8;
+  --placeholder: #C9BBA8;
+  --focus: #F7F4EE;
+  --focus-halo: #141210;
+  --hero-bg: #141210;
+  --hero-text: #F7F4EE;
+  --hero-muted: #C9BBA8;
+  --bar: #141210;
+  --bar-text: #F7F4EE;
+  --bar-line: #C9BBA8;
+  --footer-bg: #141210;
+  --footer-text: #F7F4EE;
+  --footer-muted: #C9BBA8;
+  --footer-link: #F7F4EE;
+  --footer-line: #C9BBA8;
+  --tile-art: #241F1B;
+  --kicker: #E4D9C8;
+  --eyebrow: #E4D9C8;
+  --link: #F7F4EE;
+  --nav-link: #F7F4EE;
+  --nav-current: #E4D9C8;
+  --card-border: 1px solid #C9BBA8;
+  --nav-border: 1px solid #C9BBA8;
+  --nav-current-bg: #F7F4EE;
+  --nav-current-text: #141210;
+  --theme-border: 1px solid #C9BBA8;
+  --theme-off: #F7F4EE;
+  --theme-on-bg: #F7F4EE;
+  --theme-on-text: #141210;
+  color-scheme: dark;
+}
+
+html[data-direction="f"][data-theme="dark"] .work-index {
+  color: #E4D9C8;
+}
+
+html[data-direction="f"][data-theme="dark"] .contact-block .card {
+  background: transparent;
+}
+
+html[data-direction="f"][data-theme="dark"] .btn:hover,
+html[data-direction="f"][data-theme="dark"] button.btn:hover {
+  background: #FFFFFF;
+  border-color: #FFFFFF;
+  color: #141210;
+}
+
+html[data-direction="f"][data-theme="dark"] .btn-quiet:hover {
+  background: #241F1B;
+  color: #F7F4EE;
+  border-color: #F7F4EE;
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-direction="f"][data-theme="auto"] {
+    --page: #141210;
+    --ink: #F7F4EE;
+    --muted: #C9BBA8;
+    --card: #1C1916;
+    --line: #C9BBA8;
+    --btn-bg: #F7F4EE;
+    --btn-text: #141210;
+    --btn-border: 1px solid #F7F4EE;
+    --btn-quiet-bg: transparent;
+    --btn-quiet-text: #F7F4EE;
+    --btn-quiet-border: 1px solid #F7F4EE;
+    --field: #1C1916;
+    --field-border: #C9BBA8;
+    --field-edge: 1px solid #C9BBA8;
+    --placeholder: #C9BBA8;
+    --focus: #F7F4EE;
+    --focus-halo: #141210;
+    --hero-bg: #141210;
+    --hero-text: #F7F4EE;
+    --hero-muted: #C9BBA8;
+    --bar: #141210;
+    --bar-text: #F7F4EE;
+    --bar-line: #C9BBA8;
+    --footer-bg: #141210;
+    --footer-text: #F7F4EE;
+    --footer-muted: #C9BBA8;
+    --footer-link: #F7F4EE;
+    --footer-line: #C9BBA8;
+    --tile-art: #241F1B;
+    --kicker: #E4D9C8;
+    --eyebrow: #E4D9C8;
+    --link: #F7F4EE;
+    --nav-link: #F7F4EE;
+    --nav-current: #E4D9C8;
+    --card-border: 1px solid #C9BBA8;
+    --nav-border: 1px solid #C9BBA8;
+    --nav-current-bg: #F7F4EE;
+    --nav-current-text: #141210;
+    --theme-border: 1px solid #C9BBA8;
+    --theme-off: #F7F4EE;
+    --theme-on-bg: #F7F4EE;
+    --theme-on-text: #141210;
+    color-scheme: dark;
+  }
+
+  html[data-direction="f"][data-theme="auto"] .work-index {
+    color: #E4D9C8;
+  }
+
+  html[data-direction="f"][data-theme="auto"] .contact-block .card {
+    background: transparent;
+  }
+
+  html[data-direction="f"][data-theme="auto"] .btn:hover,
+  html[data-direction="f"][data-theme="auto"] button.btn:hover {
+    background: #FFFFFF;
+    border-color: #FFFFFF;
+    color: #141210;
+  }
+
+  html[data-direction="f"][data-theme="auto"] .btn-quiet:hover {
+    background: #241F1B;
+    color: #F7F4EE;
+    border-color: #F7F4EE;
+  }
+}
