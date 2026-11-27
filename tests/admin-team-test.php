@@ -101,7 +101,7 @@ check(tylilo_admin_idea_image_extension($dir . '/bad.txt', 12) === '', 'a text f
 check(tylilo_admin_idea_image_extension($path, 3000000) === '', 'a picture over 2 MB is rejected');
 
 $version = tylilo_admin_current_game_version('pop-spiral');
-check($version === '0.2.5', 'feedback can read the current Pop Spiral version');
+check($version === '0.2.6', 'feedback can read the current Pop Spiral version');
 
 $hash = tylilo_admin_hash_password('correct horse battery staple');
 check(str_starts_with($hash, '$argon2id$') || str_starts_with($hash, '$2y$'), 'passwords use argon2id or bcrypt');

@@ -7,6 +7,84 @@ require dirname(__DIR__) . '/includes/admin.php';
 
 tylilo_admin_boot();
 
+function tylilo_admin_here(string $href, string $path): bool
+{
+    if ($href === '/admin/') {
+        return $path === '/admin' || $path === '/admin/' || $path === '/admin/index.php';
+    }
+
+    return str_starts_with($path, $href);
+}
+
+/**
+ * Grouped admin navigation. A group with no visible links is omitted,
+ * including its heading and the divider that would have sat above it.
+ *
+ * @param array<string, mixed> $user
+ */
+function tylilo_admin_menu_html(array $user, string $path): string
+{
+    $groups = [
+        ['Home', [['/admin/', 'Home']], false],
+    ];
+
+    $workspace = [];
+    if (tylilo_admin_can($user, 'notes')) {
+        $workspace[] = ['/admin/notes.php', 'Notes'];
+        $workspace[] = ['/admin/todos.php', 'To-dos'];
+    }
+    if (tylilo_admin_can($user, 'ideas')) {
+        $workspace[] = ['/admin/ideas.php', 'Ideas'];
+    }
+    if (tylilo_admin_can($user, 'feedback')) {
+        $workspace[] = ['/admin/feedback.php', 'Feedback'];
+    }
+    if ($workspace !== []) {
+        $groups[] = ['Workspace', $workspace, false];
+    }
+
+    $games = [];
+    if (tylilo_admin_is_owner($user)) {
+        $games[] = ['/admin/games.php', 'Games'];
+    }
+    if (tylilo_admin_can($user, 'beta')) {
+        $games[] = ['/admin/beta/', 'Beta'];
+    }
+    if (tylilo_admin_can($user, 'leaderboards')) {
+        $games[] = ['/admin/scores.php', 'Scores'];
+    }
+    if ($games !== []) {
+        $groups[] = ['Games', $games, false];
+    }
+
+    if (tylilo_admin_is_owner($user)) {
+        $groups[] = ['Team', [['/admin/users.php', 'Users'], ['/admin/activity.php', 'Activity']], false];
+    }
+
+    $groups[] = ['Account', [['/admin/settings.php', 'Settings']], true];
+
+    $html = '';
+    foreach ($groups as $index => $group) {
+        if ($index > 0) {
+            $html .= '<hr class="admin-menu-divider">';
+        }
+        $html .= '<div class="admin-menu-group">';
+        $html .= '<h2 class="admin-menu-label">' . tylilo_e((string) $group[0]) . '</h2>';
+        foreach ($group[1] as $link) {
+            $href = (string) $link[0];
+            $label = (string) $link[1];
+            $here = tylilo_admin_here($href, $path);
+            $html .= '<a href="' . tylilo_e($href) . '"' . ($here ? ' aria-current="page"' : '') . '>' . tylilo_e($label) . '</a>';
+        }
+        if ($group[2] === true) {
+            $html .= '<form method="post" action="/admin/logout.php"><input type="hidden" name="csrf" value="' . tylilo_e(tylilo_admin_csrf()) . '"><button type="submit">Log out</button></form>';
+        }
+        $html .= '</div>';
+    }
+
+    return $html;
+}
+
 function tylilo_admin_layout(string $title, string $main): void
 {
     global $cspNonce;
@@ -15,49 +93,32 @@ function tylilo_admin_layout(string $title, string $main): void
     $pageCanonical = TYLILO_URL . '/admin/';
     $pageRobots = 'noindex, nofollow';
     require dirname(__DIR__) . '/includes/head.php';
+    $user = tylilo_admin_current();
     echo '<body>';
+    echo '<script nonce="' . tylilo_e($cspNonce) . '">document.documentElement.classList.add("js");</script>';
     echo '<a class="skip-link" href="#main">Skip to content</a>';
     echo '<header class="hero"><div class="hero-shapes" aria-hidden="true"><span class="blob a"></span><span class="blob b"></span><span class="blob c"></span></div>';
     require dirname(__DIR__) . '/includes/topbar.php';
-    echo '<div class="hero-inner"><h1 class="tagline">' . tylilo_e($title) . '</h1></div></header>';
-    echo '<main id="main" tabindex="-1"><div class="wrap">';
-    $user = tylilo_admin_current();
+    echo '<div class="hero-inner">';
     if ($user !== null) {
         $path = parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH);
         $path = is_string($path) ? $path : '/';
-        $links = ['/admin/' => 'Home'];
-        if (tylilo_admin_can($user, 'notes')) {
-            $links['/admin/notes.php'] = 'Notes';
-            $links['/admin/todos.php'] = 'To-dos';
-        }
-        if (tylilo_admin_can($user, 'feedback')) {
-            $links['/admin/feedback.php'] = 'Feedback';
-        }
-        if (tylilo_admin_can($user, 'ideas')) {
-            $links['/admin/ideas.php'] = 'Ideas';
-        }
-        if (tylilo_admin_can($user, 'beta')) {
-            $links['/admin/beta/'] = 'Beta';
-        }
-        if (tylilo_admin_is_owner($user)) {
-            $links['/admin/games.php'] = 'Games';
-            $links['/admin/users.php'] = 'Users';
-            $links['/admin/activity.php'] = 'Activity';
-        }
-        if (tylilo_admin_can($user, 'leaderboards')) {
-            $links['/admin/scores.php'] = 'Scores';
-        }
-        $links['/admin/settings.php'] = 'Settings';
-        echo '<nav class="admin-nav" aria-label="Admin">';
-        foreach ($links as $href => $label) {
-            $here = $href === '/admin/'
-                ? ($path === '/admin' || $path === '/admin/' || $path === '/admin/index.php')
-                : str_starts_with($path, $href);
-            echo '<a href="' . tylilo_e($href) . '"' . ($here ? ' aria-current="page"' : '') . '>' . tylilo_e($label) . '</a>';
-        }
-        echo '<form method="post" action="/admin/logout.php"><input type="hidden" name="csrf" value="' . tylilo_e(tylilo_admin_csrf()) . '"><button type="submit">Log out</button></form>';
-        echo '</nav>';
+        echo '<div class="admin-menu">';
+        echo '<div class="admin-menu-bar">';
+        echo '<button type="button" class="admin-menu-toggle" id="admin-menu-toggle" aria-expanded="false" aria-controls="admin-menu-panel">';
+        echo '<svg class="admin-menu-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="22" height="22">';
+        echo '<path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>';
+        echo '</svg> Menu</button>';
+        echo '<h1 class="tagline">' . tylilo_e($title) . '</h1>';
+        echo '</div>';
+        echo '<nav id="admin-menu-panel" class="admin-menu-panel" aria-label="Admin">';
+        echo tylilo_admin_menu_html($user, $path);
+        echo '</nav></div>';
+    } else {
+        echo '<h1 class="tagline">' . tylilo_e($title) . '</h1>';
     }
+    echo '</div></header>';
+    echo '<main id="main" tabindex="-1"><div class="wrap">';
     echo $main;
     echo '</div></main>';
     if ($user !== null) {
@@ -81,6 +142,7 @@ function tylilo_admin_layout(string $title, string $main): void
         echo '</dialog>';
         echo '<script type="application/json" id="admin-session-data">' . json_encode($session, JSON_UNESCAPED_SLASHES) . '</script>';
         echo '<script src="' . tylilo_e(tylilo_asset('/assets/js/admin-session.js')) . '" defer></script>';
+        echo '<script src="' . tylilo_e(tylilo_asset('/assets/js/admin-menu.js')) . '" defer></script>';
     }
     require dirname(__DIR__) . '/includes/footer.php';
 }

@@ -9,15 +9,35 @@ if (!tylilo_admin_can($me, 'ideas')) {
     tylilo_admin_forbid();
 }
 $owner = tylilo_admin_is_owner($me);
-$error = '';
+$proposeError = '';
+$proposeDraft = [];
+$boardError = '';
+$ideaError = '';
+$ideaErrorId = 0;
+$editDraft = null;
+$editFailed = false;
+$openIdea = 0;
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+    $action = tylilo_admin_field('action');
+    $id = (int) tylilo_admin_field('id');
+    $blankIdea = ['user_id' => (int) $me['id'], 'status' => 'idea', 'created_at' => time()];
     if (!tylilo_admin_csrf_ok(tylilo_admin_field('csrf'))) {
-        $error = 'That request was not accepted. Please try again.';
+        $message = 'That request was not accepted. Please try again.';
+        if ($action === 'propose') {
+            $proposeError = $message;
+            $proposeDraft = tylilo_idea_from_post($owner, $blankIdea);
+        } else {
+            $ideaError = $message;
+            $ideaErrorId = $id;
+            $openIdea = $id;
+            $editFailed = $action === 'edit';
+            if ($editFailed) {
+                $editDraft = tylilo_idea_from_post($owner, $blankIdea);
+            }
+        }
     } else {
-        $action = tylilo_admin_field('action');
-        $id = (int) tylilo_admin_field('id');
         if ($action === 'propose' || $action === 'edit') {
-            $previous = ['user_id' => (int) $me['id'], 'status' => 'idea', 'created_at' => time()];
+            $previous = $blankIdea;
             if ($action === 'edit') {
                 $found = null;
                 $stored = tylilo_admin_with(static fn (array $data): array => $data);
@@ -27,22 +47,32 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                     }
                 }
                 if (!is_array($found)) {
-                    $error = 'That idea could not be changed.';
+                    $boardError = 'That idea could not be changed.';
                 } else {
                     $previous = $found;
                 }
             }
             $image = '';
             $imageError = false;
-            if ($error === '' && isset($_FILES['image']) && is_array($_FILES['image']) && ($_FILES['image']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+            if ($boardError === '' && isset($_FILES['image']) && is_array($_FILES['image']) && ($_FILES['image']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
                 $image = tylilo_admin_store_idea_image($_FILES['image']);
                 $imageError = $image === '';
             }
-            $fields = $error === '' ? tylilo_idea_from_post($owner, $previous) : [];
-            if ($error !== '') {
+            $fields = $boardError === '' ? tylilo_idea_from_post($owner, $previous) : [];
+            if ($boardError !== '') {
                 // already set
             } elseif ($imageError || ($fields['title'] ?? '') === '' || ($fields['pitch'] ?? '') === '') {
-                $error = $imageError ? 'Use a JPEG, PNG, WebP, or GIF under 2 MB.' : 'An idea needs a working title and a one-line pitch.';
+                $message = $imageError ? 'Use a JPEG, PNG, WebP, or GIF under 2 MB.' : 'An idea needs a working title and a one-line pitch.';
+                if ($action === 'edit') {
+                    $ideaError = $message;
+                    $ideaErrorId = $id;
+                    $openIdea = $id;
+                    $editFailed = true;
+                    $editDraft = $fields;
+                } else {
+                    $proposeError = $message;
+                    $proposeDraft = $fields;
+                }
             } else {
                 if ($image !== '') {
                     $fields['image'] = $image;
@@ -76,7 +106,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                     return $data;
                 });
                 tylilo_admin_log((int) $me['id'], (string) $me['username'], $action === 'edit' ? 'idea-edit' : 'idea', $fields['title'] . ' · ' . tylilo_idea_choice('status', $fields['status']));
-                header('Location: /admin/ideas.php#idea-' . $savedId, true, 303);
+                header('Location: /admin/ideas.php?open=' . $savedId . '#idea-' . $savedId, true, 303);
                 exit;
             }
         } elseif ($action === 'comment') {
@@ -95,7 +125,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                 });
                 tylilo_admin_log((int) $me['id'], (string) $me['username'], 'comment', 'Idea ' . $id);
             }
-            header('Location: /admin/ideas.php#idea-' . $id, true, 303);
+            header('Location: /admin/ideas.php?open=' . $id . '#idea-' . $id, true, 303);
             exit;
         } elseif ($action === 'vote') {
             tylilo_admin_with(static function (array $data) use ($id, $me): array {
@@ -109,7 +139,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                 return $data;
             });
             tylilo_admin_log((int) $me['id'], (string) $me['username'], 'vote', 'Idea ' . $id);
-            header('Location: /admin/ideas.php#idea-' . $id, true, 303);
+            header('Location: /admin/ideas.php?open=' . $id . '#idea-' . $id, true, 303);
             exit;
         }
     }
@@ -135,39 +165,66 @@ foreach ($data['users'] as $user) {
     $names[(int) $user['id']] = (string) $user['username'];
 }
 
-$html = '<div class="card"><h2>Propose a game</h2>';
-if ($error !== '') {
-    $html .= '<div class="form-status error" role="alert"><p>' . tylilo_e($error) . '</p></div>';
+$newRequested = isset($_GET['new']) && (is_string($_GET['new']) || is_int($_GET['new'])) && (string) $_GET['new'] === '1';
+if ($openIdea === 0 && isset($_GET['open']) && (is_string($_GET['open']) || is_int($_GET['open'])) && preg_match('/\A[0-9]+\z/', (string) $_GET['open']) === 1) {
+    $openIdea = (int) $_GET['open'];
 }
-$html .= tylilo_idea_form([], 'propose', 0, $owner);
-$html .= '</div>';
 
-$html .= '<form class="card idea-filters" method="get" action="/admin/ideas.php">';
-$html .= '<h2>Filter the board</h2>';
-$html .= tylilo_idea_select('genre', 'filter-genre', 'Genre', $choices['genre'], $filterGenre);
-$html .= tylilo_idea_select('status', 'filter-status', 'Status', $choices['status'], $filterStatus);
-$html .= tylilo_idea_select('priority', 'filter-priority', 'Priority', $choices['priority'], $filterPriority);
-$html .= '<button class="btn send" type="submit">Apply filters</button> <a class="btn" href="/admin/ideas.php">Clear filters</a></form>';
-
-$shown = 0;
-foreach (array_reverse($data['ideas']) as $raw) {
-    $idea = tylilo_idea_normalize($raw);
-    if ($filterGenre !== '' && $idea['genre'] !== $filterGenre) {
-        continue;
-    }
-    if ($filterStatus !== '' && $idea['status'] !== $filterStatus) {
-        continue;
-    }
-    if ($filterPriority !== '' && $idea['priority'] !== $filterPriority) {
-        continue;
-    }
-    $shown++;
-    $html .= tylilo_idea_card($idea, $data['comments'], $names, $me, $owner);
+$panel = tylilo_idea_new_panel($proposeError, $proposeDraft, $owner);
+$html = '';
+if ($boardError !== '') {
+    $html .= '<div class="card" role="alert"><p>' . tylilo_e($boardError) . '</p></div>';
 }
-if ($shown === 0) {
-    $html .= '<div class="card"><p>No ideas match these filters.</p></div>';
+if ($newRequested && $proposeError === '') {
+    $html .= '<div class="card" id="new-idea-panel">' . $panel . '</div>';
+} else {
+    $html .= '<p class="idea-new-row"><a class="btn send" id="new-idea-open" href="/admin/ideas.php?new=1">New idea</a></p>';
+    if ($proposeError !== '') {
+        $html .= '<div class="card" id="new-idea-panel">' . $panel . '</div>';
+        $html .= '<dialog id="new-idea-dialog" class="card idea-dialog" aria-labelledby="new-idea-title" aria-modal="true" data-open="true"></dialog>';
+    } else {
+        $html .= '<dialog id="new-idea-dialog" class="card idea-dialog" aria-labelledby="new-idea-title" aria-modal="true">';
+        $html .= '<div id="new-idea-panel">' . $panel . '</div></dialog>';
+    }
+    $html .= '<form class="card idea-filters" method="get" action="/admin/ideas.php">';
+    $html .= '<h2>Filter the board</h2>';
+    $html .= tylilo_idea_select('genre', 'filter-genre', 'Genre', $choices['genre'], $filterGenre);
+    $html .= tylilo_idea_select('status', 'filter-status', 'Status', $choices['status'], $filterStatus);
+    $html .= tylilo_idea_select('priority', 'filter-priority', 'Priority', $choices['priority'], $filterPriority);
+    $html .= '<button class="btn send" type="submit">Apply filters</button> <a class="btn" href="/admin/ideas.php">Clear filters</a></form>';
+
+    $shown = 0;
+    foreach (array_reverse($data['ideas']) as $raw) {
+        $idea = tylilo_idea_normalize($raw);
+        if ($filterGenre !== '' && $idea['genre'] !== $filterGenre) {
+            continue;
+        }
+        if ($filterStatus !== '' && $idea['status'] !== $filterStatus) {
+            continue;
+        }
+        if ($filterPriority !== '' && $idea['priority'] !== $filterPriority) {
+            continue;
+        }
+        $shown++;
+        $ideaId = (int) $idea['id'];
+        $html .= tylilo_idea_card(
+            $idea,
+            $data['comments'],
+            $names,
+            $me,
+            $owner,
+            $openIdea === $ideaId,
+            $ideaErrorId === $ideaId ? $ideaError : '',
+            $editFailed && $ideaErrorId === $ideaId,
+            $editFailed && $ideaErrorId === $ideaId ? $editDraft : null
+        );
+    }
+    if ($shown === 0) {
+        $html .= '<div class="card"><p>No ideas match these filters.</p></div>';
+    }
 }
 $html .= '<script src="' . tylilo_e(tylilo_asset('/assets/js/idea-help.js')) . '" defer></script>';
+$html .= '<script src="' . tylilo_e(tylilo_asset('/assets/js/ideas.js')) . '" defer></script>';
 tylilo_admin_layout('Ideas', $html);
 
 function tylilo_idea_select(string $name, string $id, string $label, array $options, string $value): string
@@ -238,12 +295,55 @@ function tylilo_idea_form(array $idea, string $action, int $id, bool $owner): st
     return $html;
 }
 
-function tylilo_idea_card(array $idea, array $comments, array $names, array $me, bool $owner): string
+function tylilo_idea_new_panel(string $error, array $draft, bool $owner): string
+{
+    $html = '<div class="idea-dialog-bar">';
+    $html .= '<h2 id="new-idea-title">New idea</h2>';
+    $html .= '<button type="button" class="idea-dialog-close" id="new-idea-close" hidden>Cancel</button>';
+    $html .= '<a class="idea-cancel-link" href="/admin/ideas.php">Cancel</a>';
+    $html .= '</div>';
+    if ($error !== '') {
+        $html .= '<div class="form-status error" role="alert"><p>' . tylilo_e($error) . '</p></div>';
+    }
+    $html .= tylilo_idea_form($draft, 'propose', 0, $owner);
+
+    return $html;
+}
+
+function tylilo_idea_category(array $idea): string
+{
+    $genre = tylilo_idea_choice('genre', (string) ($idea['genre'] ?? ''));
+    if ($genre !== '') {
+        return $genre;
+    }
+    $label = tylilo_idea_choice('status', (string) ($idea['status'] ?? ''));
+    $priority = tylilo_idea_choice('priority', (string) ($idea['priority'] ?? ''));
+    if ($priority !== '') {
+        $label .= ' · ' . $priority;
+    }
+
+    return $label;
+}
+
+function tylilo_idea_card(array $idea, array $comments, array $names, array $me, bool $owner, bool $open = false, string $error = '', bool $editOpen = false, ?array $editDraft = null): string
 {
     $id = (int) $idea['id'];
-    $html = '<article class="card" id="idea-' . $id . '">';
-    $html .= '<p class="kicker">' . tylilo_e(tylilo_idea_choice('status', $idea['status'])) . ($idea['priority'] !== '' ? ' · ' . tylilo_e(tylilo_idea_choice('priority', $idea['priority'])) : '') . '</p>';
-    $html .= '<h2>' . tylilo_e($idea['title']) . '</h2>';
+    $category = tylilo_idea_category($idea);
+    $kicker = tylilo_idea_choice('status', $idea['status']);
+    if ($idea['priority'] !== '') {
+        $kicker .= ' · ' . tylilo_idea_choice('priority', $idea['priority']);
+    }
+    $html = '<article class="card idea-card" id="idea-' . $id . '">';
+    $html .= '<details' . ($open ? ' open' : '') . '>';
+    $html .= '<summary><h2>' . tylilo_e($idea['title']) . '</h2>';
+    $html .= '<span class="idea-category"><span class="visually-hidden">Category: </span>' . tylilo_e($category) . '</span></summary>';
+    $html .= '<div class="idea-card-body">';
+    if ($error !== '') {
+        $html .= '<div class="form-status error" role="alert"><p>' . tylilo_e($error) . '</p></div>';
+    }
+    if ($kicker !== $category) {
+        $html .= '<p class="kicker">' . tylilo_e($kicker) . '</p>';
+    }
     $html .= '<p>' . tylilo_e($idea['pitch']) . '</p>';
     $html .= '<dl class="idea-facts">';
     foreach (['genre' => 'Genre', 'style' => 'Visual style', 'session' => 'Session length', 'players' => 'Players', 'difficulty' => 'Difficulty', 'scoring' => 'Scoring', 'audience' => 'Audience', 'effort' => 'Effort'] as $key => $label) {
@@ -292,9 +392,11 @@ function tylilo_idea_card(array $idea, array $comments, array $names, array $me,
     $html .= '<label for="comment-' . $id . '">Comment</label><input id="comment-' . $id . '" name="comment" maxlength="500">';
     $html .= '<button type="submit">Comment</button></form>';
     if ((int) $idea['user_id'] === (int) $me['id'] || $owner) {
-        $html .= '<details><summary>Edit this idea</summary>' . tylilo_idea_form($idea, 'edit', $id, $owner) . '</details>';
+        $html .= '<details' . ($editOpen ? ' open' : '') . '><summary>Edit this idea</summary>';
+        $html .= tylilo_idea_form(is_array($editDraft) ? $editDraft : $idea, 'edit', $id, $owner);
+        $html .= '</details>';
     }
-    $html .= '</article>';
+    $html .= '</div></details></article>';
 
     return $html;
 }
