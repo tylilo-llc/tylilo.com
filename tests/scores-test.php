@@ -133,7 +133,7 @@ foreach ($jungleAll['boards'] ?? [] as $jungleBoard) {
         $jungleAllScores[] = (int) ($row['score'] ?? 0);
     }
 }
-check(!in_array(187100, $jungleAllScores, true), 'Logan 187100 is not seeded on a fresh store');
+check(in_array(187100, $jungleAllScores, true), 'Logan 187100 is restored on a fresh store');
 
 $bigServer = $server;
 $bigServer['REMOTE_ADDR'] = '203.0.113.40';
@@ -419,14 +419,14 @@ $liveRows = static function () use ($now): array {
 $checkMigrated = static function (string $kind) use ($now): void {
     $easy = tylilo_score_handle('GET', ['game' => 'jungle-rescue', 'board' => 'easy'], '', [], $now);
     $easyRows = array_map(static fn (array $row): array => [$row['name'], $row['score'], $row['level']], $easy['boards'][0]['scores'] ?? []);
-    check($easyRows === [['LOGAN', 24500, 3], ['LOGAN', 4550, null], ['RYAN', 700, 1]], "{$kind}: migration moves default rows to easy with levels and drops LOGAN 187100");
+    check($easyRows === [['LOGAN', 187100, null], ['LOGAN', 24500, 3], ['LOGAN', 4550, null], ['RYAN', 700, 1]], "{$kind}: migration moves default rows to easy and LOGAN 187100 is restored once on easy");
     $easyTime = tylilo_score_handle('GET', ['game' => 'jungle-rescue', 'board' => 'easy-time'], '', [], $now);
     $timeRows = array_map(static fn (array $row): array => [$row['name'], $row['score'], $row['level']], $easyTime['boards'][0]['scores'] ?? []);
     check($timeRows === [['RYAN', 300, 2]], "{$kind}: migration moves time rows to easy-time");
     $raw = tylilo_scores_with(static fn (array $stored): array => $stored);
     $left = array_filter($raw['scores'], static fn (array $row): bool => $row['game'] === 'jungle-rescue' && in_array($row['board'], ['default', 'time'], true));
-    $banned = array_filter($raw['scores'], static fn (array $row): bool => $row['score'] === 187100);
-    check($left === [] && $banned === [], "{$kind}: no rows remain on the legacy boards and 187100 is gone");
+    $logan = array_filter($raw['scores'], static fn (array $row): bool => $row['score'] === 187100);
+    check($left === [] && count($logan) === 1 && reset($logan)['board'] === 'easy', "{$kind}: no rows remain on the legacy boards and 187100 is on easy once");
     check(in_array('jungle-rescue-difficulty-split-2026-11-21', $raw['seeds'], true), "{$kind}: the migration is remembered as applied");
     $redRain = array_filter($raw['scores'], static fn (array $row): bool => $row['game'] === 'red-rain' && $row['name'] === 'LINK');
     check(count($redRain) === 1, "{$kind}: other games are untouched and LINK is not seeded twice");
@@ -469,7 +469,7 @@ putenv('TYLILO_SCORE_STORE=json');
 tylilo_score_handle('GET', ['game' => 'jungle-rescue'], '', [], $now);
 $fresh = tylilo_scores_with(static fn (array $stored): array => $stored);
 $freshJungle = array_filter($fresh['scores'], static fn (array $row): bool => $row['game'] === 'jungle-rescue');
-check($freshJungle === [] && !in_array('logan-jungle-rescue-187100', $fresh['seeds'], true), 'a fresh store does not re-seed LOGAN 187100');
+check(array_values(array_map(static fn (array $row): array => [$row['board'], $row['name'], $row['score']], $freshJungle)) === [['easy', 'LOGAN', 187100]] && !in_array('logan-jungle-rescue-187100', $fresh['seeds'], true), 'a fresh store has LOGAN 187100 restored once on easy, not from the old seed');
 check(in_array('jungle-rescue-difficulty-split-2026-11-21', $fresh['seeds'], true), 'a fresh store records the migration as applied');
 $freshSeeds = array_column(tylilo_score_seeds(), 'id');
 check(!in_array('logan-jungle-rescue-187100', $freshSeeds, true), 'the LOGAN 187100 seed entry is gone');

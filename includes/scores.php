@@ -324,7 +324,8 @@ function tylilo_scores_blank(): array
  * One recorded score that the game never submitted. Applied once, then remembered
  * so later deploys do not insert it again. Safe to delete this list after it has run.
  * A seed on a legacy alias board is stored on the alias target.
- * logan-jungle-rescue-187100 was removed on purpose (a cheat-code run). Do not re-add it.
+ * logan-jungle-rescue-187100 was removed as a seed on Nov 21, 2026. Ryan asked for it back on
+ * Nov 27, 2026, so it is restored by the jungle-rescue-restore-logan-187100 migration instead.
  *
  * @return list<array{id: string, game: string, board: string, name: string, score: int, at: int}>
  */
@@ -360,7 +361,7 @@ function tylilo_score_migrations(): array
             foreach ($data['scores'] as $row) {
                 if (($row['game'] ?? '') === 'jungle-rescue') {
                     $board = (string) ($row['board'] ?? '');
-                    if (in_array($board, ['default', 'easy'], true) && ($row['name'] ?? '') === 'LOGAN' && (int) ($row['score'] ?? 0) === 187100) {
+                    if ($board === 'default' && ($row['name'] ?? '') === 'LOGAN' && (int) ($row['score'] ?? 0) === 187100) {
                         continue;
                     }
                     if (isset($moves[$board])) {
@@ -370,6 +371,25 @@ function tylilo_score_migrations(): array
                 $kept[] = $row;
             }
             $data['scores'] = $kept;
+
+            return $data;
+        },
+        // Nov 27, 2026: Ryan asked to restore Logan's 187100 ("Logan had a high
+        // score over 180,000. Would you add that back to the leaderboard?").
+        // Logan plays Easy, so it goes on the Easy points board.
+        'jungle-rescue-restore-logan-187100-2026-11-27' => static function (array $data): array {
+            foreach ($data['scores'] as $row) {
+                if (($row['game'] ?? '') === 'jungle-rescue' && ($row['board'] ?? '') === 'easy' && ($row['name'] ?? '') === 'LOGAN' && (int) ($row['score'] ?? 0) === 187100) {
+                    return $data;
+                }
+            }
+            $data['scores'][] = [
+                'game' => 'jungle-rescue',
+                'board' => 'easy',
+                'name' => 'LOGAN',
+                'score' => 187100,
+                'at' => 1795271100,
+            ];
 
             return $data;
         },
