@@ -32,7 +32,7 @@ require __DIR__ . '/includes/head.php';
       <article class="card about-card prose">
         <p class="kicker">Privacy</p>
         <h1>Privacy</h1>
-        <p><strong>Effective date:</strong> November 21, 2026</p>
+        <p><strong>Effective date:</strong> November 27, 2026</p>
         <p>Tylilo, LLC (“Tylilo”) runs <a href="/">tylilo.com</a>. This page says what the site actually does with information. It is short on purpose.</p>
 
         <h2>Contact form</h2>
@@ -46,7 +46,7 @@ require __DIR__ . '/includes/head.php';
         <p>That cookie exists so the contact form can tell a real visit from a forged or repeated one. It is not a tracking cookie. The site does not set advertising cookies.</p>
 
         <h2>Team accounts</h2>
-        <p>People who help run the site can sign in. There is no public sign-up. The owner can invite someone with a one-time link that works once and expires after 7 days. We store the username, a password hash, optional authenticator-app setup, the permissions the owner chose, private notes and to-dos, game feedback, ideas, comments, one vote per person on an idea, an optional sketch stored in private storage and shown only to signed-in people who can open Ideas, and an activity log of who did what and when. That stays in the site’s private storage. It is not shown on the public pages. The owner can see team members’ notes and to-dos. The owner’s own notes and to-dos stay private. Unpublished beta games are only opened by signed-in people the owner allows. They are not on the public Arcade. Feedback about a beta game stays in that same private storage and is tagged with the beta version. Feedback can include optional attached files, such as screenshots, short videos, PDFs, or logs. We store those files in the same private storage, along with the original file name. They are shown only to the person who sent the feedback and to the owner. The beta player does not let those games call this site, including the leaderboard.</p>
+        <p>People who help run the site can sign in. There is no public sign-up. The owner can invite someone with a one-time link that works once and expires after 7 days. The owner can also make a one-time password reset link. We store a hash of that link, not the link itself. It expires after 24 hours. When it is used we mark the hash used, and when a newer link is created the older unused one is deleted. We store the username, a password hash, optional authenticator-app setup, the permissions the owner chose, private notes and to-dos, game feedback, ideas, comments, one vote per person on an idea, an optional sketch stored in private storage and shown only to signed-in people who can open Ideas, and an activity log of who did what and when. That stays in the site’s private storage. It is not shown on the public pages. The owner can see team members’ notes and to-dos. The owner’s own notes and to-dos stay private. Unpublished beta games are only opened by signed-in people the owner allows. They are not on the public Arcade. Feedback about a beta game stays in that same private storage and is tagged with the beta version. Feedback can include optional attached files, such as screenshots, short videos, PDFs, or logs. We store those files in the same private storage, along with the original file name. They are shown only to the person who sent the feedback and to the owner. The beta player does not let those games call this site, including the leaderboard.</p>
 
         <h2>Saved on your device</h2>
         <p>If you pick Light, Dark, or Auto, the browser stores that choice in local storage under <code>tylilo-theme</code>. It stays on your device. The site does not send it to us.</p>
@@ -81,7 +81,7 @@ require __DIR__ . '/includes/head.php';
         'name' => 'Privacy',
         'url' => TYLILO_URL . '/privacy',
         'description' => $pageDescription,
-        'dateModified' => '2026-11-21',
+        'dateModified' => '2026-11-27',
         'isPartOf' => [
             '@type' => 'WebSite',
             'name' => TYLILO_SITE_NAME,

@@ -38,6 +38,7 @@ function tylilo_admin_blank(): array
         'todos' => [],
         'versions' => [],
         'invites' => [],
+        'password_resets' => [],
         'feedback' => [],
         'ideas' => [],
         'comments' => [],
@@ -455,6 +456,244 @@ function tylilo_admin_locked(string $ipHash, string $username, int $now): bool
     }
 
     return $ipFails >= 5 || $nameFails >= 5;
+}
+
+function tylilo_admin_reset_rows(array $data): array
+{
+    $rows = $data['password_resets'] ?? [];
+    if (!is_array($rows)) {
+        return [];
+    }
+    $clean = [];
+    foreach ($rows as $row) {
+        if (is_array($row)) {
+            $clean[] = $row;
+        }
+    }
+
+    return $clean;
+}
+
+function tylilo_admin_reset_invalid_error(): string
+{
+    return 'This reset link is no longer valid.';
+}
+
+function tylilo_admin_reset_token_hash(string $token): ?string
+{
+    if ($token === '' || strlen($token) > 128) {
+        return null;
+    }
+
+    return hash('sha256', $token);
+}
+
+function tylilo_admin_reset_usable(array $data, string $token, int $now): ?array
+{
+    $tokenHash = tylilo_admin_reset_token_hash($token);
+    if ($tokenHash === null) {
+        return null;
+    }
+    $reset = null;
+    foreach (tylilo_admin_reset_rows($data) as $row) {
+        $stored = (string) ($row['token_hash'] ?? '');
+        if ($stored !== '' && hash_equals($stored, $tokenHash)) {
+            $reset = $row;
+            break;
+        }
+    }
+    if (!is_array($reset)) {
+        return null;
+    }
+    $open = (int) ($reset['used_at'] ?? 0) === 0 && (int) ($reset['expires_at'] ?? 0) >= $now;
+    if (!$open) {
+        return null;
+    }
+    $user = null;
+    foreach ($data['users'] as $account) {
+        if (is_array($account) && (int) ($account['id'] ?? 0) === (int) ($reset['user_id'] ?? 0)) {
+            $user = $account;
+            break;
+        }
+    }
+    if (!is_array($user) || (int) ($user['disabled'] ?? 0) === 1) {
+        return null;
+    }
+
+    return ['reset' => $reset, 'user' => $user];
+}
+
+function tylilo_admin_reset_preview(string $token, ?int $now = null): ?array
+{
+    $now ??= time();
+    $data = tylilo_admin_with(static fn (array $stored): array => $stored);
+
+    return tylilo_admin_reset_usable($data, $token, $now);
+}
+
+function tylilo_admin_issue_reset(int $actorId, int $userId): ?string
+{
+    $token = bin2hex(random_bytes(32));
+    $issued = false;
+    $actorName = '';
+    $targetName = '';
+    tylilo_admin_with(static function (array $data) use ($actorId, $userId, $token, &$issued, &$actorName, &$targetName): array {
+        $actor = null;
+        $target = null;
+        foreach ($data['users'] as $user) {
+            if (!is_array($user)) {
+                continue;
+            }
+            if ((int) ($user['id'] ?? 0) === $actorId) {
+                $actor = $user;
+            }
+            if ((int) ($user['id'] ?? 0) === $userId) {
+                $target = $user;
+            }
+        }
+        if (!is_array($actor) || !tylilo_admin_is_owner($actor) || !is_array($target)) {
+            return $data;
+        }
+        $kept = [];
+        foreach (tylilo_admin_reset_rows($data) as $row) {
+            $sameUser = (int) ($row['user_id'] ?? 0) === $userId;
+            $open = (int) ($row['used_at'] ?? 0) === 0;
+            if ($sameUser && $open) {
+                continue;
+            }
+            $kept[] = $row;
+        }
+        $kept[] = [
+            'id' => tylilo_admin_next_id($kept),
+            'user_id' => $userId,
+            'token_hash' => hash('sha256', $token),
+            'expires_at' => time() + TYLILO_ADMIN_RESET_TTL,
+            'used_at' => 0,
+            'created_at' => time(),
+        ];
+        $data['password_resets'] = $kept;
+        $issued = true;
+        $actorName = (string) $actor['username'];
+        $targetName = (string) $target['username'];
+
+        return $data;
+    });
+    if (!$issued) {
+        return null;
+    }
+    tylilo_admin_log($actorId, $actorName, 'password-reset', 'Created a password reset link for ' . $targetName);
+
+    return $token;
+}
+
+function tylilo_admin_apply_reset(string $token, string $password, string $again): array
+{
+    $now = time();
+    $passwordHash = null;
+    if (strlen($password) >= 12 && hash_equals($password, $again)) {
+        $passwordHash = tylilo_admin_hash_password($password);
+    }
+    $state = 'invalid';
+    $userId = 0;
+    $username = '';
+    tylilo_admin_with(static function (array $data) use ($token, $passwordHash, $now, &$state, &$userId, &$username): array {
+        $found = tylilo_admin_reset_usable($data, $token, $now);
+        if ($found === null) {
+            $state = 'invalid';
+
+            return $data;
+        }
+        if ($passwordHash === null) {
+            $state = 'weak';
+
+            return $data;
+        }
+        $userId = (int) $found['user']['id'];
+        $username = (string) $found['user']['username'];
+        $tokenHash = tylilo_admin_reset_token_hash($token);
+        $marked = false;
+        $resets = [];
+        foreach (tylilo_admin_reset_rows($data) as $row) {
+            $stored = (string) ($row['token_hash'] ?? '');
+            $open = (int) ($row['used_at'] ?? 0) === 0 && (int) ($row['expires_at'] ?? 0) >= $now;
+            if (!$marked && is_string($tokenHash) && $stored !== '' && hash_equals($stored, $tokenHash) && $open) {
+                $row['used_at'] = $now;
+                $marked = true;
+            }
+            $resets[] = $row;
+        }
+        if (!$marked) {
+            $state = 'invalid';
+
+            return $data;
+        }
+        $updated = false;
+        foreach ($data['users'] as $index => $user) {
+            if (!is_array($user) || (int) ($user['id'] ?? 0) !== $userId || (int) ($user['disabled'] ?? 0) === 1) {
+                continue;
+            }
+            $user['password_hash'] = $passwordHash;
+            tylilo_admin_bump_session($user);
+            $data['users'][$index] = $user;
+            $updated = true;
+        }
+        if (!$updated) {
+            $state = 'invalid';
+
+            return $data;
+        }
+        $data['password_resets'] = $resets;
+        $state = 'saved';
+
+        return $data;
+    });
+    if ($state === 'weak') {
+        return ['ok' => false, 'error' => 'Use a password of at least 12 characters and repeat it.', 'status' => 'weak'];
+    }
+    if ($state !== 'saved') {
+        return ['ok' => false, 'error' => tylilo_admin_reset_invalid_error(), 'status' => 'invalid'];
+    }
+    tylilo_admin_log($userId, $username, 'password-reset', 'Set a new password and ended existing sessions');
+
+    return ['ok' => true, 'error' => '', 'status' => 'saved'];
+}
+
+function tylilo_admin_reset_bucket(string $token, ?array $preview): string
+{
+    if (is_array($preview)) {
+        return 'reset:' . (string) ($preview['user']['username'] ?? '');
+    }
+    $hash = tylilo_admin_reset_token_hash($token);
+
+    return 'reset:' . ($hash ?? hash('sha256', 'reset'));
+}
+
+function tylilo_admin_reset_submit(string $token, string $password, string $again, string $csrf, string $ip, ?int $now = null): array
+{
+    $now ??= time();
+    if (!tylilo_admin_csrf_ok($csrf)) {
+        return ['ok' => false, 'error' => 'That request was not accepted. Please try again.', 'status' => 'csrf'];
+    }
+    $ipHash = tylilo_admin_ip_hash($ip);
+    $preview = tylilo_admin_reset_preview($token, $now);
+    $bucket = tylilo_admin_reset_bucket($token, $preview);
+    if (tylilo_admin_locked($ipHash, $bucket, $now)) {
+        return ['ok' => false, 'error' => 'Too many attempts. Please wait 15 minutes and try again.', 'status' => 'locked'];
+    }
+    if ($preview === null) {
+        tylilo_admin_note_attempt($ipHash, $bucket, false, $now);
+
+        return ['ok' => false, 'error' => tylilo_admin_reset_invalid_error(), 'status' => 'invalid'];
+    }
+    if (strlen($password) < 12 || !hash_equals($password, $again)) {
+        tylilo_admin_note_attempt($ipHash, $bucket, false, $now);
+
+        return ['ok' => false, 'error' => 'Use a password of at least 12 characters and repeat it.', 'status' => 'weak'];
+    }
+    $result = tylilo_admin_apply_reset($token, $password, $again);
+    tylilo_admin_note_attempt($ipHash, $bucket, $result['ok'], $now);
+
+    return $result;
 }
 
 function tylilo_admin_note_attempt(string $ipHash, string $username, bool $ok, int $now): void
