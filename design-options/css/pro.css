@@ -46,10 +46,23 @@ html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .top {
 
 html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .brand-mark {
   display: block;
-  width: 32px;
+  width: auto;
   height: 32px;
+  max-width: 120px;
   flex: 0 0 auto;
-  border-radius: 8px;
+  border-radius: 0;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .brand-name {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .wordmark {
@@ -224,6 +237,38 @@ html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .text-
 html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .work-grid {
   display: grid;
   gap: 32px;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .software {
+  padding-top: 8px;
+  padding-bottom: 32px;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .software h2 {
+  font-size: 1.5rem;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .software p {
+  max-width: 40rem;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .side-note {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .side-note p {
+  margin: 0;
+  max-width: 40rem;
+  color: var(--muted);
+  font-size: 0.9375rem;
+}
+
+html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .side-note a {
+  color: var(--link);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
 }
 
 html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .work-index {
@@ -530,6 +575,12 @@ html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .legal
   html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .work-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 48px;
+  }
+}
+
+@media (min-width: 900px) {
+  html:is([data-direction="d"], [data-direction="e"], [data-direction="f"]) .consulting .work-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 

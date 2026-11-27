@@ -89,8 +89,8 @@ html[data-direction="d"] .studio-hero h1 {
   font-size: clamp(2.5rem, 4.6vw, 3.75rem);
 }
 
-html[data-direction="d"] .work-grid article + article {
-  padding-top: 32px;
+html[data-direction="d"] .consulting article {
+  padding-top: 24px;
   border-top: 1px solid var(--line);
 }
 
@@ -110,12 +110,17 @@ html[data-direction="d"] .btn-quiet:hover {
   border-color: #0A3161;
 }
 
-@media (min-width: 800px) {
-  html[data-direction="d"] .work-grid article + article {
+@media (min-width: 900px) {
+  html[data-direction="d"] .consulting article {
     padding-top: 0;
-    padding-left: 48px;
+    padding-left: 32px;
     border-top: 0;
     border-left: 1px solid var(--line);
+  }
+
+  html[data-direction="d"] .consulting article:first-child {
+    padding-left: 0;
+    border-left: 0;
   }
 }
 

@@ -75,17 +75,6 @@ html[data-direction="e"] {
   color-scheme: light;
 }
 
-html[data-direction="e"] .wordmark {
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-size: 0.875rem;
-  font-weight: 700;
-}
-
-html[data-direction="e"] .brand-mark {
-  box-shadow: 0 0 0 1px #F7F9FC;
-}
-
 html[data-direction="e"] .studio-hero {
   padding-top: 72px;
   padding-bottom: 88px;
@@ -134,7 +123,7 @@ html[data-direction="e"] .hero {
   --focus-halo: #071525;
 }
 
-html[data-direction="e"] .work article,
+html[data-direction="e"] .consulting article,
 html[data-direction="e"] .contact-block .card {
   background: #FFFFFF;
   border: 1px solid #5C6B80;
@@ -214,7 +203,7 @@ html[data-direction="e"][data-theme="dark"] {
   color-scheme: dark;
 }
 
-html[data-direction="e"][data-theme="dark"] .work article,
+html[data-direction="e"][data-theme="dark"] .consulting article,
 html[data-direction="e"][data-theme="dark"] .contact-block .card,
 html[data-direction="e"][data-theme="dark"] .featured,
 html[data-direction="e"][data-theme="dark"] .about {
@@ -295,7 +284,7 @@ html[data-direction="e"][data-theme="dark"] .studio-hero .btn-quiet:hover {
     color-scheme: dark;
   }
 
-  html[data-direction="e"][data-theme="auto"] .work article,
+  html[data-direction="e"][data-theme="auto"] .consulting article,
   html[data-direction="e"][data-theme="auto"] .contact-block .card,
   html[data-direction="e"][data-theme="auto"] .featured,
   html[data-direction="e"][data-theme="auto"] .about {
