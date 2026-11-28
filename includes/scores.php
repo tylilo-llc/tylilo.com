@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/preview.php';
+
 /**
  * Shared arcade leaderboard. No HTML headers here; api/scores.php is the HTTP edge.
  * Game files are not modified. Bots call the API described in AGENTS.md.
@@ -107,6 +109,18 @@ function tylilo_score_strlen(string $value): int
 
 function tylilo_scores_dir(): string
 {
+    if (function_exists('tylilo_is_preview') && tylilo_is_preview()) {
+        if (function_exists('tylilo_preview_isolate_data')) {
+            tylilo_preview_isolate_data();
+        }
+        $fromEnv = getenv('TYLILO_DATA_DIR');
+        if (is_string($fromEnv) && $fromEnv !== '') {
+            return rtrim($fromEnv, '/');
+        }
+
+        return dirname(__DIR__) . '/data';
+    }
+
     $fromEnv = getenv('TYLILO_DATA_DIR');
     if (is_string($fromEnv) && $fromEnv !== '') {
         return rtrim($fromEnv, '/');

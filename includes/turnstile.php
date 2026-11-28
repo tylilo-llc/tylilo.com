@@ -7,6 +7,8 @@ if (!defined('TYLILO_BOOTSTRAPPED')) {
     exit;
 }
 
+require_once __DIR__ . '/preview.php';
+
 /**
  * Cloudflare Turnstile for the contact form.
  * The sitekey is public. The secret is never in this repository:
@@ -28,6 +30,18 @@ function tylilo_turnstile_sitekey(): string
 
 function tylilo_turnstile_dir(): string
 {
+    if (function_exists('tylilo_is_preview') && tylilo_is_preview()) {
+        if (function_exists('tylilo_preview_isolate_data')) {
+            tylilo_preview_isolate_data();
+        }
+        $fromEnv = getenv('TYLILO_DATA_DIR');
+        if (is_string($fromEnv) && $fromEnv !== '') {
+            return rtrim($fromEnv, '/');
+        }
+
+        return dirname(__DIR__) . '/data';
+    }
+
     $fromEnv = getenv('TYLILO_DATA_DIR');
     if (is_string($fromEnv) && $fromEnv !== '') {
         return rtrim($fromEnv, '/');
@@ -61,6 +75,28 @@ function tylilo_turnstile_dir(): string
  */
 function tylilo_private_dirs(): array
 {
+    if (function_exists('tylilo_is_preview') && tylilo_is_preview()) {
+        if (function_exists('tylilo_preview_isolate_data')) {
+            tylilo_preview_isolate_data();
+        }
+        $dirs = [];
+        $add = static function (string $dir) use (&$dirs): void {
+            $dir = rtrim(str_replace('\\', '/', $dir), '/');
+            $base = basename($dir);
+            if ($dir === '' || $dir === '/' || ($base !== 'tylilo-preview-data' && $base !== 'data')) {
+                return;
+            }
+            $dirs[$dir] = $dir;
+        };
+        $fromEnv = getenv('TYLILO_DATA_DIR');
+        if (is_string($fromEnv) && $fromEnv !== '') {
+            $add($fromEnv);
+        }
+        $add(dirname(__DIR__) . '/data');
+
+        return array_values($dirs);
+    }
+
     $dirs = [];
     $add = static function (string $dir) use (&$dirs): void {
         $dir = rtrim(str_replace('\\', '/', $dir), '/');

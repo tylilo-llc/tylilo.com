@@ -17,6 +17,7 @@ ini_set('display_errors', '0');
 ini_set('log_errors', '1');
 
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/preview.php';
 
 $cspNonce = bin2hex(random_bytes(16));
 
@@ -27,6 +28,9 @@ header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: strict-origin-when-cross-origin');
 header('X-Frame-Options: SAMEORIGIN');
 header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+if (tylilo_is_preview()) {
+    header('X-Robots-Tag: noindex, nofollow');
+}
 // OTRadio (/otradio/) loads a public catalog, JPEG artwork, AAC audio, and
 // WebVTT captions from one R2 bucket. Other pages keep the original policy.
 $imgSrc = "'self'";

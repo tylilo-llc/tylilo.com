@@ -29,7 +29,7 @@ const TYLILO_TURNSTILE_SITEKEY = '0x4AAAAAAGLxGfk9two8K9sp';
 const TYLILO_SITE_NAME = 'Tylilo';
 const TYLILO_LEGAL_NAME = 'Tylilo, LLC';
 const TYLILO_YEAR = '2026';
-const TYLILO_URL = 'https://tylilo.com';
+const TYLILO_URL = 'https://preview.tylilo.com';
 
 /**
  * OTRadio stays in otradio/ either way. false hides /otradio/ behind the

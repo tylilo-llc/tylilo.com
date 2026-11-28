@@ -1,0 +1,593 @@
+# Uploads the preview branch to preview.tylilo.com over explicit FTPS.
+# This workflow must never deploy into the production document root.
+# It triggers only on the preview branch. Production stays on deploy.yml / main.
+
+name: Deploy preview to HostM
+
+on:
+  push:
+    branches:
+      - preview
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-tylilo-preview
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy preview over FTPS
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Check secrets and refuse production paths
+        id: ftp
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_SERVER_DIR: ${{ secrets.FTP_SERVER_DIR }}
+          PREVIEW_PASSWORD: ${{ secrets.PREVIEW_PASSWORD }}
+        run: |
+          set -euo pipefail
+          set +x
+          if [ -z "${FTP_SERVER}" ] || [ -z "${FTP_USERNAME}" ] || [ -z "${FTP_PASSWORD}" ]; then
+            echo "FTP secrets are not all set yet (FTP_SERVER, FTP_USERNAME, FTP_PASSWORD)."
+            echo "Skipping preview deploy. Nothing was uploaded."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+          if [ -z "${PREVIEW_PASSWORD}" ]; then
+            echo "PREVIEW_PASSWORD is not set."
+            echo "Add that repository secret, then push to the preview branch again."
+            echo "The preview site was not uploaded, so it stays private."
+            echo "The secret value was not printed."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+          # Confirmed by an FTP probe file that was served at preview.tylilo.com
+          # and was 404 on tylilo.com. Never take this from FTP_SERVER_DIR.
+          dir="public_html/preview.tylilo.com/"
+
+          prod="${FTP_SERVER_DIR:-public_html/}"
+          prod="${prod#/}"
+          case "$prod" in
+            */) ;;
+            *) prod="${prod}/" ;;
+          esac
+
+          if [ "$dir" = "$prod" ]; then
+            echo "Refusing to deploy: the preview path equals the production FTP_SERVER_DIR."
+            exit 1
+          fi
+          case "$dir" in
+            public_html/|public_html/tylilo.com/|tylilo.com/|/)
+              echo "Refusing to deploy: the preview path is a production root."
+              exit 1
+              ;;
+          esac
+          case "$dir" in
+            *preview.tylilo.com/)
+              ;;
+            *)
+              echo "Refusing to deploy: the preview path must be the preview.tylilo.com document root."
+              exit 1
+              ;;
+          esac
+          if ! printf '%s' "$dir" | grep -Eq '^[A-Za-z0-9._/-]+/$'; then
+            echo "The preview path may only contain letters, numbers, dots, underscores, hyphens, and slashes."
+            exit 1
+          fi
+
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+          echo "dir=${dir}" >> "$GITHUB_OUTPUT"
+          echo "FTP secrets found. Deploying the preview into public_html/preview.tylilo.com/"
+          echo "Production FTP_SERVER_DIR is different from the preview path: yes"
+
+      - name: Prepare preview auth and isolate data paths
+        if: steps.ftp.outputs.ready == 'true'
+        id: auth
+        env:
+          PREVIEW_PASSWORD: ${{ secrets.PREVIEW_PASSWORD }}
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_SERVER_DIR: ${{ steps.ftp.outputs.dir }}
+        run: |
+          set -euo pipefail
+          set +x
+          umask 077
+
+          ftp_curl() {
+            curl -k --silent --show-error --ftp-ssl --ssl-reqd --ftp-pasv \
+              --user "${FTP_USERNAME}:${FTP_PASSWORD}" \
+              --connect-timeout 20 --max-time 45 \
+              "$@"
+          }
+
+          # Remove leftover listing-probe files from this doc root only.
+          python3 - << 'PY'
+          import os, ssl, sys
+          from ftplib import FTP_TLS, error_perm
+
+          server = os.environ["FTP_SERVER"]
+          user = os.environ["FTP_USERNAME"]
+          password = os.environ["FTP_PASSWORD"]
+          path = "public_html/preview.tylilo.com"
+          ctx = ssl._create_unverified_context()
+          ftp = FTP_TLS(context=ctx, timeout=30)
+          ftp.connect(server, 21)
+          ftp.login(user, password)
+          ftp.prot_p()
+          try:
+              ftp.cwd("/")
+              ftp.cwd(path)
+          except error_perm:
+              print("Preview directory is not yet listable. Skipping leftover probe cleanup.")
+              ftp.quit()
+              sys.exit(0)
+          names = []
+          try:
+              ftp.retrlines("NLST", names.append)
+          except error_perm:
+              names = []
+          deleted = 0
+          for raw in names:
+              name = raw.strip().split("/")[-1]
+              if name.startswith("tylilo-preview-probe-") and name.endswith(".txt"):
+                  try:
+                      ftp.delete(name)
+                      deleted += 1
+                  except error_perm:
+                      print("Could not delete a leftover probe file.")
+          print(f"Deleted {deleted} leftover probe file(s) from the preview document root.")
+          ftp.quit()
+          PY
+
+          work=$(mktemp -d)
+          # Discover DOCUMENT_ROOT so AuthUserFile can be an absolute path.
+          # Do not print the path: it may contain the FTP account name.
+          cat > "$work/tylilo-preview-docroot.php" << 'PHP'
+          <?php
+          declare(strict_types=1);
+          header('Content-Type: text/plain; charset=UTF-8');
+          header('X-Robots-Tag: noindex, nofollow');
+          header('Cache-Control: no-store');
+          $doc = $_SERVER['DOCUMENT_ROOT'] ?? '';
+          if (!is_string($doc) || $doc === '') {
+              http_response_code(500);
+              exit;
+          }
+          $real = realpath($doc);
+          if (!is_string($real) || $real === '') {
+              http_response_code(500);
+              exit;
+          }
+          $real = rtrim(str_replace('\\', '/', $real), '/');
+          if (!str_ends_with($real, '/preview.tylilo.com')) {
+              http_response_code(500);
+              exit;
+          }
+          echo $real;
+          PHP
+
+          if ! ftp_curl --ftp-create-dirs -T "$work/tylilo-preview-docroot.php" \
+            "ftp://${FTP_SERVER}/${FTP_SERVER_DIR}tylilo-preview-docroot.php"; then
+            echo "Could not upload the document-root probe."
+            exit 1
+          fi
+
+          docroot=""
+          for url in \
+            "https://preview.tylilo.com/tylilo-preview-docroot.php" \
+            "http://preview.tylilo.com/tylilo-preview-docroot.php"
+          do
+            body=$(curl -k --silent --show-error --connect-timeout 20 --max-time 20 "$url" || true)
+            case "$body" in
+              */preview.tylilo.com)
+                docroot="$body"
+                break
+                ;;
+            esac
+          done
+
+          # Always try to remove the probe, even if the read failed.
+          python3 - << 'PY'
+          import os, ssl, sys
+          from ftplib import FTP_TLS, error_perm
+          ctx = ssl._create_unverified_context()
+          ftp = FTP_TLS(context=ctx, timeout=30)
+          ftp.connect(os.environ["FTP_SERVER"], 21)
+          ftp.login(os.environ["FTP_USERNAME"], os.environ["FTP_PASSWORD"])
+          ftp.prot_p()
+          ftp.cwd("/")
+          try:
+              ftp.cwd("public_html/preview.tylilo.com")
+              ftp.delete("tylilo-preview-docroot.php")
+              print("Removed the document-root probe file.")
+          except error_perm:
+              print("Could not remove the document-root probe file.")
+              sys.exit(1)
+          ftp.quit()
+          PY
+
+          if [ -z "${docroot}" ]; then
+            echo "Could not read DOCUMENT_ROOT from the preview host."
+            echo "The path was not printed."
+            exit 1
+          fi
+          case "$docroot" in
+            */public_html/preview.tylilo.com)
+              echo "DOCUMENT_ROOT ends with /public_html/preview.tylilo.com: yes"
+              ;;
+            */preview.tylilo.com)
+              echo "DOCUMENT_ROOT ends with /preview.tylilo.com: yes"
+              ;;
+            *)
+              echo "DOCUMENT_ROOT did not end at the preview document root. Refusing to write auth."
+              exit 1
+              ;;
+          esac
+          case "$docroot" in
+            *..*)
+              echo "DOCUMENT_ROOT is not a safe path."
+              exit 1
+              ;;
+          esac
+
+          hash=$(printf '%s' "${PREVIEW_PASSWORD}" | openssl passwd -apr1 -stdin)
+          printf 'ryan:%s\n' "$hash" > "$work/.htpasswd"
+          unset hash
+          if [ ! -s "$work/.htpasswd" ]; then
+            echo "Failed to generate the preview password file."
+            exit 1
+          fi
+          export PREVIEW_HTPASSWD="$work/.htpasswd"
+          python3 - << 'PY'
+          import os, pathlib, sys
+          path = pathlib.Path(os.environ["PREVIEW_HTPASSWD"])
+          text = path.read_text()
+          if not text.startswith("ryan:") or "\n" not in text or len(text) < 20:
+              print("The password file was not generated correctly.")
+              sys.exit(1)
+          print("Preview password file generated for username ryan.")
+          PY
+
+          if ! ftp_curl --ftp-create-dirs -T "$work/.htpasswd" \
+            "ftp://${FTP_SERVER}/${FTP_SERVER_DIR}.htpasswd"; then
+            echo "Could not upload the preview password file."
+            exit 1
+          fi
+          echo "Uploaded the preview password file."
+
+          authfile="${docroot}/.htpasswd"
+          {
+            printf '%s\n' \
+              'AuthType Basic' \
+              'AuthName "Tylilo preview"' \
+              "AuthUserFile \"${authfile}\"" \
+              'Require valid-user' \
+              ''
+            cat .htaccess
+          } > "$work/.htaccess"
+          cp "$work/.htaccess" .htaccess
+          echo "Wrote HTTP Basic auth directives into .htaccess."
+          # Keep the generated htpasswd in the workspace in case the deploy action uploads it.
+          cp "$work/.htpasswd" .htpasswd
+          echo "authfile_ready=true" >> "$GITHUB_OUTPUT"
+          echo "work=${work}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload the Turnstile secret to preview data only
+        if: steps.ftp.outputs.ready == 'true'
+        env:
+          TURNSTILE_SECRET: ${{ secrets.TURNSTILE_SECRET }}
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          set +x
+          if [ -z "${TURNSTILE_SECRET}" ]; then
+            echo "TURNSTILE_SECRET is not set."
+            echo "The contact form will reject messages until that repository secret exists."
+            echo "The secret value was not printed."
+            exit 0
+          fi
+          umask 077
+          work=$(mktemp -d)
+          php -r 'file_put_contents($argv[1], "<?php\n\ndeclare(strict_types=1);\n\nreturn ".var_export(getenv("TURNSTILE_SECRET"), true).";\n");' "$work/turnstile.php"
+          upload() {
+            local dest="$1"
+            case "$dest" in
+              *tylilo-data/*)
+                echo "Refusing to write a preview secret into a production data path."
+                return 1
+                ;;
+            esac
+            curl -k --silent --show-error --ftp-ssl --ssl-reqd --ftp-pasv --ftp-create-dirs \
+              --user "${FTP_USERNAME}:${FTP_PASSWORD}" \
+              -T "$work/turnstile.php" \
+              "ftp://${FTP_SERVER}/${dest}"
+          }
+          dests=(
+            "tylilo-preview-data/turnstile.php"
+            "public_html/tylilo-preview-data/turnstile.php"
+            "public_html/preview.tylilo.com/data/turnstile.php"
+          )
+          stored=0
+          for dest in "${dests[@]}"; do
+            if upload "$dest"; then
+              echo "Stored the Turnstile secret at ${dest}."
+              stored=$((stored + 1))
+            else
+              echo "Could not store the Turnstile secret at ${dest}."
+            fi
+          done
+          rm -rf "$work"
+          if [ "$stored" -eq 0 ]; then
+            echo "The Turnstile secret was not stored in preview data."
+            exit 1
+          fi
+          echo "The secret value was not printed."
+
+      - name: Upload the admin setup code to preview data only
+        if: steps.ftp.outputs.ready == 'true'
+        env:
+          ADMIN_SETUP_CODE: ${{ secrets.ADMIN_SETUP_CODE }}
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          set +x
+          if [ -z "${ADMIN_SETUP_CODE}" ]; then
+            echo "ADMIN_SETUP_CODE is not set."
+            echo "The first preview admin cannot be created until that repository secret exists."
+            echo "The code was not printed."
+            exit 0
+          fi
+          umask 077
+          work=$(mktemp -d)
+          php -r 'file_put_contents($argv[1], "<?php\n\ndeclare(strict_types=1);\n\nreturn ".var_export(getenv("ADMIN_SETUP_CODE"), true).";\n");' "$work/admin-setup.php"
+          upload() {
+            local dest="$1"
+            case "$dest" in
+              *tylilo-data/*)
+                echo "Refusing to write a preview secret into a production data path."
+                return 1
+                ;;
+            esac
+            curl -k --silent --show-error --ftp-ssl --ssl-reqd --ftp-pasv --ftp-create-dirs \
+              --user "${FTP_USERNAME}:${FTP_PASSWORD}" \
+              -T "$work/admin-setup.php" \
+              "ftp://${FTP_SERVER}/${dest}"
+          }
+          dests=(
+            "tylilo-preview-data/admin-setup.php"
+            "public_html/tylilo-preview-data/admin-setup.php"
+            "public_html/preview.tylilo.com/data/admin-setup.php"
+          )
+          stored=0
+          for dest in "${dests[@]}"; do
+            if upload "$dest"; then
+              echo "Stored the admin setup code at ${dest}."
+              stored=$((stored + 1))
+            else
+              echo "Could not store the admin setup code at ${dest}."
+            fi
+          done
+          rm -rf "$work"
+          if [ "$stored" -eq 0 ]; then
+            echo "The admin setup code was not stored in preview data."
+            exit 1
+          fi
+          echo "The setup code was not printed."
+
+      - name: Upload beta games to preview-only private storage
+        if: steps.ftp.outputs.ready == 'true'
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          set +x
+          if [ ! -d beta ]; then
+            echo "No beta directory. Nothing private to upload."
+            exit 0
+          fi
+          dests=(
+            "tylilo-preview-data/beta"
+            "public_html/tylilo-preview-data/beta"
+            "public_html/preview.tylilo.com/data/beta"
+          )
+          stored=0
+          while IFS= read -r -d '' file; do
+            rel="${file#beta/}"
+            for dest in "${dests[@]}"; do
+              case "$dest" in
+                *tylilo-data/*)
+                  echo "Refusing to write beta files into a production data path."
+                  exit 1
+                  ;;
+              esac
+              if curl -k --silent --show-error --ftp-ssl --ssl-reqd --ftp-pasv --ftp-create-dirs \
+                --user "${FTP_USERNAME}:${FTP_PASSWORD}" \
+                -T "$file" \
+                "ftp://${FTP_SERVER}/${dest}/${rel}"; then
+                stored=$((stored + 1))
+              else
+                echo "Could not store beta/${rel} at ${dest}."
+              fi
+            done
+          done < <(find beta -type f -print0)
+          if [ "$stored" -eq 0 ]; then
+            echo "Beta games were not stored in preview private storage."
+            exit 1
+          fi
+          echo "Stored beta games in preview private storage."
+
+      - name: Deploy preview to HostM
+        if: steps.ftp.outputs.ready == 'true'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          port: 21
+          security: loose
+          server-dir: ${{ steps.ftp.outputs.dir }}
+          log-level: standard
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.github/**
+            **/README
+            **/README.md
+            **/*.md
+            **/.gitignore
+            **/.gitattributes
+            **/.DS_Store
+            **/Thumbs.db
+            **/.ftp-deploy-sync-state.json
+            **/.env
+            **/.env.*
+            **/node_modules/**
+            **/router.php
+            **/scripts/**
+            **/scripts/**/**
+            **/data/**
+            **/feedback-files/**
+            **/idea-images/**
+            **/admin.sqlite
+            **/admin.json
+            **/admin-ip.salt
+            **/admin-setup.php
+            **/tests/**
+            beta/**
+            beta/**/**
+            **/php.ini
+            **/.user.ini
+            **/cgi-bin/**
+            **/.htpasswds/**
+
+      - name: Re-upload preview auth files after sync
+        if: steps.ftp.outputs.ready == 'true'
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_SERVER_DIR: ${{ steps.ftp.outputs.dir }}
+        run: |
+          set -euo pipefail
+          set +x
+          if [ ! -f .htpasswd ] || [ ! -f .htaccess ]; then
+            echo "Auth files are missing from the workspace after deploy."
+            exit 1
+          fi
+          upload() {
+            local file="$1"
+            local dest="$2"
+            curl -k --silent --show-error --ftp-ssl --ssl-reqd --ftp-pasv --ftp-create-dirs \
+              --user "${FTP_USERNAME}:${FTP_PASSWORD}" \
+              -T "$file" \
+              "ftp://${FTP_SERVER}/${dest}"
+          }
+          if ! upload .htpasswd "${FTP_SERVER_DIR}.htpasswd"; then
+            echo "Could not re-upload the preview password file."
+            exit 1
+          fi
+          if ! upload .htaccess "${FTP_SERVER_DIR}.htaccess"; then
+            echo "Could not re-upload the preview .htaccess."
+            exit 1
+          fi
+          echo "Re-uploaded preview auth files."
+
+      - name: Verify preview is private and production is up
+        if: steps.ftp.outputs.ready == 'true'
+        env:
+          PREVIEW_PASSWORD: ${{ secrets.PREVIEW_PASSWORD }}
+        run: |
+          set -euo pipefail
+          set +x
+          # Never use curl -v here: it would log the Authorization header.
+          code_home=$(curl -k --silent --show-error --output /dev/null --write-out '%{http_code}' \
+            --connect-timeout 20 --max-time 20 https://preview.tylilo.com/ || true)
+          code_robots=$(curl -k --silent --show-error --output /dev/null --write-out '%{http_code}' \
+            --connect-timeout 20 --max-time 20 https://preview.tylilo.com/robots.txt || true)
+          echo "preview.tylilo.com/ without a password: HTTP ${code_home}"
+          echo "preview.tylilo.com/robots.txt without a password: HTTP ${code_robots}"
+          if [ "$code_home" != "401" ] || [ "$code_robots" != "401" ]; then
+            echo "Preview is not password-protected as expected (HTTP 401)."
+            exit 1
+          fi
+
+          umask 077
+          robots=$(mktemp)
+          headers=$(mktemp)
+          # -u would appear in process lists; use a netrc-like curl config file instead.
+          cfg=$(mktemp)
+          printf 'machine preview.tylilo.com\nlogin ryan\npassword %s\n' "${PREVIEW_PASSWORD}" > "$cfg"
+          code_ok=$(curl -k --silent --show-error --netrc-file "$cfg" --dump-header "$headers" \
+            --output "$robots" --write-out '%{http_code}' \
+            --connect-timeout 20 --max-time 20 https://preview.tylilo.com/robots.txt || true)
+          rm -f "$cfg"
+          echo "preview.tylilo.com/robots.txt with the preview login: HTTP ${code_ok}"
+          if [ "$code_ok" != "200" ]; then
+            echo "Could not read preview robots.txt with the preview login."
+            rm -f "$robots" "$headers"
+            exit 1
+          fi
+          if ! grep -q '^User-agent: \*$' "$robots" || ! grep -q '^Disallow: /$' "$robots"; then
+            echo "Preview robots.txt does not disallow all crawlers."
+            rm -f "$robots" "$headers"
+            exit 1
+          fi
+          if grep -qi 'Sitemap:' "$robots"; then
+            echo "Preview robots.txt should not advertise a sitemap."
+            rm -f "$robots" "$headers"
+            exit 1
+          fi
+          echo "Preview robots.txt disallows all crawlers."
+          if ! grep -qi 'X-Robots-Tag: *noindex, nofollow' "$headers"; then
+            echo "Warning: X-Robots-Tag was not present on robots.txt. Checking the homepage."
+          else
+            echo "X-Robots-Tag noindex, nofollow is present."
+          fi
+          rm -f "$robots" "$headers"
+
+          cfg=$(mktemp)
+          printf 'machine preview.tylilo.com\nlogin ryan\npassword %s\n' "${PREVIEW_PASSWORD}" > "$cfg"
+          headers=$(mktemp)
+          code_page=$(curl -k --silent --show-error --netrc-file "$cfg" --dump-header "$headers" \
+            --output /dev/null --write-out '%{http_code}' \
+            --connect-timeout 20 --max-time 20 https://preview.tylilo.com/ || true)
+          rm -f "$cfg"
+          echo "preview.tylilo.com/ with the preview login: HTTP ${code_page}"
+          if [ "$code_page" != "200" ]; then
+            echo "Preview homepage did not return HTTP 200 after login."
+            rm -f "$headers"
+            exit 1
+          fi
+          if ! grep -qi 'X-Robots-Tag: *noindex, nofollow' "$headers"; then
+            echo "X-Robots-Tag noindex, nofollow is missing on the preview homepage."
+            rm -f "$headers"
+            exit 1
+          fi
+          echo "Preview homepage sends X-Robots-Tag noindex, nofollow."
+          rm -f "$headers"
+
+          prod=$(curl -k --silent --show-error --output /dev/null --write-out '%{http_code}' \
+            --connect-timeout 20 --max-time 20 https://tylilo.com/ || true)
+          echo "tylilo.com/ after preview deploy: HTTP ${prod}"
+          if [ "$prod" != "200" ]; then
+            echo "Production homepage is not HTTP 200."
+            exit 1
+          fi

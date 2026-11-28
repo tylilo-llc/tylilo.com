@@ -10,6 +10,9 @@ if (!defined('TYLILO_BOOTSTRAPPED')) {
 $pageTitle = $pageTitle ?? TYLILO_SITE_NAME;
 $pageDescription = $pageDescription ?? 'Tylilo, LLC. Placeholder homepage for a company and studio site.';
 $pageRobots = $pageRobots ?? 'index, follow';
+if (function_exists('tylilo_is_preview') && tylilo_is_preview()) {
+    $pageRobots = 'noindex, nofollow';
+}
 $pageCanonical = $pageCanonical ?? '';
 $pageImage = $pageImage ?? '/assets/img/og.png';
 $pageImageAlt = $pageImageAlt ?? 'Tylilo logo on a navy background';
