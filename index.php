@@ -7,20 +7,17 @@ require __DIR__ . '/includes/bootstrap.php';
 /**
  * HOMEPAGE COPY
  * -------------
- * The tagline is set. The About section is hidden until its copy is
- * written (Ryan asked to take it down on 2026-11-21; revisit Dec 10).
- * Set $showAbout to true to bring it back. Messages are sent to TYLILO_CONTACT_EMAIL in config.php.
+ * Consulting comes first. Software is second. The Arcade is a side note.
+ * Testimonials are the array in includes/testimonials.php. Leave it empty
+ * until a real quote exists. Messages go to TYLILO_CONTACT_EMAIL in config.php.
  * That address is not shown on the page.
  */
 $pageTitle = 'Tylilo';
-$tagline = 'Welcome!';
-$aboutHeading = 'A friendly little studio.';
-$aboutBody = 'A short description of Tylilo will live here — who you are, what you make, and why it matters. This is placeholder copy for a company or studio homepage.';
-
-$showAbout = false;
-
-$pageDescription = 'Tylilo, LLC makes UDLR games. Play free browser games in the Tylilo Arcade, or send us a message.';
+$pageDescription = 'Tylilo, LLC provides business consultation and software development.';
 $pageCanonical = TYLILO_URL . '/';
+
+require_once __DIR__ . '/includes/testimonials.php';
+$testimonials = tylilo_testimonials();
 
 tylilo_session_start();
 $flash = $_SESSION['contact_flash'] ?? null;
@@ -43,45 +40,62 @@ require __DIR__ . '/includes/head.php';
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="hero">
-    <div class="hero-shapes" aria-hidden="true">
-      <span class="blob a"></span>
-      <span class="blob b"></span>
-      <span class="blob c"></span>
-    </div>
 <?php require __DIR__ . '/includes/topbar.php'; ?>
-    <div class="hero-inner">
-      <div class="logo-seal">
-        <img src="/assets/img/logo-round.webp" alt="Tylilo logo" width="168" height="168" fetchpriority="high">
-      </div>
-      <h1 class="tagline"><?= tylilo_e($tagline) ?></h1>
-    </div>
   </header>
 
   <main id="main" tabindex="-1">
+    <section class="signal-hero">
+      <div class="signal-inner">
+        <p class="eyebrow">Tylilo, LLC</p>
+        <h1>Business consultation.</h1>
+        <p class="lede">Tylilo, LLC provides business consultation, and also develops software.</p>
+        <div class="hero-actions">
+          <a class="btn" href="#consulting">Business consultation</a>
+          <a class="btn btn-quiet" href="#contact">Contact</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="band" id="consulting" aria-labelledby="consulting-heading">
+      <div class="signal-inner">
+        <p class="eyebrow">Consulting</p>
+        <h2 id="consulting-heading">Business consultation</h2>
+        <p class="lede-quiet">Tylilo, LLC provides business consultation.</p>
+        <p><a class="btn" href="#contact">Contact</a></p>
+      </div>
+    </section>
+
+    <section class="band band-soft" id="software" aria-labelledby="software-heading">
+      <div class="signal-inner">
+        <p class="eyebrow">Software</p>
+        <h2 id="software-heading">Software development</h2>
+        <p class="lede-quiet">Tylilo, LLC also develops software. Castmaker is one example.</p>
+      </div>
+    </section>
+
+    <section class="band" id="about" aria-labelledby="about-heading">
+      <div class="signal-inner narrow">
+        <p class="eyebrow">The company</p>
+        <h2 id="about-heading">About Tylilo, LLC</h2>
+        <p>Tylilo, LLC provides business consultation and develops software.</p>
+      </div>
+    </section>
+
+    <section class="band band-soft" id="testimonials" aria-labelledby="testimonials-heading">
+      <div class="signal-inner narrow">
+        <p class="eyebrow">Clients</p>
+        <h2 id="testimonials-heading">Testimonials</h2>
+        <?= tylilo_testimonials_html($testimonials) ?>
+      </div>
+    </section>
+
+    <aside class="side-note">
+      <div class="signal-inner">
+        <p>The <a href="/arcade/">Arcade</a> is a side project.</p>
+      </div>
+    </aside>
+
     <div class="wrap">
-<?php if ($showAbout): ?>
-      <section class="card about-card" id="about" aria-labelledby="about-heading">
-        <p class="kicker">About</p>
-        <h2 id="about-heading"><?= tylilo_e($aboutHeading) ?></h2>
-        <p class="muted"><?= tylilo_e($aboutBody) ?></p>
-      </section>
-<?php endif; ?>
-
-      <section class="arcade-home" aria-labelledby="arcade-home-heading">
-        <h2 id="arcade-home-heading" class="visually-hidden">Arcade</h2>
-        <a class="arcade-tile" href="/arcade/">
-          <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="64" height="64">
-            <path fill="currentColor" d="M8 7.4h8c2.55 0 4.35 1.85 4.15 4.35l-.35 2.7c-.28 1.7-1.75 2.95-3.45 2.95-1.05 0-2.05-.5-2.65-1.35L12.9 15h-1.8l-.8 1.05c-.6.85-1.6 1.35-2.65 1.35-1.7 0-3.17-1.25-3.45-2.95l-.35-2.7C3.65 9.25 5.45 7.4 8 7.4z"/>
-            <path fill="var(--btn2-bg)" d="M7.15 10.55h1.2v1.15h1.15v1.2H8.35v1.15h-1.2V12.9H6v-1.2h1.15z"/>
-            <circle cx="15.15" cy="11.35" r=".72" fill="var(--btn2-bg)"/>
-            <circle cx="16.85" cy="12.9" r=".72" fill="var(--btn2-bg)"/>
-            <circle cx="15.15" cy="14.45" r=".72" fill="var(--btn2-bg)"/>
-            <circle cx="13.45" cy="12.9" r=".72" fill="var(--btn2-bg)"/>
-          </svg>
-          Arcade
-        </a>
-      </section>
-
       <section class="contact-block" id="contact" aria-labelledby="contact-heading">
         <div class="card">
           <p class="kicker">Contact</p>
@@ -145,8 +159,9 @@ require __DIR__ . '/includes/head.php';
         '@context' => 'https://schema.org',
         '@type' => 'Organization',
         'name' => TYLILO_LEGAL_NAME,
+        'description' => $pageDescription,
         'url' => TYLILO_URL . '/',
-        'logo' => TYLILO_URL . '/assets/img/logo-round.webp',
+        'logo' => TYLILO_URL . '/resources/Tylilo-Logo/Tylilo-Logo-Small.png',
     ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_THROW_ON_ERROR) ?>
   </script>
 <?php

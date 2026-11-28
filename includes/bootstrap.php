@@ -96,6 +96,14 @@ function tylilo_asset(string $webPath): string
  * Stylesheet contents for inlining. Font URLs are root-absolute so they
  * still resolve when the CSS is not served from /assets/css/.
  */
+function tylilo_request_is_admin(): bool
+{
+    $path = parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH);
+    $path = is_string($path) ? $path : '/';
+
+    return $path === '/admin' || str_starts_with($path, '/admin/');
+}
+
 function tylilo_inline_css(string $webPath): string
 {
     $path = '/' . ltrim($webPath, '/');

@@ -2,7 +2,7 @@
 
 Company and studio site for Tylilo, LLC. The first version is a single homepage: a navy hero, a short About section, and a contact form. It is plain HTML, CSS, and JavaScript plus a small PHP contact handler, so HostM can serve it with no build step.
 
-The look is the approved “style B, bold playful” design: big navy hero, the round logo as a badge, soft blob shapes, cream cards, and pill-shaped buttons. A Light / Dark / Auto switch remembers the choice in this browser. Auto follows the device setting. The saved choice is applied before the page paints, so it does not flash the wrong theme.
+The public look is Signal: a dark bar and hero, a light page, and a dark footer, in the manner of a software studio. Admin pages keep the earlier navy hero. A Light / Dark / Auto switch remembers the choice in this browser. Auto follows the device setting. The saved choice is applied before the page paints, so it does not flash the wrong theme.
 
 ## Preview locally
 
@@ -24,16 +24,15 @@ Open [http://localhost:8000](http://localhost:8000).
 
 The contact form needs PHP, so opening the files directly from Finder or File Explorer will not run it. Use the command above.
 
-## Edit the placeholder text
+## Edit the homepage text
 
-The tagline on the homepage is **Welcome!**. It is the `$tagline` line at the top of `index.php`.
+The public site uses the Signal design: a dark bar and hero, a light page, and a dark footer. The homepage leads with business consultation, then software development. The Arcade is a side note, not the focus.
 
-Ryan has not written the About copy yet. Those stand-in words are in the same block:
+The browser title stays **Tylilo**. The search description is `$pageDescription` in `index.php`.
 
-- About heading
-- About paragraph
+Consulting details are not written yet. The homepage states that Tylilo, LLC provides business consultation and links to the contact form. Do not add services, clients, results, or numbers until Ryan supplies them.
 
-The browser title stays **Tylilo**. The About paragraph is also the page description used for search and link previews. Change that paragraph once and both update. The tagline is not copied into the title or the description.
+Testimonials live in `includes/testimonials.php`. The list is empty until a real quote exists. See AGENTS.md.
 
 ### Contact email
 

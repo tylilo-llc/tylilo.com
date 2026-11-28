@@ -10,7 +10,18 @@ if (!defined('TYLILO_BOOTSTRAPPED')) {
 $nonce = tylilo_e($cspNonce);
 ?>
     <div class="top">
+<?php if (!tylilo_request_is_admin()): ?>
+      <a class="wordmark" href="/" aria-label="Tylilo, home"><img class="brand-mark" src="/resources/Tylilo-Logo/Tylilo-Logo-Small.png" alt="" width="96" height="36"></a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="/#consulting">Consulting</a>
+        <a href="/#software">Software</a>
+        <a href="/#about">About</a>
+        <a href="/#contact">Contact</a>
+        <a href="/arcade/"<?php if (($pageCanonical ?? '') === TYLILO_URL . '/arcade/'): ?> aria-current="page"<?php endif; ?>>Arcade</a>
+      </nav>
+<?php else: ?>
       <a class="wordmark" href="/" aria-label="Tylilo, home">Tylilo</a>
+<?php endif; ?>
       <div class="theme" role="group" aria-label="Theme">
         <button type="button" data-theme-set="light" aria-pressed="false" aria-label="Light theme" title="Light theme">
           <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="22" height="22">
