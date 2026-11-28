@@ -2,6 +2,22 @@
 <!--
   RED RAIN - changelog
   ====================
+  v2.2.10 (2026-11-28) - Red Rain 3.0 endless-progression plan, Day 2
+  - Fix: the "new threat" hints used Easy's wave numbers on every difficulty (waves 3/5/6/7/11), so on Normal,
+    Expert and Insane they showed up waves after the threat had already arrived (Insane: bomber hint on wave 6,
+    bombers since wave 3; stealth hint on 11, stealth since 6). Each difficulty now reads its own debut waves from
+    its real wave recipe (threatDebuts): fast / splitters / bombers / drones / stealth bombers =
+    Easy 3/5/6/7/11, Normal 2/4/5/6/10, Expert 2/3/3/4/8, Insane 2/3/3/3/6.
+  - NEW THREAT intro waves: the wave a threat debuts on is now an intro wave. It runs at 90% of the normal missile
+    count; a new missile type (fast, splitting) appears 2-3 times, a new aircraft at its usual debut count; and
+    nothing else is added that wave - salvos, salvo size, 3-way splits and every other enemy count stay at the
+    previous wave's level. Missile speed, spacing, ammo and misses are unchanged. The wave banner says
+    "NEW THREAT: ..." in gold (one line per debut) and stays up 3.4 s instead of 2.2 s. All other waves are
+    unchanged (waveSpecRaw = the 2.2.9 recipe). Where the current schedule debuts several threats on one wave
+    (Expert wave 3, Insane wave 3) they share one intro wave; moving debuts apart is the later
+    "difficulty offsets" build. Side effect on Expert / Insane: salvos, which also started on wave 3, now start
+    on wave 4.
+  - How to Play: one line about NEW THREAT waves. No new saved keys; leaderboards and score saving untouched.
   v2.2.9 (2026-11-27)
   - New shared UDLR launch splash (Ryan, Nov 21: "a little too fast", it showed only the end of the splash when he
     reopened a game, it should fade out to the game, and show only the first time a game is played).
@@ -861,7 +877,7 @@ try {
 <script>
 (() => {
 'use strict';
-const VERSION = '2.2.9';   // MAJOR.MINOR.BUILD - BUILD +1 per shipped release, never reset
+const VERSION = '2.2.10';   // MAJOR.MINOR.BUILD - BUILD +1 per shipped release, never reset
 document.title = 'Red Rain v' + VERSION;
 // ---------- helpers ----------
 const canvas = document.getElementById('c');
@@ -1323,8 +1339,10 @@ const blastRadius = () => (36 + G.up.blast * 8) * blastScale();
 const shotSpeed = () => (330 + G.up.speed * 85) * vS;
 const shieldR = () => SHIELD_R * gs;
 // ---------- difficulty curve: small smooth per-wave increments with caps ----------
-function waveSpec(n) {
-  const d = DF();
+// v2.2.10 (3.0 plan, Day 2): waveSpecRaw = the 2.2.9 recipe (unchanged, any difficulty d); waveSpec = that recipe plus the
+// NEW THREAT intro wave rules below.
+function waveSpecRaw(n, d) {
+  d = d || DF();
   if (d === DIFFS.easy) return waveSpecBase(n);
   // t: enemy-type schedule shifted earlier (never on wave 1). v2.2.8: wave 2 only shifts by 1 (the Normal shift) so Expert/Insane
   // don't open wave 2 with wave-5/7 content (salvos, bomber, drone, extra fast/split) on top of the bigger count - that was the pile-up.
@@ -1340,6 +1358,50 @@ function waveSpec(n) {
     stray: b.stray * d.stray,
     ammo: Math.max(6, b.ammo + d.ammo),
   });
+}
+// ---------- NEW THREAT intro waves (v2.2.10, 3.0 plan Day 2) ----------
+// The 5 enemy types that get a NEW THREAT banner. Their debut wave is read from the real recipe of the difficulty being
+// played (first wave the type appears), so the hint lands on the wave the threat actually arrives:
+// Easy 3/5/6/7/11, Normal 2/4/5/6/10, Expert 2/3/3/4/8, Insane 2/3/3/3/6 (fast/splitters/bombers/drones/stealth).
+// (Spreading co-debuts apart is the later "difficulty offsets" build; until then they share one intro wave.)
+const THREATS = [
+  { key: 'nFast',    hint: 'fast warheads (orange trails)', missile: true },
+  { key: 'nSplit',   hint: 'splitting warheads (pink) - hit them early', missile: true },
+  { key: 'nBomb',    hint: 'bombers drop warheads as they cross' },
+  { key: 'nDrone',   hint: 'kamikaze drones - they dive after a red blink!' },
+  { key: 'nStealth', hint: 'stealth bombers - shoot down their nukes!' },
+];
+const INTRO_PRESSURE = 0.9;                 // an intro wave runs at 90% of the normal missile count
+const INTRO_HOLD = ['salvos', 'salvoSize', 'nFast', 'nSplit', 'nBomb', 'nDrone', 'nStealth', 'splitKids'];
+const debutCache = {};
+function threatDebuts(d) {                  // { nFast: wave, ... } for difficulty object d (default: current)
+  d = d || DF();
+  const id = Object.keys(DIFFS).find(k => DIFFS[k] === d) || 'easy';
+  if (debutCache[id]) return debutCache[id];
+  const out = {};
+  for (let n = 1; n <= 60 && Object.keys(out).length < THREATS.length; n++) {
+    const sp = waveSpecRaw(n, d);
+    for (const t of THREATS) if (out[t.key] == null && sp[t.key] > 0) out[t.key] = n;
+  }
+  return (debutCache[id] = out);
+}
+const introThreats = (n, d) => { const db = threatDebuts(d); return THREATS.filter(t => db[t.key] === n); };
+function waveSpec(n) {
+  const d = DF(), raw = waveSpecRaw(n, d), intro = n >= 2 ? introThreats(n, d) : [];
+  if (!intro.length) return raw;
+  // Intro wave: 90% of the missile count; the new enemy shows up 2-3 times (new missile types) or at its normal debut
+  // count (aircraft); nothing else is added - every other type (and salvo size / 3-way splits) stays at last wave's level.
+  const prev = waveSpecRaw(n - 1, d), keys = intro.map(t => t.key);
+  const s = Object.assign({}, raw, { count: Math.max(1, Math.round(raw.count * INTRO_PRESSURE)), intro: keys });
+  for (const k of INTRO_HOLD) s[k] = keys.includes(k) ? raw[k] : prev[k];
+  for (const t of intro) if (t.missile) s[t.key] = clamp(raw[t.key], 2, 3);
+  const maxSpecial = Math.floor(s.count * 0.6);
+  while (s.nFast + s.nSplit > maxSpecial) {
+    if (!keys.includes('nFast') && s.nFast > 0) s.nFast--;
+    else if (!keys.includes('nSplit') && s.nSplit > 0) s.nSplit--;
+    else if (s.nFast >= s.nSplit) s.nFast--; else s.nSplit--;
+  }
+  return s;
 }
 function waveSpecBase(n) {
   const count = Math.min(32, Math.round(5 * Math.pow(1.09, n - 1)));      // +9%/wave
@@ -1482,7 +1544,7 @@ function startWave() {
   }
   // highlight cities that got a shield in the Armory
   G.cities.forEach(c => { if (c.shield && c.shield.fresh) { c.shield.fresh = false; c.shield.glow = 3; G.floaters.push({ x: c.x, y: GROUND - 84 * gs, text: 'SHIELD UP', t: 2.6, c: '#9fe6ff' }); } });
-  G.banner = 2.2;
+  G.banner = G.wave > 1 && introThreats(G.wave).length ? 3.4 : 2.2;   // v2.2.10: NEW THREAT banners stay up longer
   setState('playing');
   SFX.wave();
 }
@@ -1941,6 +2003,7 @@ function helpContent() {
     'Builder Crew rebuilds a ruined city over one wave (fails if hit).',
     'Rebuild City needs a charge: +1 every 6 waves, up to 3.',
     'Spend your cash in the Armory between waves.',
+    'NEW THREAT waves introduce each new enemy on a slightly lighter wave; harder levels meet them sooner.',
   ];
   return { rows, how };
 }
@@ -1995,6 +2058,9 @@ function drawHelp() {
 // Player-facing release notes, newest first, written from the changelog. Opens ONLY from the
 // WHAT'S NEW button or the W key - never automatically.
 const WHATS_NEW = [
+  { v: '2.2.10', d: '2026-11-28', items: [
+    'The "new threat" warnings now show on the wave each threat really arrives on your difficulty (before, Normal, Expert and Insane got them several waves late).',
+    'NEW THREAT waves: when a new enemy first appears, that wave is a little lighter and adds nothing else, so you can learn it.' ] },
   { v: '2.2.9', d: '2026-11-27', items: [
     'New UDLR splash: slower (about 4 seconds), it fades into the Red Rain title screen, and it only plays the first time you play on a device (add ?splash=1 to the address to see it again).',
     'Fixed the glitch where reopening the game showed only the end of the splash.',
@@ -2665,6 +2731,7 @@ G._dbg = { waveSpec: n => waveSpec(n), fireAt: (x, y) => fireAt(x, y), startWave
   fireworks: () => G.fw ? { t: G.fw.t, rockets: G.fw.rockets.length, sparks: G.fw.sparks.length } : null, spawnNuke: (x, y) => spawnNuke(x, y), nukeImpact: (x, y) => nukeImpact(x, y), nukeDirectR: () => NUKE_DIRECT_R(), nukeBurstY: () => nukeBurstY(), spawnMissile: (t, x, y, tg) => spawnMissile(t, x, y, tg), impact: (x, y) => impact(x, y), inShield: (x, y) => !!inShield(x, y),
   fsSupported, toggleFullscreen: () => toggleFullscreen(), fsRect: () => fsRect(),
   music: () => ({ on: musicOn, built: !!music, step: music ? music.step : 0, ctx: actx ? actx.state : 'none', bus: music ? music.bus.gain.value : 0, muted, stored: (() => { try { return localStorage.getItem('redReignMusic'); } catch (e) { return 'n/a'; } })() }), setMusic: on => setMusic(on) };
+Object.assign(G._dbg, { waveSpecRaw: (n, d) => waveSpecRaw(n, d ? DIFFS[d] : undefined), threatDebuts: d => ({ ...threatDebuts(d ? DIFFS[d] : undefined) }), waveHints: n => waveHints(n), banner: () => G.banner });   // v2.2.10
 G._dbg.lbUi = () => ({ warn: lbLeaveWarn(), level: G.lb ? G.lb.level : null, refreshes: (r => r ? r.refreshes || 0 : 0)(G.lbRun || (G.lb && G.lb.run)), queued: G.lb ? G.lb.queued : null, busy: G.lb ? G.lb.busy : null, tok: (r => r ? { has: !!r.token, age: LB.tokenAge(r), wait: LB.waitMs(r), tries: r.tries, state: r.state, dead: r.dead } : null)(G.lbRun || (G.lb && G.lb.run)), status: G.lb ? lbStatus(G.lb) : null, mode: G.lb ? G.lb.mode : null, msg: G.lb ? G.lb.msg : '', playedMs: G.lb ? G.lb.playedMs : null, score: G.lb ? G.lb.score : null, run: G.lbRun ? { state: G.lbRun.state, board: G.lbRun.board } : (G.lb && G.lb.run ? { state: G.lb.run.state, board: G.lb.run.board } : null), ui: GO.lb, btn: GO.btn, runMs: G.runMs, input: { display: lbInput.style.display, value: lbInput.value, disabled: lbInput.disabled } });   // v2.2.4 test hook
 
 // ---------- update ----------
@@ -4815,7 +4882,8 @@ function render() {
       ctx.globalAlpha = clamp(G.banner, 0, 1);
       const by = safe.t + UI.hudH + (cssH - safe.t - UI.hudH - safe.b) * 0.3;
       txt('WAVE ' + G.wave, b.cx, by, fsz(56, o, 36), '#ffb3a0', 'center', 'bold', b.w);
-      txt(G.wave === 1 ? 'Protect the cities!' : waveHint(), b.cx, by + fsz(46, o, 34), fsz(18, o, 14), '#fff', 'center', 'normal', b.w);
+      const hl = waveHints(), isNew = G.wave > 1 && introThreats(G.wave).length > 0, hs = fsz(18, o, 14);
+      hl.forEach((l, i) => txt(l, b.cx, by + fsz(46, o, 34) + i * hs * 1.5, hs, isNew ? '#ffd166' : '#fff', 'center', isNew ? 'bold' : 'normal', b.w));
       ctx.globalAlpha = 1;
     }
     if (G.state === 'finale' || (G.state === 'dying' && G.overReason === 'turrets')) drawDefensesDown();
@@ -4832,14 +4900,14 @@ function render() {
   drawOptions();
   drawCrosshair();
 }
-function waveHint() {
-  if (G.wave === 3) return 'New threat: fast warheads (orange trails)';
-  if (G.wave === 5) return 'New threat: splitting warheads (pink) - hit them early';
-  if (G.wave === 6) return 'New threat: bombers drop warheads as they cross';
-  if (G.wave === 7) return 'New threat: kamikaze drone - it dives after a red blink!';
-  if (G.wave === 11) return 'Stealth bombers inbound - shoot down their nukes!';
-  return 'Hold the line';
+// v2.2.10: hint lines come from the debut waves of the difficulty being played (one line per threat debuting this wave)
+function waveHints(n) {
+  n = n == null ? G.wave : n;
+  if (n === 1) return ['Protect the cities!'];
+  const intro = introThreats(n);
+  return intro.length ? intro.map(t => 'NEW THREAT: ' + t.hint) : ['Hold the line'];
 }
+function waveHint() { return waveHints().join(' / '); }
 
 // title-screen demo
 let demoT = 0;
