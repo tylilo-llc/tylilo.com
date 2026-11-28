@@ -14,6 +14,9 @@ AddDefaultCharset UTF-8
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
+  # Hand the Authorization header to PHP (the playtest feed reads a bearer token).
+  RewriteCond %{HTTP:Authorization} .
+  RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
   RewriteRule ^includes/ - [F,L]
   RewriteRule ^scripts/ - [F,L]
   RewriteRule ^data/ - [F,L]

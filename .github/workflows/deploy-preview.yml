@@ -359,6 +359,59 @@ jobs:
           fi
           echo "The secret value was not printed."
 
+      - name: Upload the playtest read token to preview data only
+        if: steps.ftp.outputs.ready == 'true'
+        env:
+          PLAYTEST_READ_TOKEN: ${{ secrets.PLAYTEST_READ_TOKEN }}
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          set +x
+          if [ -z "${PLAYTEST_READ_TOKEN}" ]; then
+            echo "PLAYTEST_READ_TOKEN is not set."
+            echo "The preview playtest feed stays off (503) until that repository secret exists."
+            echo "The secret value was not printed."
+            exit 0
+          fi
+          umask 077
+          work=$(mktemp -d)
+          php -r 'file_put_contents($argv[1], "<?php\n\ndeclare(strict_types=1);\n\nreturn ".var_export(getenv("PLAYTEST_READ_TOKEN"), true).";\n");' "$work/playtest-read.php"
+          upload() {
+            local dest="$1"
+            case "$dest" in
+              *tylilo-data/*)
+                echo "Refusing to write a preview secret into a production data path."
+                return 1
+                ;;
+            esac
+            curl -k --silent --show-error --ftp-ssl --ssl-reqd --ftp-pasv --ftp-create-dirs \
+              --user "${FTP_USERNAME}:${FTP_PASSWORD}" \
+              -T "$work/playtest-read.php" \
+              "ftp://${FTP_SERVER}/${dest}"
+          }
+          dests=(
+            "tylilo-preview-data/playtest-read.php"
+            "public_html/tylilo-preview-data/playtest-read.php"
+            "public_html/preview.tylilo.com/data/playtest-read.php"
+          )
+          stored=0
+          for dest in "${dests[@]}"; do
+            if upload "$dest"; then
+              echo "Stored the playtest read token at ${dest}."
+              stored=$((stored + 1))
+            else
+              echo "Could not store the playtest read token at ${dest}."
+            fi
+          done
+          rm -rf "$work"
+          if [ "$stored" -eq 0 ]; then
+            echo "The playtest read token was not stored in preview data."
+            exit 1
+          fi
+          echo "The secret value was not printed."
+
       - name: Upload the admin setup code to preview data only
         if: steps.ftp.outputs.ready == 'true'
         env:
@@ -547,6 +600,8 @@ jobs:
             **/admin.json
             **/admin-ip.salt
             **/admin-setup.php
+            **/playtest-read.php
+            **/playtest/**
             **/tests/**
             beta/**
             beta/**/**
