@@ -118,5 +118,9 @@ check(str_contains($betaPage, 'Show in Arcade') && str_contains($betaPage, 'Hide
 check(str_contains($betaPage, 'Some can also be played in the Arcade under Alpha/Beta Games'), 'the Beta tab intro matches the public Arcade section');
 check(!preg_match('/header\s*\([^;]*Content-Security-Policy/', (string) file_get_contents($root . '/arcade/early.php')), 'the public game gate does not send the site CSP');
 
+$earlySrc = (string) file_get_contents($root . '/arcade/early.php');
+check(str_contains($earlySrc, "header('Location: /arcade/'") && !str_contains($earlySrc, "require __DIR__ . '/../404.php'"), 'hidden beta URLs redirect to the Arcade instead of including the 404 page');
+
 echo "\n{$checks} checks, {$failed} failed\n";
+
 exit($failed === 0 ? 0 : 1);
