@@ -165,23 +165,32 @@ function tylilo_contacts_all(?int $now = null): array
         $stage = tylilo_contact_pick($inquiries, 'stage');
         $size = tylilo_contact_pick($inquiries, 'size');
         $location = tylilo_contact_pick($inquiries, 'location');
+        $snap = static fn (string $key): string => trim((string) ($m[$key] ?? ''));
+        $name = tylilo_contact_pick($inquiries, 'name');
+        $business = tylilo_contact_pick($inquiries, 'business');
+        $website = tylilo_contact_pick($inquiries, 'website');
+        $industry = tylilo_contact_pick($inquiries, 'industry');
         $profiles[] = [
             'id' => $id,
             'email' => $email,
-            'name' => tylilo_contact_pick($inquiries, 'name'),
-            'business' => tylilo_contact_pick($inquiries, 'business'),
-            'website' => tylilo_contact_pick($inquiries, 'website'),
-            'location' => $location !== '' ? tylilo_inquiry_label('location', $location) : '',
-            'stage' => $stage !== '' ? tylilo_inquiry_label('stage', $stage) : '',
-            'size' => $size !== '' ? tylilo_inquiry_label('size', $size) : '',
-            'industry' => tylilo_contact_pick($inquiries, 'industry'),
-            'fit' => (string) ($latest['fit'] ?? ''),
-            'fit_reasons' => is_array($latest['fit_reasons'] ?? null) ? $latest['fit_reasons'] : [],
+            'name' => $name !== '' ? $name : $snap('name'),
+            'business' => $business !== '' ? $business : $snap('business'),
+            'website' => $website !== '' ? $website : $snap('website'),
+            'location' => $location !== '' ? tylilo_inquiry_label('location', $location) : $snap('location'),
+            'stage' => $stage !== '' ? tylilo_inquiry_label('stage', $stage) : $snap('stage'),
+            'size' => $size !== '' ? tylilo_inquiry_label('size', $size) : $snap('size'),
+            'industry' => $industry !== '' ? $industry : $snap('industry'),
+            'fit' => (string) (($latest['fit'] ?? '') !== '' ? $latest['fit'] : $snap('fit')),
+            'fit_reasons' => is_array($latest['fit_reasons'] ?? null) && $latest['fit_reasons'] !== []
+                ? $latest['fit_reasons']
+                : (is_array($m['fit_reasons'] ?? null) ? $m['fit_reasons'] : []),
             'status' => $status,
             'status_at' => (int) ($m['status_at'] ?? 0),
             'notes' => $notes,
             'inquiries' => $inquiries,
-            'first_contact' => $inquiries !== [] ? (int) ($inquiries[count($inquiries) - 1]['created_at'] ?? 0) : (int) ($m['created_at'] ?? 0),
+            'first_contact' => $inquiries !== []
+                ? (int) ($inquiries[count($inquiries) - 1]['created_at'] ?? 0)
+                : (int) (($m['first_contact'] ?? 0) ?: ($m['created_at'] ?? 0)),
             'last_activity' => $activity,
             'due' => $status !== 'engaged' && $activity > 0 && ($now - $activity) > TYLILO_CONTACT_RETENTION,
         ];
@@ -194,6 +203,150 @@ function tylilo_contacts_all(?int $now = null): array
 /**
  * @return array<string, mixed>|null
  */
+
+/**
+ * Fields kept on a contact so the profile remains after its inquiries
+ * are removed from the inquiry list.
+ *
+ * @param array<string, mixed> $row
+ * @return array<string, mixed>
+ */
+function tylilo_contact_snapshot_from_inquiry(array $row): array
+{
+    $a = is_array($row['answers'] ?? null) ? $row['answers'] : [];
+    $pick = static function (string $key) use ($a): string {
+        $v = $a[$key] ?? '';
+
+        return is_string($v) ? trim($v) : '';
+    };
+    $location = $pick('location');
+    $stage = $pick('stage');
+    $size = $pick('size');
+
+    return [
+        'name' => $pick('name'),
+        'business' => $pick('business'),
+        'website' => $pick('website'),
+        'industry' => $pick('industry'),
+        'location' => $location !== '' ? tylilo_inquiry_label('location', $location) : '',
+        'stage' => $stage !== '' ? tylilo_inquiry_label('stage', $stage) : '',
+        'size' => $size !== '' ? tylilo_inquiry_label('size', $size) : '',
+        'fit' => trim((string) ($row['fit'] ?? '')),
+        'fit_reasons' => is_array($row['fit_reasons'] ?? null) ? $row['fit_reasons'] : [],
+        'last_inquiry_at' => (int) ($row['created_at'] ?? 0),
+        'first_contact' => (int) ($row['created_at'] ?? 0),
+    ];
+}
+
+/**
+ * Create or update the private profile for this inquiry's email so the
+ * contact remains even if every inquiry is later removed.
+ *
+ * @param array<string, mixed> $row
+ */
+function tylilo_contact_remember_inquiry(array $row): void
+{
+    $a = is_array($row['answers'] ?? null) ? $row['answers'] : [];
+    $email = tylilo_contact_email_key((string) ($a['email'] ?? ''));
+    if ($email === '') {
+        return;
+    }
+    tylilo_contact_write_snapshot($email, tylilo_contact_snapshot_from_inquiry($row));
+}
+
+/**
+ * After one inquiry is deleted, keep the contact profile and refresh
+ * the snapshot from any inquiries that remain.
+ *
+ * @param array<string, mixed> $removed
+ */
+function tylilo_contact_after_inquiry_removed(array $removed): void
+{
+    $a = is_array($removed['answers'] ?? null) ? $removed['answers'] : [];
+    $email = tylilo_contact_email_key((string) ($a['email'] ?? ''));
+    if ($email === '') {
+        return;
+    }
+    $left = [];
+    foreach (tylilo_inquiry_all() as $row) {
+        $ra = is_array($row['answers'] ?? null) ? $row['answers'] : [];
+        if (tylilo_contact_email_key((string) ($ra['email'] ?? '')) === $email) {
+            $left[] = $row;
+        }
+    }
+    if ($left !== []) {
+        $snap = tylilo_contact_snapshot_from_inquiry($left[0]);
+        foreach (['name', 'business', 'website', 'industry'] as $key) {
+            $picked = tylilo_contact_pick($left, $key);
+            if ($picked !== '') {
+                $snap[$key] = $picked;
+            }
+        }
+        $stage = tylilo_contact_pick($left, 'stage');
+        $size = tylilo_contact_pick($left, 'size');
+        $location = tylilo_contact_pick($left, 'location');
+        if ($stage !== '') {
+            $snap['stage'] = tylilo_inquiry_label('stage', $stage);
+        }
+        if ($size !== '') {
+            $snap['size'] = tylilo_inquiry_label('size', $size);
+        }
+        if ($location !== '') {
+            $snap['location'] = tylilo_inquiry_label('location', $location);
+        }
+        $oldest = (int) ($left[count($left) - 1]['created_at'] ?? 0);
+        if ($oldest > 0) {
+            $snap['first_contact'] = $oldest;
+        }
+        tylilo_contact_write_snapshot($email, $snap);
+        return;
+    }
+
+    tylilo_contact_write_snapshot($email, tylilo_contact_snapshot_from_inquiry($removed));
+}
+
+/**
+ * @param array<string, mixed> $snapshot
+ */
+function tylilo_contact_write_snapshot(string $emailKey, array $snapshot): void
+{
+    $emailKey = tylilo_contact_email_key($emailKey);
+    if ($emailKey === '') {
+        return;
+    }
+    $now = time();
+    tylilo_contacts_with(static function (array $data) use ($emailKey, $snapshot, $now): array {
+        $data = tylilo_contact_ensure($data, $emailKey, $now);
+        $id = tylilo_contact_id($emailKey);
+        foreach ($snapshot as $key => $value) {
+            if ($key === 'fit_reasons') {
+                if (is_array($value) && $value !== []) {
+                    $data['contacts'][$id][$key] = $value;
+                }
+                continue;
+            }
+            if ($key === 'last_inquiry_at' || $key === 'first_contact') {
+                $ts = (int) $value;
+                if ($ts <= 0) {
+                    continue;
+                }
+                $existing = (int) ($data['contacts'][$id][$key] ?? 0);
+                if ($key === 'first_contact') {
+                    $data['contacts'][$id][$key] = $existing > 0 ? min($existing, $ts) : $ts;
+                } else {
+                    $data['contacts'][$id][$key] = max($existing, $ts);
+                }
+                continue;
+            }
+            if (is_string($value) && $value !== '') {
+                $data['contacts'][$id][$key] = $value;
+            }
+        }
+
+        return $data;
+    });
+}
+
 function tylilo_contact_get(string $id): ?array
 {
     if (preg_match('/\A[a-f0-9]{24}\z/', $id) !== 1) {

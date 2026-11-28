@@ -2677,7 +2677,141 @@ html.signal .inq-retain a { color: var(--focus); font-weight: 600; text-decorati
 .contact-inquiry { margin-top: 12px; border-top: 1px solid var(--line, #5C6B80); padding-top: 8px; }
 .contact-inquiry summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 600; }
 .contact-export,
+
 .card .inq-admin-delete { margin-top: 16px; }
+
+.admin-unread-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 1.35rem;
+  min-height: 1.35rem;
+  margin-left: 0.45rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: #071525;
+  color: #F7F9FC;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1;
+  text-transform: none;
+  vertical-align: middle;
+}
+
+html.signal[data-theme="dark"] .admin-unread-badge {
+  background: #E8EEF6;
+  color: #050B14;
+}
+
+@media (prefers-color-scheme: dark) {
+  html.signal[data-theme="auto"] .admin-unread-badge {
+    background: #E8EEF6;
+    color: #050B14;
+  }
+}
+
+.admin-menu-toggle .admin-unread-badge,
+.admin-menu-panel .admin-unread-badge,
+.admin-dash-card h2 .admin-unread-badge {
+  flex: 0 0 auto;
+}
+
+.inq-admin-table tbody th,
+.inq-admin-table tbody td {
+  vertical-align: middle;
+}
+
+.inq-unread th,
+.inq-unread td {
+  font-weight: 700;
+}
+
+.inq-new-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 1.35rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  background: #071525;
+  color: #F7F9FC;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+html.signal[data-theme="dark"] .inq-new-tag {
+  background: #E8EEF6;
+  color: #050B14;
+}
+
+@media (prefers-color-scheme: dark) {
+  html.signal[data-theme="auto"] .inq-new-tag {
+    background: #E8EEF6;
+    color: #050B14;
+  }
+}
+
+.inq-sort-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  box-sizing: border-box;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.inq-sort-btn:hover,
+.inq-sort-btn:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+}
+
+.inq-sort-btn:focus-visible {
+  outline: 3px solid var(--focus, #0A3161);
+  outline-offset: 2px;
+}
+
+.inq-sort-arrow {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.inq-admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px 16px;
+  margin-top: 16px;
+}
+
+.inq-admin-intro .inq-admin-actions {
+  margin-top: 8px;
+}
+
+.inq-admin-actions button,
+.inq-admin-intro .inq-admin-actions button {
+  min-height: 44px;
+}
+
 
 /* Admin shell: sidebar on desktop, grouped menu on small screens. */
 html.signal.admin .admin-shell {

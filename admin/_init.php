@@ -80,6 +80,36 @@ function tylilo_admin_menu_groups(array $user): array
     return $groups;
 }
 
+
+/**
+ * Unread consulting inquiries for this person, or 0 without permission.
+ *
+ * @param array<string, mixed> $user
+ */
+function tylilo_admin_inquiries_unread(array $user): int
+{
+    if (!tylilo_admin_can($user, 'inquiries.view')) {
+        return 0;
+    }
+    try {
+        require_once dirname(__DIR__) . '/includes/inquiry.php';
+
+        return tylilo_inquiry_unread_count((int) ($user['id'] ?? 0));
+    } catch (Throwable $e) {
+        return 0;
+    }
+}
+
+function tylilo_admin_unread_badge(int $count, string $label): string
+{
+    if ($count < 1) {
+        return '';
+    }
+    $shown = $count > 99 ? '99+' : (string) $count;
+
+    return '<span class="admin-unread-badge" aria-hidden="true">' . tylilo_e($shown) . '</span>';
+}
+
 /**
  * Grouped admin navigation. A group with no visible links is omitted.
  *
@@ -101,7 +131,15 @@ function tylilo_admin_menu_html(array $user, string $path): string
                 continue;
             }
             $here = tylilo_admin_here($href, $path);
-            $html .= '<a href="' . tylilo_e($href) . '"' . ($here ? ' aria-current="page"' : '') . '>' . tylilo_e($label) . '</a>';
+            $unread = 0;
+            $aria = '';
+            if ($href === '/admin/inquiries.php') {
+                $unread = tylilo_admin_inquiries_unread($user);
+                if ($unread > 0) {
+                    $aria = ' aria-label="' . tylilo_e($label . ', ' . $unread . ' unread') . '"';
+                }
+            }
+            $html .= '<a href="' . tylilo_e($href) . '"' . ($here ? ' aria-current="page"' : '') . $aria . '>' . tylilo_e($label) . tylilo_admin_unread_badge($unread, $label) . '</a>';
         }
         if ($group['logout'] === true) {
             $html .= '<form method="post" action="/admin/logout.php"><input type="hidden" name="csrf" value="' . tylilo_e(tylilo_admin_csrf()) . '"><button type="submit">Log out</button></form>';
@@ -144,31 +182,28 @@ function tylilo_admin_dashboard_card(array $user, array $group): string
     $body = '';
     $actions = [];
     if ($id === 'consulting') {
-        $new = 0;
         $total = 0;
         $people = 0;
         try {
             if (tylilo_admin_can($user, 'inquiries.view')) {
                 require_once dirname(__DIR__) . '/includes/inquiry.php';
-                $rows = tylilo_inquiry_all();
-                $total = count($rows);
-                $since = time() - 7 * 86400;
-                foreach ($rows as $row) {
-                    if ((int) ($row['created_at'] ?? 0) >= $since) {
-                        $new++;
-                    }
-                }
+                $total = count(tylilo_inquiry_all());
             }
             if (tylilo_admin_can($user, 'contacts.view')) {
                 require_once dirname(__DIR__) . '/includes/contacts.php';
                 $people = count(tylilo_contacts_all());
             }
         } catch (Throwable $e) {
-            $new = 0;
+            $total = 0;
         }
         if (tylilo_admin_can($user, 'inquiries.view')) {
-            $body .= '<p>' . ($new === 0 ? 'No new inquiries in the last 7 days' : ($new === 1 ? '1 new inquiry in the last 7 days' : $new . ' new inquiries in the last 7 days')) . ', ' . $total . ' in total.</p>';
-            $actions[] = ['/admin/inquiries.php', 'View inquiries'];
+            $unread = tylilo_admin_inquiries_unread($user);
+            if ($unread === 0) {
+                $body .= '<p>No unread inquiries, ' . $total . ' in total.</p>';
+            } else {
+                $body .= '<p>' . ($unread === 1 ? '1 unread inquiry' : $unread . ' unread inquiries') . ', ' . $total . ' in total.</p>';
+            }
+            $actions[] = ['/admin/inquiries.php', 'View inquiries', $unread];
         }
         if (tylilo_admin_can($user, 'contacts.view')) {
             $body .= '<p>' . ($people === 0 ? 'No contact profiles yet.' : ($people === 1 ? '1 person in Contacts.' : $people . ' people in Contacts.')) . '</p>';
@@ -263,11 +298,16 @@ function tylilo_admin_dashboard_card(array $user, array $group): string
         $body = '<p>Nothing to report yet.</p>';
     }
     $html = '<article class="card admin-dash-card" data-dash="' . tylilo_e($id) . '">';
-    $html .= '<h2>' . tylilo_e($title) . '</h2>' . $body;
+    $consultingUnread = $id === 'consulting' ? tylilo_admin_inquiries_unread($user) : 0;
+    $html .= '<h2>' . tylilo_e($title) . tylilo_admin_unread_badge($consultingUnread, $title) . '</h2>' . $body;
     if ($actions !== []) {
         $html .= '<p class="admin-dash-actions">';
         foreach ($actions as $item) {
-            $html .= '<a href="' . tylilo_e($item[0]) . '">' . tylilo_e($item[1]) . '</a>';
+            $href = (string) $item[0];
+            $label = (string) $item[1];
+            $count = (int) ($item[2] ?? 0);
+            $aria = $count > 0 ? ' aria-label="' . tylilo_e($label . ', ' . $count . ' unread') . '"' : '';
+            $html .= '<a href="' . tylilo_e($href) . '"' . $aria . '>' . tylilo_e($label) . tylilo_admin_unread_badge($count, $label) . '</a>';
         }
         $html .= '</p>';
     }
@@ -297,10 +337,12 @@ function tylilo_admin_layout(string $title, string $main): void
         echo '<div class="admin-shell">';
         echo '<div class="admin-menu">';
         echo '<div class="admin-menu-bar">';
-        echo '<button type="button" class="admin-menu-toggle" id="admin-menu-toggle" aria-expanded="false" aria-controls="admin-menu-panel">';
+        $menuUnread = tylilo_admin_inquiries_unread($user);
+        $menuLabel = $menuUnread > 0 ? 'Menu, ' . $menuUnread . ' unread inquiries' : 'Menu';
+        echo '<button type="button" class="admin-menu-toggle" id="admin-menu-toggle" aria-expanded="false" aria-controls="admin-menu-panel"' . ($menuUnread > 0 ? ' aria-label="' . tylilo_e($menuLabel) . '"' : '') . '>';
         echo '<svg class="admin-menu-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="22" height="22">';
         echo '<path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>';
-        echo '</svg> Menu</button>';
+        echo '</svg> Menu' . tylilo_admin_unread_badge($menuUnread, 'Menu') . '</button>';
         echo '<h1 class="tagline">' . tylilo_e($title) . '</h1>';
         echo '</div>';
         echo '<nav id="admin-menu-panel" class="admin-menu-panel" aria-label="Admin">';

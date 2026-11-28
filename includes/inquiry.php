@@ -751,14 +751,349 @@ function tylilo_inquiry_all(): array
 
 function tylilo_inquiry_delete(int $id): void
 {
-    tylilo_inquiry_with(static function (array $data) use ($id): array {
-        $data['inquiries'] = array_values(array_filter(
-            $data['inquiries'],
-            static fn (array $row): bool => (int) ($row['id'] ?? 0) !== $id
-        ));
+    $removed = null;
+    tylilo_inquiry_with(static function (array $data) use ($id, &$removed): array {
+        $keep = [];
+        foreach ($data['inquiries'] as $row) {
+            if ((int) ($row['id'] ?? 0) === $id) {
+                $removed = $row;
+                continue;
+            }
+            $keep[] = $row;
+        }
+        $data['inquiries'] = $keep;
 
         return $data;
     });
+    if (is_array($removed)) {
+        tylilo_inquiry_reads_forget_inquiry($id);
+        require_once __DIR__ . '/contacts.php';
+        tylilo_contact_after_inquiry_removed($removed);
+    }
+}
+
+
+/**
+ * Per-person read state for inquiries. Stored separately from the
+ * inquiries themselves. Keys are admin user ids and inquiry ids.
+ *
+ * @return array{users: array<string, array<string, int>>}
+ */
+function tylilo_inquiry_reads_path(): string
+{
+    $dir = tylilo_turnstile_dir();
+    if (!is_dir($dir) && !@mkdir($dir, 0700, true) && !is_dir($dir)) {
+        throw new RuntimeException('Inquiry storage is not available.');
+    }
+
+    return $dir . '/inquiry-reads.json';
+}
+
+/**
+ * @return array{users: array<string, array<string, int>>}
+ */
+function tylilo_inquiry_reads_load(): array
+{
+    $path = tylilo_inquiry_reads_path();
+    if (!is_file($path)) {
+        return ['users' => []];
+    }
+    $raw = file_get_contents($path);
+    $data = is_string($raw) && $raw !== '' ? json_decode($raw, true) : null;
+    if (!is_array($data)) {
+        $data = [];
+    }
+    $data += ['users' => []];
+    if (!is_array($data['users'])) {
+        $data['users'] = [];
+    }
+
+    return $data;
+}
+
+/**
+ * @param callable(array{users: array<string, array<string, int>>}): array{users: array<string, array<string, int>>} $change
+ * @return array{users: array<string, array<string, int>>}
+ */
+function tylilo_inquiry_reads_with(callable $change): array
+{
+    $path = tylilo_inquiry_reads_path();
+    $handle = fopen($path, 'c+');
+    if ($handle === false) {
+        throw new RuntimeException('Inquiry storage is not available.');
+    }
+    @chmod($path, 0600);
+    try {
+        if (!flock($handle, LOCK_EX)) {
+            throw new RuntimeException('Inquiry storage is not available.');
+        }
+        $raw = stream_get_contents($handle);
+        $data = is_string($raw) && $raw !== '' ? json_decode($raw, true) : null;
+        if (!is_array($data)) {
+            $data = [];
+        }
+        $data += ['users' => []];
+        if (!is_array($data['users'])) {
+            $data['users'] = [];
+        }
+        $data = $change($data);
+        $encoded = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if (!is_string($encoded)) {
+            throw new RuntimeException('Inquiry storage is not available.');
+        }
+        rewind($handle);
+        ftruncate($handle, 0);
+        fwrite($handle, $encoded);
+        fflush($handle);
+    } finally {
+        flock($handle, LOCK_UN);
+        fclose($handle);
+    }
+
+    return $data;
+}
+
+/**
+ * @param list<array<string, mixed>>|null $rows
+ * @return list<int>
+ */
+function tylilo_inquiry_unread_ids(int $userId, ?array $rows = null): array
+{
+    if ($userId < 1) {
+        return [];
+    }
+    $rows ??= tylilo_inquiry_all();
+    $reads = tylilo_inquiry_reads_load()['users'][(string) $userId] ?? [];
+    if (!is_array($reads)) {
+        $reads = [];
+    }
+    $ids = [];
+    foreach ($rows as $row) {
+        $id = (int) ($row['id'] ?? 0);
+        if ($id > 0 && !isset($reads[(string) $id])) {
+            $ids[] = $id;
+        }
+    }
+
+    return $ids;
+}
+
+/**
+ * @param list<array<string, mixed>>|null $rows
+ */
+function tylilo_inquiry_unread_count(int $userId, ?array $rows = null): int
+{
+    return count(tylilo_inquiry_unread_ids($userId, $rows));
+}
+
+function tylilo_inquiry_is_unread(int $userId, int $inquiryId, ?array $readMap = null): bool
+{
+    if ($userId < 1 || $inquiryId < 1) {
+        return false;
+    }
+    if ($readMap === null) {
+        $reads = tylilo_inquiry_reads_load()['users'][(string) $userId] ?? [];
+        $readMap = is_array($reads) ? $reads : [];
+    }
+
+    return !isset($readMap[(string) $inquiryId]);
+}
+
+function tylilo_inquiry_mark_read(int $userId, int $inquiryId): void
+{
+    if ($userId < 1 || $inquiryId < 1) {
+        return;
+    }
+    $now = time();
+    tylilo_inquiry_reads_with(static function (array $data) use ($userId, $inquiryId, $now): array {
+        $uid = (string) $userId;
+        if (!is_array($data['users'][$uid] ?? null)) {
+            $data['users'][$uid] = [];
+        }
+        $data['users'][$uid][(string) $inquiryId] = $now;
+
+        return $data;
+    });
+}
+
+function tylilo_inquiry_mark_unread(int $userId, int $inquiryId): void
+{
+    if ($userId < 1 || $inquiryId < 1) {
+        return;
+    }
+    tylilo_inquiry_reads_with(static function (array $data) use ($userId, $inquiryId): array {
+        $uid = (string) $userId;
+        if (is_array($data['users'][$uid] ?? null)) {
+            unset($data['users'][$uid][(string) $inquiryId]);
+        }
+
+        return $data;
+    });
+}
+
+/**
+ * @param list<array<string, mixed>>|null $rows
+ */
+function tylilo_inquiry_mark_all_read(int $userId, ?array $rows = null): void
+{
+    if ($userId < 1) {
+        return;
+    }
+    $rows ??= tylilo_inquiry_all();
+    $now = time();
+    tylilo_inquiry_reads_with(static function (array $data) use ($userId, $rows, $now): array {
+        $uid = (string) $userId;
+        if (!is_array($data['users'][$uid] ?? null)) {
+            $data['users'][$uid] = [];
+        }
+        foreach ($rows as $row) {
+            $id = (int) ($row['id'] ?? 0);
+            if ($id > 0) {
+                $data['users'][$uid][(string) $id] = $now;
+            }
+        }
+
+        return $data;
+    });
+}
+
+function tylilo_inquiry_reads_forget_inquiry(int $inquiryId): void
+{
+    if ($inquiryId < 1) {
+        return;
+    }
+    $path = tylilo_inquiry_reads_path();
+    if (!is_file($path)) {
+        return;
+    }
+    tylilo_inquiry_reads_with(static function (array $data) use ($inquiryId): array {
+        $key = (string) $inquiryId;
+        foreach ($data['users'] as $uid => $map) {
+            if (is_array($map)) {
+                unset($data['users'][$uid][$key]);
+            }
+        }
+
+        return $data;
+    });
+}
+
+/**
+ * @return list<string>
+ */
+function tylilo_inquiry_sort_columns(): array
+{
+    return ['received', 'name', 'company', 'email', 'stage', 'fit', 'status'];
+}
+
+/**
+ * @return array{0: string, 1: string}
+ */
+function tylilo_inquiry_sort_from_request(): array
+{
+    $sort = (string) ($_GET['sort'] ?? 'received');
+    $dir = (string) ($_GET['dir'] ?? '');
+    if (!in_array($sort, tylilo_inquiry_sort_columns(), true)) {
+        $sort = 'received';
+    }
+    if ($dir !== 'asc' && $dir !== 'desc') {
+        $dir = 'desc';
+    }
+
+    return [$sort, $dir];
+}
+
+function tylilo_inquiry_sort_default_dir(string $sort): string
+{
+    return ($sort === 'received' || $sort === 'status') ? 'desc' : 'asc';
+}
+
+function tylilo_inquiries_url(string $sort = 'received', string $dir = 'desc', int $view = 0): string
+{
+    $query = [];
+    if ($sort !== 'received' || $dir !== 'desc') {
+        $query['sort'] = $sort;
+        $query['dir'] = $dir;
+    }
+    if ($view > 0) {
+        $query['view'] = (string) $view;
+    }
+    $qs = http_build_query($query);
+
+    return '/admin/inquiries.php' . ($qs !== '' ? '?' . $qs : '');
+}
+
+/**
+ * @param array<string, mixed> $row
+ * @return array{id: int, received: int, name: string, company: string, email: string, stage: string, stage_key: string, fit: string}
+ */
+function tylilo_inquiry_row_fields(array $row): array
+{
+    $a = is_array($row['answers'] ?? null) ? $row['answers'] : [];
+    $stageKey = trim((string) ($a['stage'] ?? ''));
+
+    return [
+        'id' => (int) ($row['id'] ?? 0),
+        'received' => (int) ($row['created_at'] ?? 0),
+        'name' => trim((string) ($a['name'] ?? '')),
+        'company' => trim((string) ($a['business'] ?? '')),
+        'email' => strtolower(trim((string) ($a['email'] ?? ''))),
+        'stage_key' => $stageKey,
+        'stage' => $stageKey !== '' ? tylilo_inquiry_label('stage', $stageKey) : '',
+        'fit' => trim((string) ($row['fit'] ?? '')),
+    ];
+}
+
+/**
+ * @param list<array<string, mixed>> $rows
+ * @return list<array<string, mixed>>
+ */
+function tylilo_inquiry_sorted(array $rows, string $sort, string $dir, int $userId): array
+{
+    if (!in_array($sort, tylilo_inquiry_sort_columns(), true)) {
+        $sort = 'received';
+    }
+    if ($dir !== 'asc' && $dir !== 'desc') {
+        $dir = 'desc';
+    }
+    $reads = [];
+    if ($sort === 'status' && $userId > 0) {
+        $map = tylilo_inquiry_reads_load()['users'][(string) $userId] ?? [];
+        $reads = is_array($map) ? $map : [];
+    }
+    $decorated = [];
+    foreach ($rows as $i => $row) {
+        $fields = tylilo_inquiry_row_fields($row);
+        if ($sort === 'status') {
+            $key = tylilo_inquiry_is_unread($userId, $fields['id'], $reads) ? 1 : 0;
+        } elseif ($sort === 'received') {
+            $key = $fields['received'];
+        } else {
+            $key = strtolower($fields[$sort] ?? '');
+        }
+        $decorated[] = [$key, $fields['received'], $fields['id'], $i, $row];
+    }
+    usort($decorated, static function (array $a, array $b) use ($dir): int {
+        $ka = $a[0];
+        $kb = $b[0];
+        if (is_int($ka) && is_int($kb)) {
+            $cmp = $ka <=> $kb;
+        } else {
+            $cmp = strnatcasecmp((string) $ka, (string) $kb);
+        }
+        if ($cmp === 0) {
+            $cmp = $b[1] <=> $a[1];
+            if ($cmp === 0) {
+                $cmp = $b[2] <=> $a[2];
+            }
+
+            return $cmp;
+        }
+
+        return $dir === 'asc' ? $cmp : -$cmp;
+    });
+
+    return array_map(static fn (array $item): array => $item[4], $decorated);
 }
 
 function tylilo_inquiry_ip_hash(string $ip): string
@@ -823,10 +1158,15 @@ function tylilo_inquiry_save(array $answers, array $fit, string $ip, bool $previ
         ];
         $rates[] = ['h' => $hash, 'at' => $now];
         $data['rates'] = $rates;
-        $result = ['ok' => true, 'id' => $id, 'limited' => false];
+        $result = ['ok' => true, 'id' => $id, 'limited' => false, 'row' => $data['inquiries'][count($data['inquiries']) - 1]];
 
         return $data;
     });
+    if ($result['ok'] && is_array($result['row'] ?? null)) {
+        require_once __DIR__ . '/contacts.php';
+        tylilo_contact_remember_inquiry($result['row']);
+        unset($result['row']);
+    }
 
     return $result;
 }

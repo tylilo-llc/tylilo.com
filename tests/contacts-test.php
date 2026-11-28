@@ -128,6 +128,36 @@ if ($case === '') {
     check(str_contains($text, 'alice@example.com') && str_contains($text, 'First message') && str_contains($text, 'Second message') && str_contains($text, 'Call scheduled'), 'the text export holds answers, status, and timeline');
     check(!str_contains($text, 'bob@example.com') && !str_contains(json_encode($json), 'bob@example.com'), 'an export holds only that person');
 
+    // Deleting an inquiry must not delete the contact.
+    tylilo_inquiry_with(static function (array $data) use ($now): array {
+        $row = static fn (int $id, int $at, array $a, string $fit): array => [
+            'id' => $id, 'created_at' => $at, 'answers' => $a, 'fit' => $fit, 'fit_reasons' => ['Kept for the profile.'],
+            'preview' => false, 'mail_visitor' => 'sent', 'mail_owner' => 'sent',
+        ];
+        $data['inquiries'][] = $row(6, $now - 100, ['name' => 'Cara Cole', 'email' => 'cara@example.com', 'business' => 'Cole Design', 'stage' => 'growing'], 'Assessment');
+        $data['inquiries'][] = $row(7, $now - 50, ['name' => 'Cara Cole', 'email' => 'cara@example.com', 'business' => 'Cole Design'], 'Improvement');
+        $data['inquiries'][] = $row(8, $now - 40, ['name' => 'Dan Dunn', 'email' => 'dan@example.com', 'business' => 'Dunn Co'], 'Advisory');
+
+        return $data;
+    });
+    tylilo_contact_add_note('cara@example.com', 'Cara note');
+    tylilo_contact_set_status('cara@example.com', 'replied');
+    tylilo_inquiry_delete(6);
+    $cara = tylilo_contact_get(contact_cid('cara@example.com'));
+    check($cara !== null && count($cara['inquiries']) === 1 && (int) $cara['inquiries'][0]['id'] === 7, 'deleting one inquiry leaves the person\'s other inquiries');
+    check($cara['status'] === 'replied' && count($cara['notes']) === 1 && $cara['notes'][0]['text'] === 'Cara note', 'notes and status stay when an inquiry is deleted');
+    check($cara['name'] === 'Cara Cole' && $cara['business'] === 'Cole Design', 'name and company stay when an inquiry remains');
+    tylilo_inquiry_delete(7);
+    $cara = tylilo_contact_get(contact_cid('cara@example.com'));
+    check($cara !== null && $cara['inquiries'] === [], 'the profile remains after the last inquiry is deleted');
+    check($cara['name'] === 'Cara Cole' && $cara['business'] === 'Cole Design', 'name and company remain on the profile after the last inquiry is gone');
+    check($cara['status'] === 'replied' && count($cara['notes']) === 1 && $cara['notes'][0]['text'] === 'Cara note', 'notes and status remain after the last inquiry is deleted');
+    check($cara['fit'] === 'Improvement', 'the latest suggested fit is kept on the profile');
+    tylilo_inquiry_delete(8);
+    $dan = tylilo_contact_get(contact_cid('dan@example.com'));
+    check($dan !== null && $dan['inquiries'] === [] && $dan['name'] === 'Dan Dunn' && $dan['business'] === 'Dunn Co', 'a profile with no notes is still kept after its only inquiry is deleted');
+    check(tylilo_contact_get(contact_cid('alice@example.com')) !== null && count(tylilo_contact_get(contact_cid('alice@example.com'))['inquiries']) === 2, 'other people\'s inquiries are not removed');
+
     // Delete.
     tylilo_contact_add_note('bob@example.com', 'Bob note');
     check(tylilo_contact_delete('Alice@Example.com') === 2, 'deleting a person removes both of their inquiries');
