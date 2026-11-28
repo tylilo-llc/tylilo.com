@@ -8,22 +8,38 @@ if (!defined('TYLILO_BOOTSTRAPPED')) {
 }
 ?>
   <footer class="site-footer">
-    <nav aria-label="Footer">
+<?php if (!tylilo_request_is_admin()): ?>
+    <div class="footer-pro">
+      <div class="footer-brand">
+        <p class="footer-name"><?= tylilo_e(TYLILO_LEGAL_NAME) ?></p>
+        <p>Business consultation and software development.</p>
+      </div>
+      <nav aria-label="Explore">
+        <p class="footer-label">Explore</p>
+        <a href="/#consulting">Consulting</a>
+        <a href="/#software">Software</a>
+        <a href="/#about">About</a>
+        <a href="/#contact">Contact</a>
+        <a href="/arcade/"<?php if (($pageCanonical ?? '') === TYLILO_URL . '/arcade/'): ?> aria-current="page"<?php endif; ?>>Arcade</a>
+      </nav>
+      <nav aria-label="Company">
+        <p class="footer-label">Company</p>
 <?php if (TYLILO_OTRADIO_ENABLED): ?>
-      <a href="/otradio/"<?php if (($pageCanonical ?? '') === TYLILO_URL . '/otradio/'): ?> aria-current="page"<?php endif; ?>>OTRadio</a>
+        <a href="/otradio/"<?php if (($pageCanonical ?? '') === TYLILO_URL . '/otradio/'): ?> aria-current="page"<?php endif; ?>>OTRadio</a>
 <?php endif; ?>
-      <a href="/arcade/"<?php if (($pageCanonical ?? '') === TYLILO_URL . '/arcade/'): ?> aria-current="page"<?php endif; ?>>Arcade</a>
-      <a href="/accessibility"<?php if (($pageCanonical ?? '') === TYLILO_URL . '/accessibility'): ?> aria-current="page"<?php endif; ?>>Accessibility</a>
-      <a href="/privacy"<?php if (($pageCanonical ?? '') === TYLILO_URL . '/privacy'): ?> aria-current="page"<?php endif; ?>>Privacy</a>
-<?php
-$tyliloPath = parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH);
-$tyliloPath = is_string($tyliloPath) ? $tyliloPath : '/';
-if ($tyliloPath !== '/admin' && !str_starts_with($tyliloPath, '/admin/')):
-?>
-      <a href="/admin/" rel="nofollow">Sign in</a>
-<?php endif; ?>
+        <a href="/accessibility"<?php if (($pageCanonical ?? '') === TYLILO_URL . '/accessibility'): ?> aria-current="page"<?php endif; ?>>Accessibility</a>
+        <a href="/privacy"<?php if (($pageCanonical ?? '') === TYLILO_URL . '/privacy'): ?> aria-current="page"<?php endif; ?>>Privacy</a>
+      </nav>
+    </div>
+    <p class="legal">© <?= tylilo_e(TYLILO_YEAR) ?> <?= tylilo_e(TYLILO_LEGAL_NAME) ?><a class="legal-sign" href="/admin/" rel="nofollow">Sign in</a></p>
+<?php else: ?>
+    <nav aria-label="Footer">
+      <a href="/arcade/">Arcade</a>
+      <a href="/accessibility">Accessibility</a>
+      <a href="/privacy">Privacy</a>
     </nav>
     <p>© <?= tylilo_e(TYLILO_YEAR) ?> <?= tylilo_e(TYLILO_LEGAL_NAME) ?></p>
+<?php endif; ?>
   </footer>
 <?php if (!empty($pageA2hs)): ?>
   <script src="<?= tylilo_e(tylilo_asset('/assets/js/a2hs.js')) ?>" defer></script>

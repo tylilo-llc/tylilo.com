@@ -14,16 +14,19 @@ $pageCanonical = $pageCanonical ?? '';
 $pageImage = $pageImage ?? '/assets/img/og.png';
 $pageImageAlt = $pageImageAlt ?? 'Tylilo logo on a navy background';
 $nonce = tylilo_e($cspNonce);
+$tyliloPublic = !tylilo_request_is_admin();
+$themeColorLight = $tyliloPublic ? '#071525' : '#0A3161';
+$themeColorDark = $tyliloPublic ? '#050B14' : '#071526';
 ?>
 <!DOCTYPE html>
-<html lang="en" data-theme="auto">
+<html lang="en" data-theme="auto"<?= $tyliloPublic ? ' class="signal"' : '' ?>>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title><?= tylilo_e($pageTitle) ?></title>
   <meta name="description" content="<?= tylilo_e($pageDescription) ?>">
   <meta name="robots" content="<?= tylilo_e($pageRobots) ?>">
-  <meta name="theme-color" content="#0A3161">
+  <meta name="theme-color" content="<?= tylilo_e($themeColorLight) ?>">
   <meta name="color-scheme" content="light dark">
   <meta name="application-name" content="<?= tylilo_e(TYLILO_SITE_NAME) ?>">
 <?php if ($pageCanonical !== ''): ?>
@@ -50,9 +53,11 @@ $nonce = tylilo_e($cspNonce);
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="UDLR Arcade">
   <link rel="manifest" href="/site.webmanifest">
+<?php if (!$tyliloPublic): ?>
   <link rel="preload" as="image" href="/assets/img/logo-round.webp" type="image/webp" fetchpriority="high">
   <link rel="preload" as="font" href="/assets/fonts/nunito-800.woff2" type="font/woff2" crossorigin>
   <link rel="preload" as="font" href="/assets/fonts/nunito-500.woff2" type="font/woff2" crossorigin>
+<?php endif; ?>
   <script nonce="<?= $nonce ?>">
     (function () {
       var theme = "auto";
@@ -69,7 +74,7 @@ $nonce = tylilo_e($cspNonce);
       } catch (e) {}
       var meta = document.querySelector('meta[name="theme-color"]');
       if (meta) {
-        meta.setAttribute("content", dark ? "#071526" : "#0A3161");
+        meta.setAttribute("content", dark ? <?= json_encode($themeColorDark, JSON_HEX_TAG | JSON_HEX_AMP) ?> : <?= json_encode($themeColorLight, JSON_HEX_TAG | JSON_HEX_AMP) ?>);
       }
     })();
   </script>
