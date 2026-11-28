@@ -101,7 +101,7 @@ require __DIR__ . '/includes/head.php';
 
         <h2 id="review">Reviewing or changing your information</h2>
         <p>You can ask what we have from a message or inquiry you sent or from a name on the leaderboard, ask us to correct it, or ask us to delete it. Email <a href="mailto:ryan@tylilo.com">ryan@tylilo.com</a> or use the <a href="/#contact">contact form</a>. We may ask you to confirm the email address you used so we give the information only to you.</p>
-        <p>If you are in the UK or the European Economic Area, you can make those requests about the message you sent us or a leaderboard name. If you are in California, you can ask us to tell you what we have from that message or name and to delete it. We do not sell personal information.</p>
+        <p>Anyone can make these requests, wherever they live. We do not sell personal information.</p>
         <p>This site is not directed at children under 13, and we do not knowingly collect information from them.</p>
 
         <h2>Changes</h2>
