@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 require __DIR__ . '/../includes/bootstrap.php';
+require_once __DIR__ . '/../includes/beta-arcade.php';
+header('Cache-Control: no-store, private');
 
 /**
  * ARCADE GAMES
@@ -19,9 +21,11 @@ require __DIR__ . '/../includes/bootstrap.php';
  * leaderboard slug in includes/scores.php.
  *
  * ALPHA/BETA GAMES
- * Listed in a section below the main tiles. These builds have no
- * box art, favicon, or UDLR splash, so the tile is plain text: the
- * name, a short description, and a Beta or Alpha badge. Do not add
+ * Listed in a section below the main tiles when at least one is
+ * marked visible in admin. These builds have no box art, favicon,
+ * or UDLR splash, so the tile is plain text: the name, a short
+ * description, and a Beta or Alpha badge. Visibility is stored in
+ * the private data dir and takes effect immediately. Do not add
  * them to sitemap.xml for now. Games still open in the same tab.
  */
 $games = [
@@ -55,14 +59,7 @@ $games = [
     ],
 ];
 
-$earlyGames = [
-    [
-        'title' => 'Crash Cars',
-        'description' => 'A 3D demolition-derby driving game.',
-        'href' => '/arcade/crash-cars/',
-        'badge' => 'Beta',
-    ],
-];
+$earlyGames = tylilo_arcade_visible_early_games();
 
 $pageTitle = 'Arcade — Tylilo';
 $pageDescription = 'Browser games from Tylilo, including Solitaire, Red Rain, Pop Spiral, and Jungle Rescue.';
@@ -132,6 +129,7 @@ require __DIR__ . '/../includes/head.php';
         </article>
 <?php endforeach; ?>
       </div>
+<?php if ($earlyGames !== []): ?>
       <section class="arcade-alpha" aria-labelledby="arcade-alpha-heading">
         <h2 id="arcade-alpha-heading">Alpha/Beta Games</h2>
         <div class="arcade-alpha-grid">
@@ -146,6 +144,7 @@ require __DIR__ . '/../includes/head.php';
 <?php endforeach; ?>
         </div>
       </section>
+<?php endif; ?>
     </div>
   </main>
   <script type="application/ld+json" nonce="<?= tylilo_e($cspNonce) ?>">

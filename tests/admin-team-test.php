@@ -26,7 +26,7 @@ function check(bool $ok, string $label): void
 }
 
 $defaults = tylilo_admin_default_permissions();
-check($defaults['notes'] === 1 && $defaults['feedback'] === 1 && $defaults['ideas'] === 1 && $defaults['leaderboards'] === 0 && $defaults['beta'] === 0, 'new invites default to notes, feedback, and ideas');
+check($defaults['notes'] === 1 && $defaults['feedback'] === 1 && $defaults['ideas'] === 1 && $defaults['leaderboards'] === 0 && $defaults['beta'] === 0 && $defaults['arcade_publish'] === 0, 'new invites default to notes, feedback, and ideas');
 
 tylilo_admin_with(static function (array $data): array {
     $data['users'][] = [

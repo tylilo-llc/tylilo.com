@@ -40,6 +40,13 @@ if (preg_match('#^/admin/beta/g/([a-z0-9-]+)(?:/(.*))?$#', $uri, $betaRoute) ===
     require __DIR__ . '/admin/beta/g.php';
     exit;
 }
+if (preg_match('#^/arcade/([a-z0-9-]+)(?:/(index\\.html)?)?$#', $uri, $earlyRoute) === 1
+    && !in_array($earlyRoute[1], ['solitaire', 'red-rain', 'pop-spiral', 'jungle-rescue'], true)) {
+    $_GET['game'] = $earlyRoute[1];
+    require __DIR__ . '/arcade/early.php';
+    exit;
+}
+
 if ($uri !== '/' && is_file($path)) {
     return false;
 }

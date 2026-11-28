@@ -487,6 +487,30 @@ h2 {
   margin-top: 0.9rem;
 }
 
+.beta-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+
+.beta-card-actions .beta-play,
+.beta-card-actions .beta-arcade-toggle {
+  margin-top: 0;
+}
+
+.beta-card-actions form {
+  margin: 0;
+}
+
+.beta-arcade-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+}
+
 .beta-cover {
   width: 100%;
   aspect-ratio: 4 / 3;

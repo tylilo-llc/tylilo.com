@@ -1,0 +1,7 @@
+# Alpha/Beta games are gated so Show/Hide takes effect without a redeploy.
+# The game file (index.html) is left unchanged.
+DirectoryIndex index.php index.html
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^index\.html$ /arcade/early.php?game=crash-cars [L,QSA]
+</IfModule>
