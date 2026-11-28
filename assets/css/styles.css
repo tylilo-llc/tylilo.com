@@ -885,6 +885,12 @@ html.js .admin-menu-panel.is-open {
   border-top: 2px solid var(--field-border);
 }
 
+.admin-menu-group + .admin-menu-group {
+  margin-top: 0.45rem;
+  padding-top: 0.55rem;
+  border-top: 2px solid var(--field-border);
+}
+
 .admin-menu-panel a,
 .admin-menu-panel button {
   display: flex;
@@ -2551,6 +2557,12 @@ html.signal.admin .admin-menu-label {
 html.signal.admin .admin-menu-divider {
   border-top-width: 1px;
   border-top-color: var(--line);
+}
+
+html.signal.admin .admin-menu-group + .admin-menu-group {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
 }
 
 html.signal.admin .admin-menu-panel a,
