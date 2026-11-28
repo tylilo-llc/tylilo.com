@@ -17,6 +17,12 @@ require __DIR__ . '/../includes/bootstrap.php';
  * The Top scores button sits after the link, inside the
  * article, and is not part of the link. Its data-game value is the
  * leaderboard slug in includes/scores.php.
+ *
+ * ALPHA/BETA GAMES
+ * Listed in a section below the main tiles. These builds have no
+ * box art, favicon, or UDLR splash, so the tile is plain text: the
+ * name, a short description, and a Beta or Alpha badge. Do not add
+ * them to sitemap.xml for now. Games still open in the same tab.
  */
 $games = [
     [
@@ -46,6 +52,15 @@ $games = [
         'href' => '/arcade/jungle-rescue/',
         'art' => '/arcade/jungle-rescue/cover-400.webp',
         'art2x' => '/arcade/jungle-rescue/cover-800.webp',
+    ],
+];
+
+$earlyGames = [
+    [
+        'title' => 'Crash Cars',
+        'description' => 'A 3D demolition-derby driving game.',
+        'href' => '/arcade/crash-cars/',
+        'badge' => 'Beta',
     ],
 ];
 
@@ -117,6 +132,20 @@ require __DIR__ . '/../includes/head.php';
         </article>
 <?php endforeach; ?>
       </div>
+      <section class="arcade-alpha" aria-labelledby="arcade-alpha-heading">
+        <h2 id="arcade-alpha-heading">Alpha/Beta Games</h2>
+        <div class="arcade-alpha-grid">
+<?php foreach ($earlyGames as $game): ?>
+          <article class="arcade-alpha-slot">
+            <a class="arcade-alpha-tile" href="<?= tylilo_e($game['href']) ?>">
+              <span class="arcade-alpha-badge"><?= tylilo_e($game['badge']) ?></span>
+              <span class="arcade-alpha-name"><?= tylilo_e($game['title']) ?></span>
+              <span class="arcade-alpha-desc"><?= tylilo_e($game['description']) ?></span>
+            </a>
+          </article>
+<?php endforeach; ?>
+        </div>
+      </section>
     </div>
   </main>
   <script type="application/ld+json" nonce="<?= tylilo_e($cspNonce) ?>">
