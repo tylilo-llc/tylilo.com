@@ -25,6 +25,10 @@ The legal name is written **Tylilo, LLC**, with a comma. Use `TYLILO_LEGAL_NAME`
 - Keep pages fast: small CSS and images, no unused frameworks, and a stable layout so Core Web Vitals stay healthy.
 - Follow current indexing guidance from Google, Bing, DuckDuckGo, and Brave: crawlable HTML, unique titles and descriptions, accurate canonicals, and no doorway or hidden-text tricks.
 
+## Testimonials
+
+The homepage Testimonials section reads `tylilo_testimonials()` in `includes/testimonials.php`. The array is empty until a real quote exists. Each entry is `quote`, `name`, and an optional `role`. Do not add a quote, a name, or a role that was not given to Tylilo, LLC. An empty list, or an entry missing a quote or a name, renders “No testimonials yet.” and no quotation.
+
 ## Arcade
 
 Each game is one folder, `/arcade/<slug>/index.html`. The list on `/arcade/` is the `$games` array in `arcade/index.php`: title, one-line description, path, and cover art. Adding a game is one new entry, in the order it should appear, plus `arcade/<slug>/cover-400.webp` and `arcade/<slug>/cover-800.webp`. The tile name is the accessible text, so the artwork stays decorative (`alt=""`).
