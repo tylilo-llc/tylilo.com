@@ -34,8 +34,8 @@ function tylilo_admin_permission_catalog(): array
         ],
         'Games' => [
             'leaderboards' => ['label' => 'Leaderboard moderation', 'short' => 'Leaderboards', 'invite_default' => false],
-            'beta' => ['label' => 'Play beta games', 'short' => 'Beta games', 'invite_default' => false],
-            'arcade_publish' => ['label' => 'Show or hide beta games in the Arcade', 'short' => 'Arcade visibility', 'invite_default' => false],
+            'beta' => ['label' => 'Play alpha and beta games', 'short' => 'Alpha/Beta games', 'invite_default' => false],
+            'arcade_publish' => ['label' => 'Show, hide, or set the stage of pre-release games in the Arcade', 'short' => 'Arcade visibility', 'invite_default' => false],
         ],
     ];
 }

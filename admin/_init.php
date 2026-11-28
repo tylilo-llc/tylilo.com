@@ -50,7 +50,7 @@ function tylilo_admin_menu_groups(array $user): array
         $arcade[] = ['/admin/games.php', 'Games'];
     }
     if (tylilo_admin_can($user, 'beta')) {
-        $arcade[] = ['/admin/beta/', 'Beta'];
+        $arcade[] = ['/admin/beta/', 'Alpha/Beta'];
     }
     if (tylilo_admin_can($user, 'leaderboards')) {
         $arcade[] = ['/admin/scores.php', 'Scores'];
@@ -254,7 +254,7 @@ function tylilo_admin_dashboard_card(array $user, array $group): string
             $actions[] = ['/admin/feedback.php', 'View feedback'];
         }
         if (tylilo_admin_can($user, 'beta')) {
-            $actions[] = ['/admin/beta/', 'Open beta'];
+            $actions[] = ['/admin/beta/', 'Open Alpha/Beta'];
         }
         if ($body === '') {
             $body = '<p>Arcade tools you can use are in the menu.</p>';

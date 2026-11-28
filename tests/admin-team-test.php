@@ -73,7 +73,7 @@ $owner = tylilo_admin_user_by_name('ryan');
 $member = tylilo_admin_user_by_name('sam');
 check(is_array($owner) && tylilo_admin_is_owner($owner), 'an admin account is the owner');
 check(is_array($member) && tylilo_admin_can($member, 'feedback') && !tylilo_admin_can($member, 'leaderboards') && !tylilo_admin_can($member, 'beta') && !tylilo_admin_can($member, 'inquiries.view'), 'a member has the default permissions and cannot open Inquiries');
-$expected = ['crash-cars' => ['Crash Cars', '2.3'], 'jumpy-jumperton' => ['Jumpy Jumperton', '1.4'], 'starbase-defender' => ['Starbase Defender', '1.5.0']];
+$expected = ['crash-cars' => ['Crash Cars', '2.3'], 'jumpy-jumperton' => ['Jumpy Jumperton', '1.6'], 'starbase-defender' => ['Starbase Defender', '1.5.0']];
 foreach ($expected as $slug => [$title, $version]) {
     $game = tylilo_beta_game($slug);
     check(is_array($game) && $game['title'] === $title && $game['version'] === $version, $title . ' is a beta game at ' . $version);

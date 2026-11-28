@@ -121,10 +121,145 @@ function tylilo_beta_set_visible(string $slug, bool $visible): bool
     return true;
 }
 
+/** @var list<string> */
+const TYLILO_BETA_STAGE_DEFAULT_ALPHA = ['crash-cars', 'jumpy-jumperton', 'starbase-defender'];
+
+function tylilo_beta_stages_path(): string
+{
+    return rtrim(tylilo_turnstile_dir(), '/') . '/beta-stages.json';
+}
+
 /**
- * Catalog for the public Alpha/Beta Games section. Badge is "Beta" or "Alpha".
+ * @return 'alpha'|'beta'|null
+ */
+function tylilo_beta_parse_stage(mixed $stage): ?string
+{
+    if (!is_string($stage)) {
+        return null;
+    }
+    $value = strtolower(trim($stage));
+
+    return $value === 'alpha' || $value === 'beta' ? $value : null;
+}
+
+/**
+ * @return 'alpha'|'beta'
+ */
+function tylilo_beta_normalize_stage(mixed $stage): string
+{
+    return tylilo_beta_parse_stage($stage) ?? 'beta';
+}
+
+function tylilo_beta_stage_label(string $stage): string
+{
+    return tylilo_beta_normalize_stage($stage) === 'alpha' ? 'Alpha' : 'Beta';
+}
+
+/**
+ * @return array<string, 'alpha'|'beta'>
+ */
+function tylilo_beta_stage_defaults(): array
+{
+    $defaults = [];
+    $alpha = array_fill_keys(TYLILO_BETA_STAGE_DEFAULT_ALPHA, true);
+    foreach (tylilo_beta_games() as $game) {
+        $defaults[$game['slug']] = isset($alpha[$game['slug']]) ? 'alpha' : 'beta';
+    }
+    foreach (array_keys(tylilo_arcade_early_catalog()) as $slug) {
+        if (!isset($defaults[$slug])) {
+            $defaults[$slug] = isset($alpha[$slug]) ? 'alpha' : 'beta';
+        }
+    }
+
+    return $defaults;
+}
+
+/**
+ * @return array<string, 'alpha'|'beta'>
+ */
+function tylilo_beta_stages(): array
+{
+    $defaults = tylilo_beta_stage_defaults();
+    $path = tylilo_beta_stages_path();
+    if (!is_file($path)) {
+        return $defaults;
+    }
+    $decoded = json_decode((string) file_get_contents($path), true);
+    if (!is_array($decoded)) {
+        return $defaults;
+    }
+    $state = $defaults;
+    foreach ($decoded as $slug => $stage) {
+        if (!is_string($slug) || preg_match('/^[a-z0-9-]{1,40}$/', $slug) !== 1) {
+            continue;
+        }
+        $parsed = tylilo_beta_parse_stage($stage);
+        if ($parsed !== null) {
+            $state[$slug] = $parsed;
+        }
+    }
+
+    return $state;
+}
+
+/**
+ * @return 'alpha'|'beta'
+ */
+function tylilo_beta_stage(string $slug): string
+{
+    $state = tylilo_beta_stages();
+
+    return $state[$slug] ?? (in_array($slug, TYLILO_BETA_STAGE_DEFAULT_ALPHA, true) ? 'alpha' : 'beta');
+}
+
+function tylilo_beta_set_stage(string $slug, string $stage): bool
+{
+    $parsed = tylilo_beta_parse_stage($stage);
+    if (preg_match('/^[a-z0-9-]{1,40}$/', $slug) !== 1 || tylilo_beta_game($slug) === null || $parsed === null) {
+        return false;
+    }
+    $dir = tylilo_turnstile_dir();
+    if (!is_dir($dir) && !mkdir($dir, 0700, true) && !is_dir($dir)) {
+        throw new RuntimeException('Beta stage storage is not available.');
+    }
+    $path = tylilo_beta_stages_path();
+    $handle = fopen($path, 'c+');
+    if ($handle === false) {
+        throw new RuntimeException('Beta stage storage is not available.');
+    }
+    try {
+        if (!flock($handle, LOCK_EX)) {
+            throw new RuntimeException('Beta stage storage is not available.');
+        }
+        rewind($handle);
+        $raw = stream_get_contents($handle);
+        $decoded = is_string($raw) && $raw !== '' ? json_decode($raw, true) : [];
+        if (!is_array($decoded)) {
+            $decoded = [];
+        }
+        $decoded[$slug] = $parsed;
+        $encoded = json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+        if (!is_string($encoded)) {
+            throw new RuntimeException('Beta stage could not be saved.');
+        }
+        rewind($handle);
+        if (!ftruncate($handle, 0) || fwrite($handle, $encoded . "\n") === false) {
+            throw new RuntimeException('Beta stage could not be saved.');
+        }
+        fflush($handle);
+    } finally {
+        flock($handle, LOCK_UN);
+        fclose($handle);
+    }
+
+    return true;
+}
+
+/**
+ * Catalog for the public Alpha/Beta Games section. The badge comes from
+ * the stored stage at request time.
  *
- * @return array<string, array{title: string, description: string, href: string, badge: string}>
+ * @return array<string, array{title: string, description: string, href: string}>
  */
 function tylilo_arcade_early_catalog(): array
 {
@@ -133,19 +268,16 @@ function tylilo_arcade_early_catalog(): array
             'title' => 'Crash Cars',
             'description' => 'A 3D demolition-derby driving game.',
             'href' => '/arcade/crash-cars/',
-            'badge' => 'Beta',
         ],
         'jumpy-jumperton' => [
             'title' => 'Jumpy Jumperton',
             'description' => 'A jumping game still in testing.',
             'href' => '/arcade/jumpy-jumperton/',
-            'badge' => 'Beta',
         ],
         'starbase-defender' => [
             'title' => 'Starbase Defender',
             'description' => 'A base-defense game still in testing.',
             'href' => '/arcade/starbase-defender/',
-            'badge' => 'Beta',
         ],
     ];
 }
@@ -178,9 +310,9 @@ function tylilo_arcade_visible_early_games(): array
         $visible[] = [
             'slug' => $slug,
             'title' => $title,
-            'description' => $meta['description'] ?? 'A beta game still in testing.',
+            'description' => $meta['description'] ?? 'An early game still in testing.',
             'href' => $meta['href'] ?? '/arcade/' . rawurlencode($slug) . '/',
-            'badge' => $meta['badge'] ?? 'Beta',
+            'badge' => tylilo_beta_stage_label(tylilo_beta_stage($slug)),
         ];
     }
 
@@ -229,6 +361,36 @@ function tylilo_beta_arcade_toggle(array $user, string $slug, bool $visible, str
     $title = is_array($game) ? (string) $game['title'] : $slug;
     $detail = $visible ? ('Showed ' . $title . ' in the Arcade') : ('Hid ' . $title . ' from the Arcade');
     tylilo_admin_log((int) ($user['id'] ?? 0), (string) ($user['username'] ?? ''), 'beta-arcade', $detail);
+
+    return ['status' => 204, 'error' => ''];
+}
+
+/**
+ * @param array<string, mixed> $user
+ * @return array{status: int, error: string}
+ */
+function tylilo_beta_arcade_set_stage(array $user, string $slug, string $stage, string $csrf): array
+{
+    if (!tylilo_admin_csrf_ok($csrf)) {
+        return ['status' => 400, 'error' => 'That request was not accepted. Please try again.'];
+    }
+    if (!tylilo_admin_can($user, 'arcade_publish')) {
+        return ['status' => 403, 'error' => 'You do not have access to that page.'];
+    }
+    if (tylilo_beta_game($slug) === null) {
+        return ['status' => 400, 'error' => 'That early game was not found.'];
+    }
+    $parsed = tylilo_beta_parse_stage($stage);
+    if ($parsed === null) {
+        return ['status' => 400, 'error' => 'Choose Alpha or Beta.'];
+    }
+    $current = tylilo_beta_stage($slug);
+    if ($current !== $parsed) {
+        tylilo_beta_set_stage($slug, $parsed);
+        $game = tylilo_beta_game($slug);
+        $title = is_array($game) ? (string) $game['title'] : $slug;
+        tylilo_admin_log((int) ($user['id'] ?? 0), (string) ($user['username'] ?? ''), 'beta-stage', 'Set ' . $title . ' to ' . tylilo_beta_stage_label($parsed));
+    }
 
     return ['status' => 204, 'error' => ''];
 }

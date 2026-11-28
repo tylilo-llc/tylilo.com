@@ -83,7 +83,7 @@ foreach ($labels as $label) {
 }
 check($orderOk, 'group headings stay in order');
 
-$links = ['Home', 'Inquiries', 'Contacts', 'Games', 'Beta', 'Scores', 'Feedback', 'Users', 'Activity', 'Ideas', 'Notes', 'To-dos', 'Settings', 'Log out'];
+$links = ['Home', 'Inquiries', 'Contacts', 'Games', 'Alpha/Beta', 'Scores', 'Feedback', 'Users', 'Activity', 'Ideas', 'Notes', 'To-dos', 'Settings', 'Log out'];
 $cursor = strpos($ownerPage, 'id="admin-menu-panel"');
 $linkOrder = is_int($cursor);
 foreach ($links as $label) {
@@ -116,7 +116,7 @@ check(!str_contains($ideasMenu, '>To-dos<'), 'to-dos stay hidden without that pe
 check(!str_contains($ideasMenu, '>Feedback<'), 'feedback stays hidden without that permission');
 check(!str_contains($ideasMenu, '>Arcade</h2>') && !str_contains($ideasMenu, '>Games<'), 'the Arcade group is omitted when it would be empty');
 check(!str_contains($ideasMenu, '>Software</h2>') && !str_contains($ideasMenu, 'Coming later'), 'Software stays hidden for a team member');
-check(!str_contains($ideasMenu, '>Users<') && !str_contains($ideasMenu, '>Activity<') && !str_contains($ideasMenu, '>Beta<') && !str_contains($ideasMenu, '>Scores<'), 'owner and other gated links stay hidden');
+check(!str_contains($ideasMenu, '>Users<') && !str_contains($ideasMenu, '>Activity<') && !str_contains($ideasMenu, '>Alpha/Beta<') && !str_contains($ideasMenu, '>Scores<'), 'owner and other gated links stay hidden');
 check(!str_contains($ideasMenu, '>Consulting</h2>') && !str_contains($ideasMenu, '>Inquiries<'), 'Inquiries stay hidden without the consulting permission');
 check(!str_contains($ideasMenu, 'data-group="consulting"') && !str_contains($ideasMenu, 'data-group="arcade"') && !str_contains($ideasMenu, 'data-group="software"'), 'empty groups are omitted');
 check(str_contains($ideasMenu, '>Settings<') && str_contains($ideasMenu, '>Log out</button>'), 'account links stay available');
@@ -147,7 +147,7 @@ $arcadeOnly = [
     ],
 ];
 $arcadeMenu = tylilo_admin_menu_html($arcadeOnly, '/admin/scores.php');
-check(str_contains($arcadeMenu, '>Arcade</h2>') && str_contains($arcadeMenu, '>Scores<') && str_contains($arcadeMenu, '>Beta<') && str_contains($arcadeMenu, '>Feedback<'), 'an arcade-only person still sees Arcade, Scores, Beta, and Feedback');
+check(str_contains($arcadeMenu, '>Arcade</h2>') && str_contains($arcadeMenu, '>Scores<') && str_contains($arcadeMenu, '>Alpha/Beta<') && str_contains($arcadeMenu, '>Feedback<'), 'an arcade-only person still sees Arcade, Scores, Alpha/Beta, and Feedback');
 check(!str_contains($arcadeMenu, '>Games<'), 'an arcade-only person does not see the owner Games page');
 check(!str_contains($arcadeMenu, '>Software</h2>') && !str_contains($arcadeMenu, 'Coming later'), 'an arcade-only person does not see Software');
 check(!str_contains($arcadeMenu, '>Consulting</h2>') && !str_contains($arcadeMenu, 'href="/admin/inquiries.php"'), 'an arcade-only person does not see Inquiries in the menu');
@@ -177,14 +177,14 @@ check(str_contains($dashPlain, 'data-dash="site"') && !str_contains($dashPlain, 
 
 $beta = tylilo_admin_menu_html($ideasOnly, '/admin/beta/g/harbor/');
 
-check(!str_contains($beta, 'aria-current="page"'), 'a beta page is not current when that person cannot open Beta');
+check(!str_contains($beta, 'aria-current="page"'), 'an early-game page is not current when that person cannot open Alpha/Beta');
 $ownerBeta = tylilo_admin_menu_html([
     'id' => 1,
     'role' => 'owner',
     'disabled' => 0,
     'permissions' => [],
 ], '/admin/beta/g/harbor/');
-check(str_contains($ownerBeta, 'href="/admin/beta/" aria-current="page"'), 'Beta stays current on a beta game page');
+check(str_contains($ownerBeta, 'href="/admin/beta/" aria-current="page"'), 'Alpha/Beta stays current on an early-game page');
 
 echo $failed === 0 ? "\n{$checks} checks passed\n" : "\n{$failed} failed\n";
 exit($failed === 0 ? 0 : 1);

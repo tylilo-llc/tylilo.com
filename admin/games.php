@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/_init.php';
 require dirname(__DIR__) . '/includes/scores.php';
+require_once dirname(__DIR__) . '/includes/beta-arcade.php';
 $user = tylilo_admin_guard();
 if (!tylilo_admin_is_owner($user)) {
     tylilo_admin_forbid();
@@ -98,9 +99,9 @@ foreach ($data['versions'] as $row) {
     }
 }
 usort($rows, static fn (array $a, array $b): int => strcmp((string) $b['released_on'], (string) $a['released_on']));
-$html = '<div class="card"><h2>Beta games</h2><p>A beta build is not in the Arcade. Publishing it is a separate site change, not a button here.</p></div>';
+$html = '<div class="card"><h2>Alpha/Beta games</h2><p>These are test builds in progress. Some can also be played in the Arcade under Alpha/Beta Games. Use the Alpha/Beta tab to set a game\'s stage or to show or hide it there.</p></div>';
 foreach (tylilo_beta_games() as $beta) {
-    $html .= '<article class="card"><p class="kicker">Beta</p><h2>' . tylilo_e($beta['title']) . '</h2>';
+    $html .= '<article class="card"><p class="kicker">' . tylilo_e(tylilo_beta_stage_label(tylilo_beta_stage($beta['slug']))) . '</p><h2>' . tylilo_e($beta['title']) . '</h2>';
     $html .= '<p>Version ' . tylilo_e($beta['version'] !== '' ? $beta['version'] : 'unknown') . '</p>';
     $html .= '<p><a class="btn" href="/admin/beta/g/' . rawurlencode($beta['slug']) . '/">Play</a></p></article>';
 }

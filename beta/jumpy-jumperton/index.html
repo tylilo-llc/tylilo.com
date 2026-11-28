@@ -1,23 +1,45 @@
-<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Jumpy Jumperton v1.4</title><style>
-html,body{margin:0;height:100%;background:#0b0e1f;overflow:hidden;font-family:system-ui,sans-serif;color:#fff;touch-action:none;user-select:none}
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Jumpy Jumperton v1.6 (Alpha)</title><style>
+html,body{margin:0;height:100%;background:#0b0e1f;overflow:hidden;font-family:system-ui,sans-serif;color:#fff;touch-action:manipulation;user-select:none}
+body.playing,body.playing #wrap,#touch,canvas{touch-action:none}
 #wrap{position:relative;height:100%;display:flex;align-items:center;justify-content:center}
 canvas{background:linear-gradient(#141a3a,#2a1a4a);box-shadow:0 0 40px #6af5;border-radius:8px;max-height:100%;max-width:100%}
 #ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:#0009}
-#ov h1{font-size:44px;margin:0;color:#ffd84a;text-shadow:0 4px 0 #c55}#ov p{opacity:.9}
+#ov h1{font-size:44px;margin:0;color:#ffd84a;text-shadow:0 4px 0 #c55}#ov p{color:#eef0fa}
 button.big{font-size:22px;padding:12px 30px;border:0;border-radius:30px;background:#ffd84a;color:#222;font-weight:bold;cursor:pointer}
 #touch{position:absolute;bottom:10px;left:0;right:0;display:none;justify-content:space-between;padding:0 14px;pointer-events:none}
-#touch div{pointer-events:auto;width:70px;height:70px;border-radius:50%;background:#fff3;display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 6px}
-button.cb{font-size:16px;padding:8px 16px;margin:0 4px;border:2px solid #ffd84a;border-radius:20px;background:none;color:#ffd84a}button.cb.on{background:#ffd84a;color:#222}body{--strip:0px}
+#touch button{pointer-events:auto;width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,.22);border:3px solid #fff;color:#fff;padding:0;font:30px system-ui,sans-serif;display:flex;align-items:center;justify-content:center;margin:0 6px;-webkit-tap-highlight-color:transparent}
+button.cb{font-size:16px;min-height:44px;min-width:44px;padding:8px 16px;margin:0 4px;border:2px solid #ffd84a;border-radius:22px;background:none;color:#ffd84a;cursor:pointer}button.cb.on{background:#ffd84a;color:#222}body{--strip:0px;--top:52px;--foot:28px;--bot:max(var(--strip),env(safe-area-inset-bottom,0px))}
 body.tb{--strip:calc(120px + env(safe-area-inset-bottom))}
 body.ts{--strip:calc(120px + env(safe-area-inset-bottom))}
-#wrap{box-sizing:border-box;height:100vh;height:100dvh;padding-bottom:var(--strip);padding-top:env(safe-area-inset-top)}
-canvas{max-height:calc(100vh - var(--strip) - env(safe-area-inset-top));max-height:calc(100dvh - var(--strip) - env(safe-area-inset-top))}
+#wrap{box-sizing:border-box;height:100vh;height:100dvh;padding-bottom:calc(var(--bot) + var(--foot));padding-top:calc(env(safe-area-inset-top,0px) + var(--top))}
+canvas{max-height:calc(100vh - var(--bot) - var(--foot) - var(--top) - env(safe-area-inset-top,0px));max-height:calc(100dvh - var(--bot) - var(--foot) - var(--top) - env(safe-area-inset-top,0px))}
 body.ts #touch span{visibility:hidden}body.ts #tj{width:84px;height:84px}
 body.tb #touch,body.ts #touch{position:fixed;bottom:env(safe-area-inset-bottom);height:120px;align-items:center;padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right));background:#0006}
-</style></head><body><div id="wrap"><canvas id="c" width="420" height="700"></canvas>
-<div id="ov"><h1>JUMPY<br>JUMPERTON</h1><div style="opacity:.7;margin-top:4px">v1.4</div><p>Jump onto falling blocks for points!<br>Higher blocks = bigger bonus. Don't fall off the bottom<br>and don't get squashed.<br>⚡ Grab boosters for 20s of double jump!</p><p>←/→ or A/D to move · Space/↑/W to jump</p><p id="hs"></p><div id="ctl" style="display:none;margin:0 0 14px">Controls: <button class="cb" data-m="buttons">Buttons</button><button class="cb" data-m="swipe">Swipe</button><div id="ctlh" style="font-size:13px;opacity:.75;margin-top:6px"></div></div><button class="big" id="go">PLAY</button></div>
-<div id="touch"><span id="arrows" style="display:flex"><div id="tl">◀</div><div id="tr">▶</div></span><div id="tj">⤒</div></div></div>
+#top{position:fixed;top:env(safe-area-inset-top,0px);left:max(8px,env(safe-area-inset-left,0px));height:var(--top);display:flex;align-items:center;z-index:10}
+#back{font:bold 16px system-ui,sans-serif;min-height:44px;padding:0 16px;border:2px solid #ffd84a;border-radius:22px;background:#0b0e1f;color:#ffd84a;cursor:pointer}
+#back:hover{background:#1c2148}
+#ft{position:fixed;left:0;right:0;bottom:var(--bot);height:var(--foot);line-height:var(--foot);text-align:center;font-size:14px;color:#b9bdd9;z-index:5;pointer-events:none}
+.ver{color:#c9cde8;margin-top:4px;font-size:16px}
+.alpha{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:6px;background:#ff4a6a;color:#fff;font:bold 13px system-ui,sans-serif;letter-spacing:.08em;vertical-align:2px}
+#pd{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.72);padding:16px}
+#pd[hidden]{display:none}
+#pd .box{background:#1a1f45;border:2px solid #ffd84a;border-radius:16px;padding:22px 22px 18px;max-width:340px;text-align:center;box-shadow:0 10px 40px #000a}
+#pd h2{margin:0 0 8px;color:#ffd84a;font-size:26px}#pd p{margin:0 0 18px;font-size:16px;line-height:1.4;color:#eef0fa}
+#pd .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+#pd button{min-height:44px}button.sec{font:bold 18px system-ui,sans-serif;padding:10px 20px;border:2px solid #fff;border-radius:30px;background:none;color:#fff;cursor:pointer}
+button.big{min-height:44px}
+:focus{outline:none}
+:focus-visible{outline:3px solid #6ff;outline-offset:3px}
+canvas:focus,canvas:focus-visible{outline:none}
+#touch button:focus,#touch button:focus-visible{outline:none}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style></head><body><div id="top"><button id="back" type="button">← Back to Arcade</button></div>
+<div id="wrap"><canvas id="c" width="420" height="700" tabindex="-1" role="img" aria-label="Jumpy Jumperton game area"></canvas>
+<div id="ov"><h1>JUMPY<br>JUMPERTON</h1><div class="ver">v1.6<span class="alpha">ALPHA</span></div><p>Jump onto falling blocks for points!<br>Higher blocks = bigger bonus. Don't fall off the bottom<br>and don't get squashed.<br>⚡ Grab boosters for 20s of double jump!</p><p>←/→ or A/D to move · Space/↑/W to jump</p><p id="hs"></p><div id="ctl" style="display:none;margin:0 0 14px">Controls: <button class="cb" data-m="buttons">Buttons</button><button class="cb" data-m="swipe">Swipe</button><div id="ctlh" style="font-size:16px;color:#d6d9ee;margin-top:6px"></div></div><button class="big" id="go" type="button">PLAY</button></div>
+<div id="touch"><span id="arrows" style="display:flex"><button type="button" id="tl" tabindex="-1" aria-label="Move left">◀</button><button type="button" id="tr" tabindex="-1" aria-label="Move right">▶</button></span><button type="button" id="tj" tabindex="-1" aria-label="Jump">⤒</button></div></div>
+<footer id="ft">© 2026 Tylilo, LLC</footer>
+<div id="pd" role="dialog" aria-modal="true" aria-labelledby="pdt" aria-describedby="pdd" hidden><div class="box"><h2 id="pdt">Paused</h2><p id="pdd">Leave for the Arcade? Your current run will end and won't count toward your high score.</p><div class="row"><button type="button" class="big" id="pdr">Resume</button><button type="button" class="sec" id="pdl">Leave to Arcade</button></div></div></div>
 <script>
 const cv=document.getElementById('c'),ctx=cv.getContext('2d'),W=420,H=700,C=30,COLS=14;
 const SH={I:[[0,0],[1,0],[2,0],[3,0]],O:[[0,0],[1,0],[0,1],[1,1]],T:[[0,0],[1,0],[2,0],[1,1]],L:[[0,0],[0,1],[0,2],[1,2]],J:[[1,0],[1,1],[1,2],[0,2]],S:[[1,0],[2,0],[0,1],[1,1]],Z:[[0,0],[1,0],[1,1],[2,1]]};
@@ -26,6 +48,7 @@ const JV=560,GR=1500,VMAX=260;
 const MAXH=JV*JV/(2*GR); // ~104px peak with jump held
 const CLIMB=Math.floor((MAXH-26*0.15)/C); // rows climbable (3)
 let boosts=[],djT=0,djUsed=false;
+const rmq=matchMedia('(prefers-reduced-motion: reduce)');let RM=rmq.matches;rmq.addEventListener&&rmq.addEventListener('change',e=>{RM=e.matches;});
 function heights(){const h=new Array(COLS).fill(0);for(const k of grid.keys()){const[c,r]=k.split(',').map(Number);if(c>=0&&c<COLS)h[c]=Math.max(h[c],r+1);}return h;}
 function dropOn(h,cells,col){const bot={};for(const[cx,cy]of cells)bot[cx]=Math.max(bot[cx]??-1,cy);
  const maxCy=Math.max(...cells.map(c=>c[1]));let base=0;for(const cx in bot){base=Math.max(base,h[col+ +cx]-(maxCy-bot[cx]));}
@@ -63,8 +86,8 @@ function pieceLand(f){// can it move down by dy?
 function maxDrop(f,dy){let m=dy;for(const[cx,cy]of f.cells){const bot=f.y+(cy+1)*C;let lim=-bot;// floor
   for(let r=0;r<400;r++){if(grid.has(key(f.col+cx,r))){const top=-(r+1)*C;if(top>=bot-0.01){lim=Math.min(lim,top-bot);}}}
   m=Math.min(m,lim);}return Math.max(0,m);}
-function burst(x,y,c,n){for(let i=0;i<n;i++)parts.push({x,y,vx:(Math.random()-.5)*300,vy:-Math.random()*300,l:.6+Math.random()*.4,c});}
-function over(){st='over';if(score>hi){hi=score;localStorage.jjHi=hi;}burst(P.x+10,P.y+13,'#fff',40);
+function burst(x,y,c,n){if(RM)return;for(let i=0;i<n;i++)parts.push({x,y,vx:(Math.random()-.5)*300,vy:-Math.random()*300,l:.6+Math.random()*.4,c});}
+function over(){st='over';document.body.classList.remove('playing');if(score>hi){hi=score;localStorage.jjHi=hi;}burst(P.x+10,P.y+13,'#fff',40);
  setTimeout(()=>{ov.style.display='flex';ov.querySelector('h1').innerHTML='GAME<br>OVER';ov.querySelector('p').innerHTML='Score: <b>'+score+'</b>';document.getElementById('hs').textContent='High score: '+hi;document.getElementById('go').textContent='PLAY AGAIN';},700);}
 function hit(r){return r.x<P.x+P.w&&r.x+r.w>P.x&&r.y<P.y+P.h&&r.y+r.h>P.y;}
 function update(dt){t+=dt;const d=diff();
@@ -106,21 +129,24 @@ function draw(){ctx.clearRect(0,0,W,H);ctx.save();ctx.translate(0,-Math.round(ca
  ctx.fillStyle='#3a2d5a';ctx.fillRect(0,0,W,H);
  for(const[k,g]of grid){const[c,r]=k.split(',').map(Number);block(c*C,-(r+1)*C,COL[g.k],!g.scored);}
  for(const f of falling)for(const[cx,cy]of f.cells)block((f.col+cx)*C,f.y+cy*C,COL[f.k],!f.scored);
- for(const f of falling){if(f.y<camY-C){ctx.fillStyle=COL[f.k];ctx.globalAlpha=.6+.4*Math.sin(t*10);ctx.beginPath();const x=(f.col+1)*C;ctx.moveTo(x-8,camY+4);ctx.lineTo(x+8,camY+4);ctx.lineTo(x,camY+16);ctx.fill();ctx.globalAlpha=1;}}
- for(const b of boosts){const g=4*Math.sin(t*6);ctx.save();ctx.shadowColor='#6ff';ctx.shadowBlur=15;ctx.fillStyle='#6ff';ctx.beginPath();ctx.arc(b.x,b.y+g,11,0,7);ctx.fill();ctx.fillStyle='#035';ctx.font='bold 14px system-ui';ctx.textAlign='center';ctx.fillText('⚡',b.x,b.y+g+5);ctx.restore();}
- if(djT>0){ctx.save();ctx.shadowColor='#6ff';ctx.shadowBlur=20+8*Math.sin(t*10);ctx.strokeStyle=djT<3&&t%.3<.15?'#fff':'#6ff';ctx.lineWidth=3;ctx.beginPath();ctx.roundRect(P.x-3,P.y-3,P.w+6,P.h+6,9);ctx.stroke();ctx.restore();}
- if(st!=='over'||t%0.2<0.1){const sx=1/P.sq**.5,sy=P.sq;ctx.save();ctx.translate(P.x+P.w/2,P.y+P.h);ctx.scale(sx,sy);
+ for(const f of falling){if(f.y<camY-C){ctx.fillStyle=COL[f.k];ctx.globalAlpha=RM?.85:.6+.4*Math.sin(t*10);ctx.beginPath();const x=(f.col+1)*C;ctx.moveTo(x-8,camY+4);ctx.lineTo(x+8,camY+4);ctx.lineTo(x,camY+16);ctx.fill();ctx.globalAlpha=1;}}
+ for(const b of boosts){const g=RM?0:4*Math.sin(t*6);ctx.save();ctx.shadowColor='#6ff';ctx.shadowBlur=15;ctx.fillStyle='#6ff';ctx.beginPath();ctx.arc(b.x,b.y+g,11,0,7);ctx.fill();ctx.fillStyle='#035';ctx.font='bold 14px system-ui';ctx.textAlign='center';ctx.fillText('⚡',b.x,b.y+g+5);ctx.restore();}
+ if(djT>0){ctx.save();ctx.shadowColor='#6ff';ctx.shadowBlur=20+(RM?0:8*Math.sin(t*10));ctx.strokeStyle=djT<3&&(RM||t%.3<.15)?'#fff':'#6ff';ctx.lineWidth=3;ctx.beginPath();ctx.roundRect(P.x-3,P.y-3,P.w+6,P.h+6,9);ctx.stroke();ctx.restore();}
+ if(st!=='menu'&&(st!=='over'||RM||t%0.2<0.1)){const sx=1/P.sq**.5,sy=P.sq;ctx.save();ctx.translate(P.x+P.w/2,P.y+P.h);ctx.scale(sx,sy);
   ctx.fillStyle='#ff6fa8';ctx.beginPath();ctx.roundRect(-P.w/2,-P.h,P.w,P.h,7);ctx.fill();ctx.fillStyle='#fff';ctx.fillRect(P.face*3-4,-P.h+6,6,7);ctx.fillStyle='#222';ctx.fillRect(P.face*3-2+P.face,-P.h+8,3,4);ctx.restore();}
  for(const p of parts){ctx.globalAlpha=Math.max(0,p.l);ctx.fillStyle=p.c;ctx.fillRect(p.x,p.y,4,4);}ctx.globalAlpha=1;
  ctx.font='bold 16px system-ui';ctx.textAlign='center';for(const f of floats){ctx.globalAlpha=f.l;ctx.fillStyle='#ffd84a';ctx.fillText(f.txt,f.x+10,f.y-10-(1-f.l)*40);}ctx.globalAlpha=1;
  ctx.restore();ctx.fillStyle='#f44a';ctx.fillRect(0,H-4,W,4);
  ctx.fillStyle='#fff';ctx.font='bold 22px system-ui';ctx.textAlign='left';ctx.fillText('Score '+score,12,30);ctx.textAlign='right';ctx.font='14px system-ui';if(djT>0){ctx.fillStyle='#6ff';ctx.font='bold 16px system-ui';ctx.fillText('⚡ Double jump '+Math.ceil(djT)+'s',W-12,52);ctx.fillStyle='#fff';ctx.font='14px system-ui';}ctx.fillText('Best '+hi+'  ·  Lvl '+(1+Math.floor(diff()*9)),W-12,28);}
 let last=0;function loop(ts){const dt=Math.min(.033,(ts-last)/1000||0);last=ts;if(st==='play')update(dt);else if(st==='over'){for(const p of parts){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=900*dt;p.l-=dt;}t+=dt;}
- for(const f of floats)f.l-=dt;floats=floats.filter(f=>f.l>0);if(grid)draw();requestAnimationFrame(loop);}
-function start(){reset();floats=[];st='play';ov.style.display='none';}
+ if(st!=='paused')for(const f of floats)f.l-=dt;floats=floats.filter(f=>f.l>0);if(grid)draw();requestAnimationFrame(loop);}
+function start(){if(pdOpen)return;reset();floats=[];st='play';ov.style.display='none';document.body.classList.add('playing');cv.focus({preventScroll:true});}
 document.getElementById('go').onclick=start;
 const map={ArrowLeft:'l',KeyA:'l',ArrowRight:'r',KeyD:'r',ArrowUp:'j',KeyW:'j',Space:'j'};
-addEventListener('keydown',e=>{if(map[e.code]){if(map[e.code]==='j'&&!e.repeat&&!keys.j)keys.jp=true;keys[map[e.code]]=true;e.preventDefault();}if((e.code==='Enter'||e.code==='Space')&&st!=='play'&&ov.style.display!=='none')start();});
+addEventListener('keydown',e=>{if(pdOpen){if(e.key==='Escape'){e.preventDefault();resume();}else if(e.key==='Tab'){const f=[pdr,pdl],i=f.indexOf(document.activeElement);e.preventDefault();f[(i+(e.shiftKey?-1:1)+f.length)%f.length].focus();}return;}
+ if(e.key==='Escape'){if(st==='play'){e.preventDefault();openPause();}return;}
+ const tb=e.target&&e.target.closest&&e.target.closest('button');if(tb&&tb.id!=='go'&&st!=='play'&&(e.code==='Enter'||e.code==='Space'||e.code==='NumpadEnter'))return;
+ if(map[e.code]){if(map[e.code]==='j'&&!e.repeat&&!keys.j)keys.jp=true;keys[map[e.code]]=true;e.preventDefault();}if((e.code==='Enter'||e.code==='Space')&&st!=='play'&&ov.style.display!=='none')start();});
 addEventListener('keyup',e=>{if(map[e.code])keys[map[e.code]]=false;});
 const isTouch='ontouchstart'in window||navigator.maxTouchPoints>0;let ctlMode=localStorage.jjCtl||'buttons';
 function setCtl(m){ctlMode=m;localStorage.jjCtl=m;document.querySelectorAll('.cb').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
@@ -130,7 +156,7 @@ if(isTouch){document.getElementById('ctl').style.display='block';}
 document.querySelectorAll('.cb').forEach(b=>{b.onclick=e=>{e.stopPropagation();setCtl(b.dataset.m);};b.addEventListener('touchstart',e=>e.stopPropagation());});
 setCtl(ctlMode);
 let sw=null;
-addEventListener('touchstart',e=>{if(ctlMode!=='swipe'||st!=='play')return;if(sw)return;const t0=[...e.changedTouches].find(t=>!t.target.closest||!t.target.closest('#touch div'));if(!t0)return;e.preventDefault();sw={id:t0.identifier,x:t0.clientX,y:t0.clientY,ax:t0.clientX,ay:t0.clientY,t:performance.now(),moved:false,jumped:false};},{passive:false});
+addEventListener('touchstart',e=>{if(ctlMode!=='swipe'||st!=='play')return;if(sw)return;const t0=[...e.changedTouches].find(t=>!t.target.closest||!t.target.closest('#touch button'));if(!t0)return;e.preventDefault();sw={id:t0.identifier,x:t0.clientX,y:t0.clientY,ax:t0.clientX,ay:t0.clientY,t:performance.now(),moved:false,jumped:false};},{passive:false});
 addEventListener('touchmove',e=>{if(!sw)return;e.preventDefault();for(const t0 of e.changedTouches){if(t0.identifier!==sw.id)continue;
  const dx=t0.clientX-sw.ax,dy=t0.clientY-sw.ay;if(Math.hypot(t0.clientX-sw.x,t0.clientY-sw.y)>12)sw.moved=true;
  if(dx>18){keys.r=true;keys.l=false;sw.ax=t0.clientX-18;}else if(dx<-18){keys.l=true;keys.r=false;sw.ax=t0.clientX+18;}}},{passive:false});
@@ -139,5 +165,19 @@ keys.l=keys.r=false;sw=null;}}
 addEventListener('touchend',swEnd);addEventListener('touchcancel',swEnd);
 
 for(const[id,k]of[['tl','l'],['tr','r'],['tj','j']]){const el=document.getElementById(id);el.addEventListener('touchstart',e=>{e.preventDefault();e.stopPropagation();if(k==='j')keys.jp=true;keys[k]=true;});el.addEventListener('touchend',e=>{e.preventDefault();keys[k]=false;});}
+// v1.5: Back to Arcade, pause/leave dialog, pause on hidden tab
+const pd=document.getElementById('pd'),pdr=document.getElementById('pdr'),pdl=document.getElementById('pdl'),backBtn=document.getElementById('back');
+let pdOpen=false;
+function goArcade(){location.href='/arcade/';}
+function setInert(on){for(const id of['wrap','top','ft']){const el=document.getElementById(id);if(on)el.setAttribute('inert','');else el.removeAttribute('inert');}}
+function openPause(){if(pdOpen||st!=='play')return;st='paused';keys.l=keys.r=keys.j=keys.jp=false;sw=null;document.body.classList.remove('playing');
+ pdOpen=true;pd.hidden=false;setInert(true);pdr.focus();}
+function resume(){if(!pdOpen)return;pdOpen=false;pd.hidden=true;setInert(false);st='play';document.body.classList.add('playing');cv.focus({preventScroll:true});}
+pdr.addEventListener('click',resume);
+pdl.addEventListener('click',()=>{pdOpen=false;goArcade();});
+backBtn.addEventListener('click',e=>{e.stopPropagation();if(st==='play')openPause();else goArcade();});
+backBtn.addEventListener('touchstart',e=>e.stopPropagation());
+for(const b of[pdr,pdl])b.addEventListener('touchstart',e=>e.stopPropagation());
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&st==='play')openPause();});
 reset();requestAnimationFrame(loop);
 </script></body></html>
