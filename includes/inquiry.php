@@ -712,7 +712,8 @@ function tylilo_inquiry_bodies(array $answers, array $fit, int $id, bool $previe
             . '</div></body></html>';
     };
 
-    $visitorText = $greeting . "\n\n"
+    $previewNote = 'This is a test message from the private preview site, not tylilo.com.';
+    $visitorText = ($preview ? '[Preview] ' . $previewNote . "\n\n" : '') . $greeting . "\n\n"
         . "Thank you for reaching out to Tylilo, LLC. I'll personally reply by email within one business day.\n\n"
         . "Here is a copy of what you sent:\n\n"
         . $textRows
@@ -720,7 +721,8 @@ function tylilo_inquiry_bodies(array $answers, array $fit, int $id, bool $previe
         . "Ryan Thorpe\nTylilo, LLC\nhttps://tylilo.com\n\n"
         . "--\n" . $disclaimer . "\n";
     $visitorHtml = $wrap(
-        '<p style="margin:0 0 16px">' . htmlspecialchars($greeting, ENT_QUOTES, 'UTF-8') . '</p>'
+        ($preview ? '<p style="margin:0 0 16px;padding:8px 12px;background:#FFF4D6;font-size:14px"><strong>[Preview]</strong> ' . $previewNote . '</p>' : '')
+        . '<p style="margin:0 0 16px">' . htmlspecialchars($greeting, ENT_QUOTES, 'UTF-8') . '</p>'
         . '<p style="margin:0 0 16px">Thank you for reaching out to Tylilo, LLC. I\'ll personally reply by email within one business day.</p>'
         . '<p style="margin:0 0 16px">Here is a copy of what you sent:</p>'
         . '<div style="border-left:3px solid #0A3161;padding-left:16px;margin:0 0 16px">' . $htmlRows . '</div>'

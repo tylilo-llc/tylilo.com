@@ -123,6 +123,16 @@ check(!str_contains($visitorDecoded, 'Suggested fit') && !str_contains($visitorD
 check(str_contains(quoted_printable_decode($owner), 'Suggested fit (private): Improvement'), 'the owner notice includes the suggested fit');
 check(str_contains($visitorDecoded, 'Quotes and hiring.'), 'the visitor copy includes their answers');
 check(tylilo_inquiry_subject('X', false) === 'X', 'live mail has no preview mark');
+check(str_contains($visitorDecoded, '[Preview] This is a test message from the private preview site'), 'the preview visitor copy says it is a preview test in the body');
+$live = tylilo_inquiry_bodies($clean, $fit, 1, false);
+check(!str_contains($live['visitor_text'], '[Preview]') && !str_contains($live['visitor_html'], '[Preview]'), 'live mail bodies have no preview note');
+$before = (string) file_get_contents($tmp . '/mail.txt');
+check(tylilo_smtp_check() === true && (string) file_get_contents($tmp . '/mail.txt') === $before, 'the mail login check sends nothing');
+$page = (string) file_get_contents(dirname(__DIR__) . '/inquiry.php');
+check(strpos($page, "preview_smtp_check") < strpos($page, 'tylilo_inquiry_validate('), 'the mail login check runs before any inquiry is stored');
+check(str_contains($page, '$preview && ($_POST[\'preview_smtp_check\']'), 'the mail login check only works on the preview');
+$wf = (string) file_get_contents(dirname(__DIR__) . '/.github/workflows/deploy-preview.yml');
+check(str_contains($wf, 'send_test_email') && str_contains($wf, 'SEND_TEST_EMAIL}" != "true"'), 'deploys send no email unless a manual run asks for it');
 
 $html = tylilo_inquiry_form_html([], [], 'tok', 'sitekey');
 check(substr_count($html, 'class="inq-step"') === 8, 'the form has eight steps');

@@ -9,6 +9,20 @@ tylilo_session_start();
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     $preview = tylilo_is_preview();
+
+    // Preview deploy check: log in to the mail server and quit without
+    // sending or storing anything. Needs the one-time preview token.
+    if ($preview && ($_POST['preview_smtp_check'] ?? '') === '1') {
+        $ok = tylilo_inquiry_selftest_ok(is_string($_POST['preview_selftest'] ?? null) ? $_POST['preview_selftest'] : '');
+        header('Cache-Control: no-store');
+        if (!$ok) {
+            http_response_code(403);
+            exit;
+        }
+        header('X-Inquiry-SMTP: ' . (tylilo_smtp_check() ? 'login-ok' : 'failed'));
+        http_response_code(204);
+        exit;
+    }
     $done = static function (array $flash, int $storedId = 0): void {
         $_SESSION['inquiry_flash'] = $flash;
         if ($storedId > 0) {

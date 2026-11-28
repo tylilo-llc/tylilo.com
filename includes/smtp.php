@@ -126,6 +126,36 @@ function tylilo_smtp_send(string $to, string $subject, string $text, string $htm
         return false;
     }
 
+    $session = tylilo_smtp_open($password);
+    if ($session === null) {
+        return false;
+    }
+    [$socket, $address] = $session;
+    $ok = tylilo_smtp_cmd($socket, 'MAIL FROM:<' . TYLILO_SMTP_FROM . '>', [250])
+        && tylilo_smtp_cmd($socket, 'RCPT TO:<' . $to . '>', [250, 251])
+        && tylilo_smtp_cmd($socket, 'DATA', [354]);
+    if ($ok) {
+        $data = preg_replace('/^\./m', '..', $message) ?? $message;
+        $ok = fwrite($socket, $data . "\r\n.\r\n") !== false && tylilo_smtp_cmd($socket, '', [250]);
+    }
+    @fwrite($socket, "QUIT\r\n");
+    fclose($socket);
+    if (!$ok) {
+        error_log('Inquiry mail: the SMTP conversation failed at ' . $address . '.');
+    }
+
+    return $ok;
+}
+
+/**
+ * Connect and log in. Returns [socket, address] or null.
+ * A connection that is refused moves on to the next port; a login that
+ * fails does not, so a wrong password is never tried twice.
+ *
+ * @return array{0: resource, 1: string}|null
+ */
+function tylilo_smtp_open(string $password): ?array
+{
     $attempts = [
         ['ssl://' . TYLILO_SMTP_HOST . ':465', false],
         ['tcp://' . TYLILO_SMTP_HOST . ':587', true],
@@ -149,25 +179,40 @@ function tylilo_smtp_send(string $to, string $subject, string $text, string $htm
                 && @stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT | STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT) === true
                 && tylilo_smtp_cmd($socket, 'EHLO tylilo.com', [250]);
         }
-        $ok = $ok
-            && tylilo_smtp_cmd($socket, 'AUTH PLAIN ' . base64_encode("\0" . TYLILO_SMTP_USER . "\0" . $password), [235])
-            && tylilo_smtp_cmd($socket, 'MAIL FROM:<' . TYLILO_SMTP_FROM . '>', [250])
-            && tylilo_smtp_cmd($socket, 'RCPT TO:<' . $to . '>', [250, 251])
-            && tylilo_smtp_cmd($socket, 'DATA', [354]);
+        $ok = $ok && tylilo_smtp_cmd($socket, 'AUTH PLAIN ' . base64_encode("\0" . TYLILO_SMTP_USER . "\0" . $password), [235]);
         if ($ok) {
-            $data = preg_replace('/^\./m', '..', $message) ?? $message;
-            $ok = fwrite($socket, $data . "\r\n.\r\n") !== false && tylilo_smtp_cmd($socket, '', [250]);
+            return [$socket, $address];
         }
         @fwrite($socket, "QUIT\r\n");
         fclose($socket);
-        if ($ok) {
-            return true;
-        }
-        error_log('Inquiry mail: the SMTP conversation failed at ' . $address . '.');
-        // Connected but failed: do not retry on another port, so a wrong
-        // password is not tried twice against the server's login limits.
-        return false;
+        error_log('Inquiry mail: the SMTP login failed at ' . $address . '.');
+
+        return null;
     }
 
-    return false;
+    return null;
+}
+
+/**
+ * Dry run for deploy checks: connect and log in, then quit without sending.
+ */
+function tylilo_smtp_check(): bool
+{
+    if (defined('TYLILO_SMTP_TEST_SINK')) {
+        return true;
+    }
+    $password = tylilo_smtp_password();
+    if ($password === '') {
+        return false;
+    }
+    $session = tylilo_smtp_open($password);
+    if ($session === null) {
+        return false;
+    }
+    [$socket] = $session;
+    $ok = tylilo_smtp_cmd($socket, 'NOOP', [250]);
+    @fwrite($socket, "QUIT\r\n");
+    fclose($socket);
+
+    return $ok;
 }

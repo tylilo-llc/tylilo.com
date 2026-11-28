@@ -8,6 +8,15 @@ on:
   push:
     branches:
       - preview
+  # Manual run only: set send_test_email to send one real test inquiry
+  # (both emails go to ryan@tylilo.com). Pushes never send email; they
+  # only check that the site can log in to the mail server.
+  workflow_dispatch:
+    inputs:
+      send_test_email:
+        description: "Send one real test inquiry to ryan@tylilo.com"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -21,6 +30,7 @@ jobs:
     name: Deploy preview over FTPS
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    if: github.ref == 'refs/heads/preview'
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -189,8 +199,11 @@ jobs:
           printf 'machine preview.tylilo.com\nlogin ryan\npassword %s\n' "${PREVIEW_PASSWORD}" > "$probe_netrc"
           for url in \
             "https://preview.tylilo.com/tylilo-preview-docroot.php" \
+            "https://preview.tylilo.com/tylilo-preview-docroot.php" \
+            "https://preview.tylilo.com/tylilo-preview-docroot.php" \
             "http://preview.tylilo.com/tylilo-preview-docroot.php"
           do
+            sleep 3
             probe_out="$work/probe-body"
             probe_code=$(curl -k --silent --show-error --netrc-file "$probe_netrc" --output "$probe_out" \
               --write-out '%{http_code}' --connect-timeout 20 --max-time 20 "$url" || true)
@@ -578,6 +591,7 @@ jobs:
         if: steps.ftp.outputs.ready == 'true'
         env:
           PREVIEW_PASSWORD: ${{ secrets.PREVIEW_PASSWORD }}
+          SEND_TEST_EMAIL: ${{ github.event_name == 'workflow_dispatch' && inputs.send_test_email && 'true' || 'false' }}
         run: |
           set -euo pipefail
           set +x
@@ -661,14 +675,34 @@ jobs:
             fi
           done
 
-          # One test inquiry, sent to Ryan's own address, using the one-time preview token
-          # instead of Turnstile. The token file deletes itself when it is used.
           token_file="${RUNNER_TEMP}/inquiry-selftest-token"
           if [ ! -s "$token_file" ]; then
             rm -f "$cfg"
             echo "No self-test token was prepared."
             exit 1
           fi
+          if [ "${SEND_TEST_EMAIL}" != "true" ]; then
+            # Dry run: the site logs in to the mail server and quits. No email
+            # is sent and nothing is stored. The token deletes itself on use.
+            headers=$(mktemp)
+            code_chk=$(curl -k --silent --show-error --netrc-file "$cfg" \
+              --dump-header "$headers" --output /dev/null --write-out '%{http_code}' \
+              --connect-timeout 20 --max-time 60 \
+              --data-urlencode "preview_smtp_check=1" \
+              --data-urlencode "preview_selftest@${token_file}" \
+              https://preview.tylilo.com/inquiry || true)
+            rm -f "$cfg" "$token_file"
+            smtp_status=$(grep -i '^X-Inquiry-SMTP:' "$headers" | tr -d '\r' | sed 's/^[^:]*: *//' || true)
+            rm -f "$headers"
+            echo "Mail login check (no email sent): HTTP ${code_chk}, '${smtp_status}'"
+            if [ "$code_chk" != "204" ] || [ "$smtp_status" != "login-ok" ]; then
+              echo "The site could not log in to the mail server as consulting@tylilo.com."
+              exit 1
+            fi
+            echo "The site can log in to the mail server. No email was sent."
+          else
+          # Manual run only: one real test inquiry, sent to Ryan's own address,
+          # using the one-time preview token instead of Turnstile.
           jar=$(mktemp)
           page=$(mktemp)
           curl -k --silent --show-error --netrc-file "$cfg" --cookie-jar "$jar" --cookie "$jar" \
@@ -713,6 +747,7 @@ jobs:
             exit 1
           fi
           echo "The test inquiry was stored and both emails were sent to ryan@tylilo.com."
+          fi
 
           prod=$(curl -k --silent --show-error --output /dev/null --write-out '%{http_code}' \
             --connect-timeout 20 --max-time 20 https://tylilo.com/ || true)
