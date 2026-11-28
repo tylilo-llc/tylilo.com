@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 require __DIR__ . '/../includes/bootstrap.php';
+require_once __DIR__ . '/../includes/beta-arcade.php';
+header('Cache-Control: no-store, private');
 
 /**
  * ARCADE GAMES
@@ -17,6 +19,14 @@ require __DIR__ . '/../includes/bootstrap.php';
  * The Top scores button sits after the link, inside the
  * article, and is not part of the link. Its data-game value is the
  * leaderboard slug in includes/scores.php.
+ *
+ * ALPHA/BETA GAMES
+ * Listed in a section below the main tiles when at least one is
+ * marked visible in admin. These builds have no box art, favicon,
+ * or UDLR splash, so the tile is plain text: the name, a short
+ * description, and a Beta or Alpha badge. Visibility is stored in
+ * the private data dir and takes effect immediately. Do not add
+ * them to sitemap.xml for now. Games still open in the same tab.
  */
 $games = [
     [
@@ -48,6 +58,8 @@ $games = [
         'art2x' => '/arcade/jungle-rescue/cover-800.webp',
     ],
 ];
+
+$earlyGames = tylilo_arcade_visible_early_games();
 
 $pageTitle = 'UDLR Arcade — Tylilo, LLC';
 $pageDescription = 'The UDLR Arcade is a side project of browser games from Tylilo, LLC, including Solitaire, Red Rain, Pop Spiral, and Jungle Rescue.';
@@ -118,6 +130,22 @@ require __DIR__ . '/../includes/head.php';
         </article>
 <?php endforeach; ?>
       </div>
+<?php if ($earlyGames !== []): ?>
+      <section class="arcade-alpha" aria-labelledby="arcade-alpha-heading">
+        <h2 id="arcade-alpha-heading">Alpha/Beta Games</h2>
+        <div class="arcade-alpha-grid">
+<?php foreach ($earlyGames as $game): ?>
+          <article class="arcade-alpha-slot">
+            <a class="arcade-alpha-tile" href="<?= tylilo_e($game['href']) ?>">
+              <span class="arcade-alpha-badge"><?= tylilo_e($game['badge']) ?></span>
+              <span class="arcade-alpha-name"><?= tylilo_e($game['title']) ?></span>
+              <span class="arcade-alpha-desc"><?= tylilo_e($game['description']) ?></span>
+            </a>
+          </article>
+<?php endforeach; ?>
+        </div>
+      </section>
+<?php endif; ?>
     </div>
   </main>
   <script type="application/ld+json" nonce="<?= tylilo_e($cspNonce) ?>">

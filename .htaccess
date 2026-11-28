@@ -38,6 +38,11 @@ AddDefaultCharset UTF-8
   RewriteRule ^otradio/index\.php$ /otradio/ [R=301,L]
   RewriteCond %{THE_REQUEST} \s/+arcade/index\.php[\s?] [NC]
   RewriteRule ^arcade/index\.php$ /arcade/ [R=301,L]
+  # Alpha/Beta games are gated by arcade/early.php so Show/Hide applies
+  # without a redeploy. Keep this slug list in sync with
+  # tylilo_arcade_released_slugs().
+  RewriteCond %{REQUEST_URI} !^/arcade/(solitaire|red-rain|pop-spiral|jungle-rescue)(/|$)
+  RewriteRule ^arcade/([a-z0-9-]+)/(index\.html)?$ arcade/early.php?game=$1 [L,QSA]
   # /arcade/red-rain and /arcade/solitaire work with or without a slash.
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteCond %{REQUEST_URI} !/$

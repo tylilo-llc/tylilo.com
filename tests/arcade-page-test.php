@@ -35,6 +35,10 @@ check(str_contains($arcade, 'The UDLR Arcade is a side project I build with my s
 check(str_contains($arcade, "/assets/img/udlr-logo.webp"), 'the arcade page shows the UDLR logo');
 check(str_contains($arcade, 'alt="UDLR logo"') && str_contains($arcade, 'width="280"') && str_contains($arcade, 'height="107"'), 'the UDLR logo has alt text, width, and height');
 check(is_file($root . '/assets/img/udlr-logo.webp'), 'the optimized UDLR logo file is in the assets folder');
+$catalog = (string) file_get_contents($root . '/includes/beta-arcade.php');
+check(str_contains($arcade, 'tylilo_arcade_visible_early_games()') && str_contains($arcade, 'Alpha/Beta Games'), 'the UDLR Arcade page has an Alpha/Beta Games section driven by live visibility');
+check(str_contains($catalog, "'crash-cars'") && str_contains($catalog, "/arcade/crash-cars/") && str_contains($catalog, "'badge' => 'Beta'"), 'the catalog lists Crash Cars with a Beta badge');
+check(preg_match('/class="arcade-alpha-tile"[^>]*>/', $arcade, $tile) === 1 && !str_contains($tile[0], 'target='), 'Alpha/Beta tiles open in the same tab');
 
 echo "\n{$checks} checks, {$failed} failed\n";
 exit($failed === 0 ? 0 : 1);
