@@ -17,6 +17,7 @@ $nonce = tylilo_e($cspNonce);
         <a href="/#software">Software</a>
         <a href="/#about">About</a>
         <a href="/#contact">Contact</a>
+        <a class="nav-cta" href="/inquiry"<?php if (($pageCanonical ?? '') === TYLILO_URL . '/inquiry'): ?> aria-current="page"<?php endif; ?>>Start an inquiry</a>
         <a href="/arcade/"<?php if (($pageCanonical ?? '') === TYLILO_URL . '/arcade/'): ?> aria-current="page"<?php endif; ?>>Arcade</a>
       </nav>
 <?php else: ?>

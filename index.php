@@ -12,11 +12,12 @@ require __DIR__ . '/includes/bootstrap.php';
  * until a real quote exists. Messages go to TYLILO_CONTACT_EMAIL in config.php.
  * That address is not shown on the page.
  */
-$pageTitle = 'Tylilo';
-$pageDescription = 'Tylilo, LLC provides business consultation and software development.';
+$pageTitle = 'Tylilo, LLC — Business consulting and software';
+$pageDescription = 'Practical business consulting for small businesses, new ventures, and mission-driven organizations, plus software development. Remote everywhere; in person in East Tennessee.';
 $pageCanonical = TYLILO_URL . '/';
 
 require_once __DIR__ . '/includes/testimonials.php';
+require_once __DIR__ . '/includes/inquiry.php';
 $testimonials = tylilo_testimonials();
 
 tylilo_session_start();
@@ -47,11 +48,11 @@ require __DIR__ . '/includes/head.php';
     <section class="signal-hero">
       <div class="signal-inner">
         <p class="eyebrow">Tylilo, LLC</p>
-        <h1>Business consultation.</h1>
-        <p class="lede">Tylilo, LLC provides business consultation, and also develops software.</p>
+        <h1>Practical business consulting for owners and leaders.</h1>
+        <p class="lede">Clear thinking, a written plan, and steady help putting it to work. For small businesses, new ventures, and mission-driven organizations.</p>
         <div class="hero-actions">
-          <a class="btn" href="#consulting">Business consultation</a>
-          <a class="btn btn-quiet" href="#contact">Contact</a>
+          <a class="btn" href="/inquiry">Start an inquiry</a>
+          <a class="btn btn-quiet" href="#consulting">How it works</a>
         </div>
       </div>
     </section>
@@ -59,9 +60,32 @@ require __DIR__ . '/includes/head.php';
     <section class="band" id="consulting" aria-labelledby="consulting-heading">
       <div class="signal-inner">
         <p class="eyebrow">Consulting</p>
-        <h2 id="consulting-heading">Business consultation</h2>
-        <p class="lede-quiet">Tylilo, LLC provides business consultation.</p>
-        <p><a class="btn" href="#contact">Contact</a></p>
+        <h2 id="consulting-heading">Business consulting</h2>
+        <p class="lede-quiet">Tylilo, LLC helps owners find what matters most right now and make steady progress on it, in plain language, with plans you can keep.</p>
+        <h3 class="band-subhead">Ways to work together</h3>
+        <ul class="offer-grid">
+          <li class="offer">
+            <h4>A one-time diagnosis</h4>
+            <p>A focused look at where things stand, ending in a written 90-day plan.</p>
+          </li>
+          <li class="offer">
+            <h4>Work alongside you for a few months</h4>
+            <p>One or two priorities over 8 to 12 weeks, with weekly check-ins, and processes and roles written down.</p>
+          </li>
+          <li class="offer">
+            <h4>An ongoing advisor</h4>
+            <p>A monthly planning note, decision support by email, and a quarterly check-in.</p>
+          </li>
+        </ul>
+        <h3 class="band-subhead">How it starts</h3>
+        <ol class="steps">
+          <li><strong>Answer a few short questions.</strong> It takes about five minutes.</li>
+          <li><strong>Get a personal reply.</strong> Ryan reads every inquiry and replies by email within one business day.</li>
+          <li><strong>Agree on a starting point.</strong> If it is not a good fit, we will point you to someone who can help.</li>
+        </ol>
+        <p class="band-note">Everything we offer works remotely, wherever you are. At this time, in-person visits are available in East Tennessee.</p>
+        <p class="band-cta"><a class="btn" href="/inquiry">Start an inquiry</a></p>
+        <p class="disclaimer"><?= tylilo_e(TYLILO_INQUIRY_DISCLAIMER) ?></p>
       </div>
     </section>
 
@@ -69,38 +93,34 @@ require __DIR__ . '/includes/head.php';
       <div class="signal-inner">
         <p class="eyebrow">Software</p>
         <h2 id="software-heading">Software development</h2>
-        <p class="lede-quiet">Tylilo, LLC also develops software. Castmaker is one example.</p>
+        <p class="lede-quiet">Tylilo, LLC also builds software: small, dependable tools made for a specific job. Castmaker is one example.</p>
       </div>
     </section>
 
     <section class="band" id="about" aria-labelledby="about-heading">
-      <div class="signal-inner narrow">
+      <div class="signal-inner">
         <p class="eyebrow">The company</p>
         <h2 id="about-heading">About Tylilo, LLC</h2>
-        <p>Tylilo, LLC provides business consultation and develops software.</p>
+        <p class="lede-quiet">Tylilo, LLC is a consulting and software company led by Ryan Thorpe. Work is done personally and explained plainly, and every engagement ends with something written down that you keep.</p>
       </div>
     </section>
 
+<?php if (tylilo_testimonials_html($testimonials) !== tylilo_testimonials_html([])): ?>
     <section class="band band-soft" id="testimonials" aria-labelledby="testimonials-heading">
-      <div class="signal-inner narrow">
+      <div class="signal-inner">
         <p class="eyebrow">Clients</p>
-        <h2 id="testimonials-heading">Testimonials</h2>
+        <h2 id="testimonials-heading">What clients say</h2>
         <?= tylilo_testimonials_html($testimonials) ?>
       </div>
     </section>
 
-    <aside class="side-note">
+<?php endif; ?>
+    <section class="band band-soft" id="contact" aria-labelledby="contact-heading">
       <div class="signal-inner">
-        <p>The <a href="/arcade/">Arcade</a> is a side project.</p>
-      </div>
-    </aside>
-
-    <div class="wrap">
-      <section class="contact-block" id="contact" aria-labelledby="contact-heading">
-        <div class="card">
-          <p class="kicker">Contact</p>
-          <h2 id="contact-heading">Drop us a line.</h2>
-          <p class="muted">Send a message with the form. We read it and reply by email.</p>
+        <p class="eyebrow">Contact</p>
+        <h2 id="contact-heading">A general question?</h2>
+        <p class="lede-quiet">For consulting, the <a href="/inquiry">inquiry form</a> is the quickest way to start. For anything else, send a short message and we will reply by email.</p>
+        <div class="contact-form-wrap">
 
 <?php if ($success): ?>
           <div class="form-status success" id="form-status" tabindex="-1" role="status" aria-live="polite" aria-atomic="true">
@@ -151,8 +171,14 @@ require __DIR__ . '/includes/head.php';
             <button class="btn send" type="submit">Send message</button>
           </form>
         </div>
-      </section>
-    </div>
+      </div>
+    </section>
+
+    <aside class="side-note" aria-label="Side project">
+      <div class="signal-inner">
+        <p>Also from Tylilo, LLC: the <a href="/arcade/">Arcade</a>, a side project of browser games.</p>
+      </div>
+    </aside>
   </main>
   <script type="application/ld+json" nonce="<?= tylilo_e($cspNonce) ?>">
     <?= json_encode([

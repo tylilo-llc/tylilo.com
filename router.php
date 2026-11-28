@@ -82,6 +82,16 @@ if ($uri === '/accessibility' || $uri === '/accessibility/') {
     exit;
 }
 
+if ($uri === '/inquiry' || $uri === '/inquiry/') {
+    require __DIR__ . '/inquiry.php';
+    exit;
+}
+
+if ($uri === '/terms' || $uri === '/terms/') {
+    require __DIR__ . '/terms.php';
+    exit;
+}
+
 if ($uri === '/privacy' || $uri === '/privacy/') {
     require __DIR__ . '/privacy.php';
     exit;

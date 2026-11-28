@@ -59,7 +59,8 @@ check(str_contains($ownerPage, 'aria-controls="admin-menu-panel"'), 'the menu bu
 check(str_contains($ownerPage, 'Menu</button>'), 'the menu button is labeled Menu');
 check(str_contains($ownerPage, '<h1 class="tagline">Ideas</h1>'), 'the current page name sits in the header');
 check(str_contains($ownerPage, 'class="js"') || str_contains($ownerPage, "classList.add(\"js\")"), 'scripted pages can hide the menu until it is opened');
-check(substr_count($ownerPage, 'class="admin-menu-divider"') === 4, 'an owner sees a divider between each of the five groups');
+check(substr_count($ownerPage, 'class="admin-menu-divider"') === 5, 'an owner sees a divider between each of the six groups');
+check(str_contains($ownerPage, 'href="/admin/inquiries.php"'), 'an owner sees Inquiries in the menu');
 check(str_contains($ownerPage, 'href="/admin/ideas.php" aria-current="page"'), 'Ideas is the current page');
 check(!str_contains($ownerPage, 'href="/admin/notes.php" aria-current="page"'), 'Notes is not marked current on Ideas');
 check(str_contains($ownerPage, 'action="/admin/logout.php"'), 'log out still posts to the logout action');

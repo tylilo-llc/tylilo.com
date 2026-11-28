@@ -1959,14 +1959,19 @@ html.signal .footer-label {
 html.signal .footer-pro nav {
   display: flex;
   flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
   align-items: flex-start;
+  row-gap: 0;
   margin: 0;
 }
+
+html.signal .footer-pro .footer-label { margin-bottom: 4px; }
 
 html.signal .footer-pro a,
 html.signal .legal-sign {
   justify-content: flex-start;
-  min-height: 48px;
+  min-height: 44px;
   padding: 0;
   color: var(--hero-text);
   font-weight: 600;
@@ -2014,3 +2019,322 @@ html.signal .arcade-lead.card { background: transparent; border: 0; padding-left
 @media (min-width: 960px) {
   html.signal .site-nav { flex: 1 1 auto; order: 0; padding-left: 16px; }
 }
+
+/* Signal: alignment, consulting, and inquiry. */
+html.signal .wrap {
+  max-width: 1120px;
+  padding: 0 16px;
+}
+
+html.signal .wrap.solo .prose { max-width: 760px; }
+
+html.signal .wrap.solo { padding-top: 48px; padding-bottom: 64px; }
+
+html.signal .about-card { margin-top: 0; }
+
+html.signal .band h2 { margin: 0 0 16px; line-height: 1.15; letter-spacing: -0.02em; }
+
+html.signal .band p { max-width: 44rem; }
+
+html.signal .band-subhead {
+  margin: 40px 0 16px;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+html.signal .offer-grid {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+html.signal .offer {
+  padding: 24px;
+  background: var(--card-bg);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+
+html.signal .band-soft .offer { background: var(--page-bg); }
+
+html.signal .offer h4 {
+  margin: 0 0 8px;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+html.signal .offer p { margin: 0; color: var(--muted); line-height: 1.55; }
+
+html.signal .steps {
+  display: grid;
+  gap: 12px;
+  max-width: 44rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+html.signal .steps li {
+  position: relative;
+  padding-left: 44px;
+  line-height: 1.55;
+  counter-increment: step;
+}
+
+html.signal .steps li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: -2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+html.signal .band-note { margin: 32px 0 0; color: var(--muted); }
+
+html.signal .band-cta { margin: 24px 0 0; }
+
+html.signal .disclaimer {
+  margin: 32px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+html.signal .contact-form-wrap {
+  max-width: 44rem;
+  margin-top: 24px;
+}
+
+html.signal .contact-form-wrap form,
+html.signal .inq-form { gap: 16px; }
+
+html.signal input,
+html.signal textarea,
+html.signal select { border-radius: 4px; border-width: 1px; }
+
+html.signal label { font-size: 0.9375rem; font-weight: 600; }
+
+html.signal .form-status { border-radius: 4px; font-weight: 600; }
+
+html.signal .form-status ul { margin: 8px 0 0; padding-left: 20px; font-weight: 400; }
+
+html.signal .form-status a { color: inherit; text-decoration: underline; }
+
+html.signal .site-nav .nav-cta {
+  margin-left: 8px;
+  padding: 8px 16px;
+  border: 1px solid #8FB0D4;
+  border-radius: 4px;
+}
+
+html.signal .side-note { padding: 24px 0 32px; }
+
+/* Inquiry */
+html.signal .inq-layout { display: grid; gap: 32px; }
+
+html.signal .inq-intro h1 {
+  margin: 0 0 16px;
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+html.signal .inq-note { color: var(--muted); font-size: 0.9375rem; line-height: 1.55; }
+
+html.signal .inq-panel {
+  max-width: 44rem;
+  padding: 24px;
+  background: var(--card-bg);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+
+html.signal .inq-step { display: grid; gap: 24px; }
+
+html.signal .inq-form:not(.is-stepped) .inq-step + .inq-step {
+  margin-top: 16px;
+  padding-top: 32px;
+  border-top: 1px solid var(--line);
+}
+
+html.signal .inq-count,
+html.signal .inq-progress-text {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+html.signal .inq-step-title {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 600;
+}
+
+html.signal .inq-step-title:focus { outline: none; }
+
+html.signal .inq-step-title:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
+
+html.signal .inq-progress { display: grid; gap: 8px; margin-bottom: 8px; }
+
+html.signal .inq-progress-track {
+  height: 4px;
+  background: var(--page-bg);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+html.signal .inq-progress-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--focus);
+  transition: width 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.signal .inq-progress-fill { transition: none; }
+}
+
+html.signal .inq-q { margin: 0; padding: 0; border: 0; min-width: 0; }
+
+html.signal .inq-label {
+  display: block;
+  margin: 0 0 8px;
+  padding: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+html.signal .inq-req { color: var(--muted); font-size: 0.875rem; font-weight: 400; }
+
+html.signal .inq-hint { margin: -4px 0 12px; color: var(--muted); font-size: 0.9375rem; line-height: 1.5; }
+
+html.signal .inq-privacy { margin: 8px 0 0; }
+
+html.signal .inq-privacy a { color: var(--focus); font-weight: 600; text-decoration: underline; }
+
+html.signal .inq-options { display: grid; gap: 8px; }
+
+html.signal label.inq-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 48px;
+  margin: 0;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--field-bg);
+  font-size: 1rem;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+html.signal label.inq-option:has(input:checked) {
+  border-color: var(--focus);
+  box-shadow: inset 0 0 0 1px var(--focus);
+}
+
+html.signal .inq-option input {
+  flex: 0 0 auto;
+  width: 20px;
+  min-width: 20px;
+  height: 20px;
+  min-height: 20px;
+  margin: 2px 0 0;
+  padding: 0;
+  accent-color: var(--focus);
+}
+
+html.signal .inq-option-text { display: grid; gap: 2px; }
+
+html.signal .inq-option-label { font-weight: 600; }
+
+html.signal .inq-option-hint { color: var(--muted); font-size: 0.9375rem; line-height: 1.45; }
+
+html.signal .inq-branch { display: grid; gap: 24px; }
+
+html.signal .inq-when { margin: 0; color: var(--muted); font-size: 0.875rem; font-weight: 600; }
+
+html.js.signal .inq-form.is-stepped .inq-when { display: none; }
+
+html.signal .inq-step[hidden],
+html.signal .inq-branch[hidden] { display: none; }
+
+html.signal .inq-consent {
+  display: grid;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+html.signal .inq-disclaimer { margin: 0; color: var(--muted); font-size: 0.875rem; line-height: 1.55; }
+
+html.signal label.inq-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 48px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+html.signal label.inq-check input { margin-top: 2px; accent-color: var(--focus); }
+
+html.signal .inq-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+html.signal main form button.inq-back {
+  min-height: 48px;
+  padding: 8px 20px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+html.signal .inq-step-error[hidden] { display: none; }
+
+html.signal .inq-thanks { margin: 0 0 16px; }
+
+@media (min-width: 720px) {
+  html.signal .offer-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  html.signal .inq-panel { padding: 32px; }
+  html.signal .wrap { padding-left: 32px; padding-right: 32px; }
+}
+
+@media (min-width: 960px) {
+  html.signal .inq-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 48px; align-items: start; }
+  html.signal .inq-intro { position: sticky; top: 96px; }
+}
+
+/* Admin inquiries */
+.inq-admin-answers { margin: 1rem 0; }
+.inq-admin-answers dt { font-weight: 800; margin-top: 0.85rem; }
+.inq-admin-answers dd { margin: 0.2rem 0 0; white-space: normal; }
+.inq-admin-fit { margin: 1rem 0; padding: 0.8rem 1rem; border-radius: 1rem; background: var(--chip-bg); }
+.inq-admin-fit p, .inq-admin-fit ul { margin: 0.2rem 0; }
+.inq-admin-delete { margin-top: 1rem; }

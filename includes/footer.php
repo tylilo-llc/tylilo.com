@@ -17,6 +17,7 @@ if (!defined('TYLILO_BOOTSTRAPPED')) {
       <nav aria-label="Explore">
         <p class="footer-label">Explore</p>
         <a href="/#consulting">Consulting</a>
+        <a href="/inquiry"<?php if (($pageCanonical ?? '') === TYLILO_URL . '/inquiry'): ?> aria-current="page"<?php endif; ?>>Start an inquiry</a>
         <a href="/#software">Software</a>
         <a href="/#about">About</a>
         <a href="/#contact">Contact</a>
@@ -29,6 +30,7 @@ if (!defined('TYLILO_BOOTSTRAPPED')) {
 <?php endif; ?>
         <a href="/accessibility"<?php if (($pageCanonical ?? '') === TYLILO_URL . '/accessibility'): ?> aria-current="page"<?php endif; ?>>Accessibility</a>
         <a href="/privacy"<?php if (($pageCanonical ?? '') === TYLILO_URL . '/privacy'): ?> aria-current="page"<?php endif; ?>>Privacy</a>
+        <a href="/terms"<?php if (($pageCanonical ?? '') === TYLILO_URL . '/terms'): ?> aria-current="page"<?php endif; ?>>Terms</a>
       </nav>
     </div>
     <p class="legal">© <?= tylilo_e(TYLILO_YEAR) ?> <?= tylilo_e(TYLILO_LEGAL_NAME) ?><a class="legal-sign" href="/admin/" rel="nofollow">Sign in</a></p>
@@ -46,6 +48,9 @@ if (!defined('TYLILO_BOOTSTRAPPED')) {
 <?php endif; ?>
   <script src="<?= tylilo_e(tylilo_asset('/assets/js/theme.js')) ?>" defer></script>
   <script src="<?= tylilo_e(tylilo_asset('/assets/js/form.js')) ?>" defer></script>
+<?php if (!empty($pageInquiry)): ?>
+  <script src="<?= tylilo_e(tylilo_asset('/assets/js/inquiry.js')) ?>" defer></script>
+<?php endif; ?>
 <?php if (!empty($pageTurnstile)): ?>
   <script src="<?= tylilo_e(tylilo_asset('/assets/js/turnstile.js')) ?>" defer></script>
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&amp;onload=tyliloTurnstile" defer></script>

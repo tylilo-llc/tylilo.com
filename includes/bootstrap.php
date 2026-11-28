@@ -41,7 +41,7 @@ $frameSrc = "'self'";
 $connectSrc = "'self'";
 $mediaSrc = '';
 $home = $requestPath === '/' || $requestPath === '/index.php';
-$needsTurnstile = $home || $requestPath === '/admin' || str_starts_with($requestPath, '/admin/');
+$needsTurnstile = $home || $requestPath === '/inquiry' || $requestPath === '/inquiry.php' || $requestPath === '/admin' || str_starts_with($requestPath, '/admin/');
 if ($needsTurnstile) {
     $scriptSrc .= ' https://challenges.cloudflare.com';
     $frameSrc .= ' https://challenges.cloudflare.com';

@@ -43,6 +43,10 @@ function tylilo_admin_menu_html(array $user, string $path): string
         $groups[] = ['Workspace', $workspace, false];
     }
 
+    if (tylilo_admin_can($user, 'inquiries')) {
+        $groups[] = ['Consulting', [['/admin/inquiries.php', 'Inquiries']], false];
+    }
+
     $games = [];
     if (tylilo_admin_is_owner($user)) {
         $games[] = ['/admin/games.php', 'Games'];

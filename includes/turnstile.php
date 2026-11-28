@@ -305,7 +305,8 @@ function tylilo_turnstile_verify(string $token, string $remoteIp, string $expect
 
     $hostname = strtolower((string) ($data['hostname'] ?? ''));
     $action = $data['action'] ?? null;
-    $allowed = $hostname === 'tylilo.com' || $hostname === 'www.tylilo.com';
+    $allowed = $hostname === 'tylilo.com' || $hostname === 'www.tylilo.com'
+        || (function_exists('tylilo_is_preview') && tylilo_is_preview() && $hostname === 'preview.tylilo.com');
     // Cloudflare's public always-pass test secret reports hostname example.com and omits action.
     $dummyPass = hash_equals('1x0000000000000000000000000000000AA', $secret);
     if (!$allowed && !($dummyPass && $hostname === 'example.com')) {

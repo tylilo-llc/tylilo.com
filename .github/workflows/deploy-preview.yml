@@ -389,6 +389,60 @@ jobs:
           fi
           echo "The setup code was not printed."
 
+      - name: Upload the consulting mail password and a self-test token to preview data only
+        if: steps.ftp.outputs.ready == 'true'
+        env:
+          CONSULTING_SMTP_PASSWORD: ${{ secrets.CONSULTING_SMTP_PASSWORD }}
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          set +x
+          if [ -z "${CONSULTING_SMTP_PASSWORD}" ]; then
+            echo "CONSULTING_SMTP_PASSWORD is not set."
+            echo "The inquiry form cannot send email until that repository secret exists."
+            exit 1
+          fi
+          umask 077
+          work=$(mktemp -d)
+          php -r 'file_put_contents($argv[1], "<?php\n\ndeclare(strict_types=1);\n\nreturn ".var_export(getenv("CONSULTING_SMTP_PASSWORD"), true).";\n");' "$work/consulting-smtp.php"
+          token=$(openssl rand -hex 32)
+          echo "::add-mask::${token}"
+          printf '%s' "$token" > "${RUNNER_TEMP}/inquiry-selftest-token"
+          TOKEN="$token" php -r 'file_put_contents($argv[1], "<?php\n\ndeclare(strict_types=1);\n\nreturn ".var_export(getenv("TOKEN"), true).";\n");' "$work/inquiry-selftest.php"
+          upload() {
+            local src="$1" dest="$2"
+            case "$dest" in
+              *tylilo-data/*)
+                echo "Refusing to write a preview secret into a production data path."
+                return 1
+                ;;
+            esac
+            curl -k --silent --show-error --ftp-ssl --ssl-reqd --ftp-pasv --ftp-create-dirs \
+              --user "${FTP_USERNAME}:${FTP_PASSWORD}" \
+              -T "$src" \
+              "ftp://${FTP_SERVER}/${dest}"
+          }
+          for file in consulting-smtp.php inquiry-selftest.php; do
+            stored=0
+            for dir in "tylilo-preview-data" "public_html/preview.tylilo.com/data"; do
+              if upload "$work/$file" "$dir/$file"; then
+                echo "Stored ${file} at ${dir}/."
+                stored=$((stored + 1))
+              else
+                echo "Could not store ${file} at ${dir}/."
+              fi
+            done
+            if [ "$stored" -eq 0 ]; then
+              rm -rf "$work"
+              echo "${file} was not stored in preview data."
+              exit 1
+            fi
+          done
+          rm -rf "$work"
+          echo "No secret values were printed."
+
       - name: Upload beta games to preview-only private storage
         if: steps.ftp.outputs.ready == 'true'
         env:
@@ -583,6 +637,72 @@ jobs:
           fi
           echo "Preview homepage sends X-Robots-Tag noindex, nofollow."
           rm -f "$headers"
+
+          cfg=$(mktemp)
+          printf 'machine preview.tylilo.com\nlogin ryan\npassword %s\n' "${PREVIEW_PASSWORD}" > "$cfg"
+          for path in / /inquiry /terms /privacy /accessibility /arcade/; do
+            code_p=$(curl -k --silent --show-error --netrc-file "$cfg" --output /dev/null --write-out '%{http_code}' \
+              --connect-timeout 20 --max-time 30 "https://preview.tylilo.com${path}" || true)
+            echo "preview.tylilo.com${path} with the preview login: HTTP ${code_p}"
+            if [ "$code_p" != "200" ]; then
+              rm -f "$cfg"
+              echo "A preview page did not return HTTP 200."
+              exit 1
+            fi
+          done
+
+          # One test inquiry, sent to Ryan's own address, using the one-time preview token
+          # instead of Turnstile. The token file deletes itself when it is used.
+          token_file="${RUNNER_TEMP}/inquiry-selftest-token"
+          if [ ! -s "$token_file" ]; then
+            rm -f "$cfg"
+            echo "No self-test token was prepared."
+            exit 1
+          fi
+          jar=$(mktemp)
+          page=$(mktemp)
+          curl -k --silent --show-error --netrc-file "$cfg" --cookie-jar "$jar" --cookie "$jar" \
+            --output "$page" --connect-timeout 20 --max-time 30 https://preview.tylilo.com/inquiry
+          csrf=$(grep -o 'name="csrf" value="[^"]*"' "$page" | head -n 1 | sed 's/.*value="//; s/"$//')
+          if [ -z "$csrf" ] || ! grep -q 'data-inquiry' "$page"; then
+            rm -f "$cfg" "$jar" "$page" "$token_file"
+            echo "The inquiry form did not render with a form token."
+            exit 1
+          fi
+          headers=$(mktemp)
+          code_post=$(curl -k --silent --show-error --netrc-file "$cfg" --cookie-jar "$jar" --cookie "$jar" \
+            --dump-header "$headers" --output /dev/null --write-out '%{http_code}' \
+            --connect-timeout 20 --max-time 90 \
+            --data-urlencode "csrf=${csrf}" \
+            --data-urlencode "preview_selftest@${token_file}" \
+            --data-urlencode "stage=stuck" \
+            --data-urlencode "goals[]=time" \
+            --data-urlencode "time_hours=55to70" \
+            --data-urlencode "time_only_me=Preview self-test from the deploy workflow." \
+            --data-urlencode "size=2to10" \
+            --data-urlencode "industry=Preview self-test" \
+            --data-urlencode "timeline=3months" \
+            --data-urlencode "help=alongside" \
+            --data-urlencode "location=east_tn" \
+            --data-urlencode "name=Preview self-test" \
+            --data-urlencode "email=ryan@tylilo.com" \
+            --data-urlencode "message=Automatic test from deploy run ${GITHUB_RUN_ID}. No reply needed." \
+            --data-urlencode "consent=yes" \
+            https://preview.tylilo.com/inquiry || true)
+          rm -f "$cfg" "$jar" "$page" "$token_file"
+          stored_id=$(grep -i '^X-Inquiry-Stored:' "$headers" | tr -d '\r' | sed 's/^[^:]*: *//' || true)
+          mail_status=$(grep -i '^X-Inquiry-Mail:' "$headers" | tr -d '\r' | sed 's/^[^:]*: *//' || true)
+          rm -f "$headers"
+          echo "Test inquiry: HTTP ${code_post}, stored id '${stored_id}', mail '${mail_status}'"
+          if [ "$code_post" != "303" ] || [ -z "$stored_id" ]; then
+            echo "The test inquiry was not stored."
+            exit 1
+          fi
+          if [ "$mail_status" != "visitor=sent; owner=sent" ]; then
+            echo "The test inquiry was stored, but email did not send."
+            exit 1
+          fi
+          echo "The test inquiry was stored and both emails were sent to ryan@tylilo.com."
 
           prod=$(curl -k --silent --show-error --output /dev/null --write-out '%{http_code}' \
             --connect-timeout 20 --max-time 20 https://tylilo.com/ || true)

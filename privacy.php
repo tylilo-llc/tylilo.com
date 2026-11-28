@@ -5,7 +5,7 @@ declare(strict_types=1);
 require __DIR__ . '/includes/bootstrap.php';
 
 $pageTitle = 'Privacy — Tylilo';
-$pageDescription = 'What tylilo.com collects: the contact form, one session cookie, settings the browser keeps on your device, and names saved to the arcade leaderboard.';
+$pageDescription = 'What tylilo.com collects: the contact and inquiry forms, one session cookie, settings the browser keeps on your device, and names saved to the arcade leaderboard.';
 $pageCanonical = TYLILO_URL . '/privacy';
 $pageRobots = 'index, follow';
 
@@ -32,7 +32,7 @@ require __DIR__ . '/includes/head.php';
       <article class="card about-card prose">
         <p class="kicker">Privacy</p>
         <h1>Privacy</h1>
-        <p><strong>Effective date:</strong> November 27, 2026</p>
+        <p><strong>Effective date:</strong> November 28, 2026</p>
         <p>Tylilo, LLC (“Tylilo”) runs <a href="/">tylilo.com</a>. This page says what the site actually does with information. It is short on purpose.</p>
 
         <h2>Contact form</h2>
@@ -40,10 +40,15 @@ require __DIR__ . '/includes/head.php';
         <p>We do not keep a database of messages. Your words sit in a temporary server session only long enough to show a thank-you or an error, and then that copy is removed. The same session holds a security token and the times of recent sends (five messages in 30 minutes) so the form is harder to spam. The site code does not write your message into its own log file. The email itself goes out through the web host’s mail system, which is how it reaches us.</p>
         <p>Before a message is accepted, the form asks Cloudflare Turnstile to tell a person from a bot. Cloudflare processes the visitor’s signals for that check, including the IP address, browser type, and the site the form was on. We do not use Turnstile for advertising. Cloudflare’s description of that processing is in the <a href="https://www.cloudflare.com/turnstile-privacy-policy/">Turnstile Privacy Addendum</a>.</p>
 
+        <h2 id="inquiries">Consulting inquiries</h2>
+        <p>The <a href="/inquiry">inquiry form</a> asks about your business or organization so we can tell whether and how we can help: its stage, your goals, a few follow-up questions, its size and type, your timing, the kind of help you want, and your general location. It also asks for your name and email address, and, if you choose, a business name, a website or social link, how you heard about us, and anything else you want to add. It does not ask for financial account numbers, government ID numbers, or other sensitive details. Please do not include them.</p>
+        <p>We use your answers only to read and reply to your inquiry and to prepare for a first conversation. When you send the form, we email you a copy of your answers and email a notice to Ryan Thorpe at Tylilo, LLC. Those emails are sent from our own mailbox through our web host’s mail server. We also keep your answers in the site’s private storage, which is not public and is open only to the owner and to team members the owner allows, so we can follow up. We keep an inquiry for up to two years after our last contact, or delete it sooner if you ask.</p>
+        <p>To limit spam, we keep a keyed hash of your network address for one hour, not the address itself, and the same session cookie described below holds a security token and the times of recent sends. Before an inquiry is accepted, Cloudflare Turnstile checks that a person sent it, as described for the contact form above. We do not sell your information or share it with advertisers.</p>
+
         <h2>Cookies</h2>
         <p>The homepage sets one cookie named <code>tylilo</code>. It is a session cookie: it lasts until you close the browser. It is HttpOnly, so page scripts cannot read it, and SameSite is Lax. When you visit over HTTPS, it is also marked Secure.</p>
         <p>Signing in at the private admin area uses that same cookie so the browser stays signed in. The cookie is necessary for the login. There is no public sign-up. A team account is created only when someone opens an invite from the owner.</p>
-        <p>That cookie exists so the contact form can tell a real visit from a forged or repeated one. It is not a tracking cookie. The site does not set advertising cookies.</p>
+        <p>The inquiry form uses that same cookie in the same way. That cookie exists so the contact form can tell a real visit from a forged or repeated one. It is not a tracking cookie. The site does not set advertising cookies.</p>
 
         <h2>Team accounts</h2>
         <p>People who help run the site can sign in. There is no public sign-up. The owner can invite someone with a one-time link that works once and expires after 7 days. The owner can also make a one-time password reset link. We store a hash of that link, not the link itself. It expires after 24 hours. When it is used we mark the hash used, and when a newer link is created the older unused one is deleted. We store the username, a password hash, optional authenticator-app setup, the permissions the owner chose, private notes and to-dos, game feedback, ideas, comments, one vote per person on an idea, an optional sketch stored in private storage and shown only to signed-in people who can open Ideas, and an activity log of who did what and when. That stays in the site’s private storage. It is not shown on the public pages. The owner can see team members’ notes and to-dos. The owner’s own notes and to-dos stay private. Unpublished beta games are only opened by signed-in people the owner allows. They are not on the public Arcade. Feedback about a beta game stays in that same private storage and is tagged with the beta version. Feedback can include optional attached files, such as screenshots, short videos, PDFs, or logs. We store those files in the same private storage, along with the original file name. They are shown only to the person who sent the feedback and to the owner. The beta player does not let those games call this site, including the leaderboard.</p>
@@ -59,13 +64,13 @@ require __DIR__ . '/includes/head.php';
         <p>To slow down repeated submissions, we store a hash of the network address with the time of the save, not the address itself. That hash cannot be turned back into the address, and we delete it after it is no longer needed for the limit. We also store a hash of a single-use start token so the same game cannot be saved twice. The leaderboard does not set a cookie.</p>
 
         <h2>What we don’t add</h2>
-        <p>The site code does not include analytics, ads, or third-party tracking scripts. The contact form loads Cloudflare Turnstile, described above, only to tell people from bots. Fonts are files on this site, not a font service.</p>
+        <p>The site code does not include analytics, ads, or third-party tracking scripts. The contact form and the inquiry form load Cloudflare Turnstile, described above, only to tell people from bots. Fonts are files on this site, not a font service.</p>
 
         <h2>Hosting</h2>
         <p>The site is hosted on HostM. Like most web hosts, their servers may keep ordinary access logs, such as an IP address, browser type, and the time of a visit. This site’s pages do not turn on a separate analytics log.</p>
 
         <h2>Asking about your information</h2>
-        <p>You can ask what we have from a message you sent or from a name on the leaderboard, ask us to correct it, or ask us to delete it. Use the <a href="/#contact">contact form</a>.</p>
+        <p>You can ask what we have from a message or inquiry you sent or from a name on the leaderboard, ask us to correct it, or ask us to delete it. Use the <a href="/#contact">contact form</a>.</p>
         <p>If you are in the UK or the European Economic Area, you can make those requests about the message you sent us or a leaderboard name. If you are in California, you can ask us to tell you what we have from that message or name and to delete it. We do not sell personal information.</p>
         <p>This site is not directed at children under 13, and we do not knowingly collect information from them.</p>
 
@@ -81,7 +86,7 @@ require __DIR__ . '/includes/head.php';
         'name' => 'Privacy',
         'url' => TYLILO_URL . '/privacy',
         'description' => $pageDescription,
-        'dateModified' => '2026-11-27',
+        'dateModified' => '2026-11-28',
         'isPartOf' => [
             '@type' => 'WebSite',
             'name' => TYLILO_SITE_NAME,
