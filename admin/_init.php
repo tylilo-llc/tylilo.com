@@ -48,7 +48,7 @@ function tylilo_admin_menu_html(array $user, string $path): string
         $games[] = ['/admin/games.php', 'Games'];
     }
     if (tylilo_admin_can($user, 'beta')) {
-        $games[] = ['/admin/beta/', 'Beta'];
+        $games[] = ['/admin/beta/', 'Alpha/Beta'];
     }
     if (tylilo_admin_can($user, 'leaderboards')) {
         $games[] = ['/admin/scores.php', 'Scores'];
