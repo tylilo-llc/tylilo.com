@@ -34,7 +34,7 @@ check(str_contains($html, 'href="mailto:ryan@tylilo.com"') && str_contains($html
 check(str_contains($text, 'we will add a note below saying what changed'), 'says how changes are announced');
 check(str_contains($html, 'id="inquiries"') && str_contains($text, 'up to 3 years after our last contact') && str_contains($text, 'under 16'), 'the inquiry section covers retention and children');
 check(preg_match('/CCPA|GDPR|CalOPPA|European Economic Area|California/', $text) !== 1, 'describes practices without naming laws or saying any law does not apply');
-foreach (['tyliloInquiryDraft', 'tylilo-theme', 'tyliloA2hsDismissed', 'redRainLbName', 'klondike.lbName', 'popSpiral.playerName', 'jungleRescueLbQueue', 'jjHi', 'crashcars.settings.v1'] as $key) {
+foreach (['tyliloInquiryDraft', 'tylilo-theme', 'tyliloA2hsDismissed', 'redRainLbName', 'klondike.lbName', 'popSpiral.playerName', 'udlr_splash_seen_pop-spiral', 'jungleRescueLbQueue', 'jjHi', 'crashcars.settings.v1'] as $key) {
     check(str_contains($html, $key), 'keeps the ' . $key . ' storage text');
 }
 check(str_contains($text, 'does not write radio-station data') && str_contains($text, 'does not contact radio or stream services'), 'says Crash Cars does not write radio-station data or contact radio services');
