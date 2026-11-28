@@ -206,14 +206,23 @@
 </style>
 </head>
 <body>
-<!-- UDLR-SPLASH:BEGIN udlr-splash.js md5=49be43c7bc1f844f6fa52edbebeef58d (shared file, inlined unchanged by tools/inline-splash.js - do not edit here) -->
+<!-- UDLR-SPLASH:BEGIN udlr-splash.js md5=95b99f5c3114f905df1af061a76acd92 (shared file, inlined unchanged by tools/inline-splash.js - do not edit here) -->
 <script>
 /*!
  * UDLR launch splash — drop-in, no dependencies.
  *
  * Usage (inline this file near the start of <body>):
- *   UDLRSplash.show({ onDone: startGame });
+ *   UDLRSplash.show({
+ *     id: 'red-rain',               // per-game key; splash shows on first play only
+ *     onReveal: drawFirstScreen,    // draw title/menu NOW; it sits under the fading overlay
+ *     onDone: startGame             // overlay fully gone
+ *   });
  *   // also returns a Promise that resolves after the overlay is removed
+ *
+ * Seen flag: localStorage "udlr_splash_seen_<id>" (cookie fallback), set when
+ * the splash completes or is skipped. Add ?splash=1 to the URL (or pass
+ * {force:true}) to show it again. Sequence starts only when the page is
+ * visible and painted; hidden mid-run or bfcache restore restarts it.
  *
  * Skip: any key, click, tap, or gamepad button. The skip event is not
  * cancelled, so a game can still use that first gesture to unlock audio.
@@ -223,9 +232,9 @@
 
   var COLOR = "#0399BC";
   var Z = 2147483646;
-  var FLY_MS = 340;
-  var HOLD_MS = 700;
-  var FADE_MS = 300;
+  var FLY_MS = 600;
+  var HOLD_MS = 1200;
+  var FADE_MS = 450;
   var SKIP_FADE_MS = 150;
   var REDUCED_FADE_IN_MS = 200;
   var FLY_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
@@ -393,9 +402,44 @@
     return LETTERS.length * FLY_MS;
   }
 
+  // ---- first-play-only memory (per game id; arcade games share one origin) ----
+  var KEY_PREFIX = "udlr_splash_seen_";
+
+  function slug(id) {
+    return String(id == null || id === "" ? "default" : id).toLowerCase().replace(/[^a-z0-9_-]+/g, "-");
+  }
+
+  function forced() {
+    try { return /[?&]splash=1(?:&|#|$)/.test(root.location.search || ""); } catch (e) { return false; }
+  }
+
+  function wasSeen(id) {
+    var key = KEY_PREFIX + slug(id);
+    try {
+      return root.localStorage.getItem(key) === "1";
+    } catch (e) {
+      try {
+        return (root.document.cookie || "").split(/;\s*/).indexOf(key + "=1") !== -1;
+      } catch (e2) { return false; }
+    }
+  }
+
+  function markSeen(id) {
+    var key = KEY_PREFIX + slug(id);
+    try {
+      root.localStorage.setItem(key, "1");
+    } catch (e) {
+      try {
+        root.document.cookie = key + "=1; max-age=31536000; path=/; SameSite=Lax";
+      } catch (e2) {}
+    }
+  }
+
   function show(opts) {
     opts = opts || {};
     var onDone = typeof opts.onDone === "function" ? opts.onDone : null;
+    var onReveal = typeof opts.onReveal === "function" ? opts.onReveal : null;
+    var hasId = opts.id != null && opts.id !== "";
 
     if (active) {
       if (onDone) {
@@ -404,13 +448,40 @@
       return active.promise;
     }
 
+    // Already seen on this device: draw the game's first screen and finish now.
+    if (hasId && !opts.force && !forced() && wasSeen(opts.id)) {
+      try { if (onReveal) onReveal(); } catch (e) {}
+      try { if (onDone) onDone(); } catch (e) {}
+      return Promise.resolve();
+    }
+
     var settled = false;
     var fading = false;
+    var revealed = false;
     var resolve;
     var promise = new Promise(function (res) { resolve = res; });
-    var timers = [];
+    var runTimers = [];
+    var endTimers = [];
     var rafId = 0;
+    var gateRaf = 0;
+    var runToken = 0;
     var overlay, styleEl;
+
+    function reveal() {
+      if (revealed) return;
+      revealed = true;
+      try { if (onReveal) onReveal(); } catch (e) {}
+    }
+
+    function clearRun() {
+      runTimers.forEach(function (id) { clearTimeout(id); });
+      runTimers = [];
+      runToken++;
+      if (gateRaf) {
+        try { root.cancelAnimationFrame(gateRaf); } catch (e) {}
+        gateRaf = 0;
+      }
+    }
 
     function done() {
       if (settled) return;
@@ -422,33 +493,94 @@
     }
 
     function cleanup() {
-      timers.forEach(function (id) { clearTimeout(id); });
-      timers = [];
+      clearRun();
+      endTimers.forEach(function (id) { clearTimeout(id); });
+      endTimers = [];
       if (rafId) {
         try { root.cancelAnimationFrame(rafId); } catch (e) {}
         rafId = 0;
       }
       try { root.removeEventListener("keydown", onSkip, true); } catch (e) {}
       try { root.removeEventListener("pointerdown", onSkip, true); } catch (e) {}
+      try { root.document.removeEventListener("visibilitychange", onVisibility, false); } catch (e) {}
+      try { root.removeEventListener("pageshow", onPageShow, false); } catch (e) {}
       if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
       overlay = null;
       if (styleEl && styleEl.parentNode) styleEl.parentNode.removeChild(styleEl);
       styleEl = null;
     }
 
+    function isVisible() {
+      try { return root.document.visibilityState !== "hidden"; } catch (e) { return true; }
+    }
+
+    // The splash counts as seen only once it finished or was skipped.
     function fadeOut(ms) {
       if (fading || settled) return;
       fading = true;
+      clearRun();
+      if (hasId) markSeen(opts.id);
       if (!overlay) { done(); return; }
-      overlay.style.transitionDuration = (ms || FADE_MS) + "ms";
-      overlay.classList.add("udlr-splash-exit");
-      timers.push(setTimeout(done, (ms || FADE_MS) + 40));
+      var dur = ms || FADE_MS;
+      var started = false;
+      // Draw the game's first screen underneath the still-opaque overlay,
+      // then crossfade the whole overlay (background included) away.
+      reveal();
+      function startFade() {
+        if (started || settled || !overlay) return;
+        started = true;
+        overlay.style.transitionDuration = dur + "ms";
+        overlay.classList.add("udlr-splash-exit");
+        endTimers.push(setTimeout(done, dur + 60));
+      }
+      void overlay.offsetWidth;
+      try { rafId = root.requestAnimationFrame(function () { rafId = 0; startFade(); }); } catch (e) {}
+      endTimers.push(setTimeout(startFade, 120));
     }
 
     function onSkip() {
       // Intentionally does not preventDefault or stopPropagation:
       // the same user gesture can unlock game audio.
       fadeOut(SKIP_FADE_MS);
+    }
+
+    // (Re)start the letter sequence from the beginning, but only once the
+    // page is visible and has painted (visible + two animation frames).
+    // Anything that runs before first paint, or while hidden, is never seen:
+    // that is what used to show only the tail end of the splash on reopen.
+    function startRun() {
+      if (settled || fading || !overlay) return;
+      clearRun();
+      overlay.classList.remove("udlr-splash-ready");
+      void overlay.offsetWidth;
+      if (!isVisible()) return; // visibilitychange will call startRun again
+      var token = runToken;
+      gateRaf = root.requestAnimationFrame(function () {
+        gateRaf = root.requestAnimationFrame(function () {
+          gateRaf = 0;
+          if (token !== runToken || settled || fading || !overlay || !isVisible()) return;
+          setOffscreenStarts(overlay);
+          overlay.classList.add("udlr-splash-ready");
+          var reduced = reducedMotion();
+          var total = reduced ? REDUCED_FADE_IN_MS + HOLD_MS : (flyDuration() + HOLD_MS);
+          runTimers.push(setTimeout(function () { fadeOut(FADE_MS); }, total));
+        });
+      });
+    }
+
+    function onVisibility() {
+      if (settled) return;
+      if (!isVisible()) {
+        if (fading) { done(); return; } // nobody is watching the fade
+        clearRun();
+        if (overlay) overlay.classList.remove("udlr-splash-ready");
+      } else {
+        startRun();
+      }
+    }
+
+    function onPageShow(ev) {
+      if (ev && ev.persisted) startRun();
     }
 
     function pollGamepad() {
@@ -488,21 +620,18 @@
       overlay.innerHTML = svgMarkup();
       (doc.body || doc.documentElement).appendChild(overlay);
 
-      // Force layout, then set viewport-based starts before animations begin.
-      void overlay.offsetWidth;
-      setOffscreenStarts(overlay);
-      overlay.classList.add("udlr-splash-ready");
-
       root.addEventListener("keydown", onSkip, true);
       root.addEventListener("pointerdown", onSkip, true);
+      doc.addEventListener("visibilitychange", onVisibility, false);
+      root.addEventListener("pageshow", onPageShow, false);
       rafId = root.requestAnimationFrame(pollGamepad);
 
-      var reduced = reducedMotion();
-      var holdAfter = reduced ? REDUCED_FADE_IN_MS + HOLD_MS : (flyDuration() + HOLD_MS);
-      timers.push(setTimeout(function () { fadeOut(FADE_MS); }, holdAfter));
+      active = { promise: promise };
+      startRun();
     } catch (e) {
       cleanup();
       active = null;
+      try { if (onReveal) onReveal(); } catch (err) {}
       if (onDone) {
         try { onDone(); } catch (err) {}
       }
@@ -510,7 +639,6 @@
       return promise;
     }
 
-    active = { promise: promise };
     return promise;
   }
 
@@ -520,15 +648,17 @@
 </script>
 <!-- UDLR-SPLASH:END -->
 <script>
-/* Launch glue: the game boots only when the shared UDLR splash finishes or is skipped.
-   If the splash is missing or throws, the game boots straight away. */
-window.__solitaireLaunch = { done: false, boot: null };
+/* Launch glue: onReveal draws the dealt table under the fading overlay (or at once
+   if the splash was already seen). onDone unlocks input and play. If the splash is
+   missing or throws, the game starts straight away. ?splash=1 forces the splash. */
+window.__solitaireLaunch = { revealed: false, done: false, reveal: null, boot: null };
 (function () {
   var L = window.__solitaireLaunch;
-  function go() { if (L.done) return; L.done = true; if (L.boot) L.boot(); }
+  function reveal() { if (L.revealed) return; L.revealed = true; if (L.reveal) L.reveal(); }
+  function done() { reveal(); if (L.done) return; L.done = true; if (L.boot) L.boot(); }
   if (window.UDLRSplash && typeof window.UDLRSplash.show === 'function') {
-    try { window.UDLRSplash.show({ onDone: go }); } catch (e) { go(); }
-  } else { go(); }
+    try { window.UDLRSplash.show({ id: 'solitaire', onReveal: reveal, onDone: done }); } catch (e) { done(); }
+  } else { done(); }
 })();
 </script>
 <header>
@@ -554,7 +684,7 @@ window.__solitaireLaunch = { done: false, boot: null };
   <span id="copyright">&copy; <span id="copyYear">2026</span> Tylilo, LLC</span>
   <span class="right">
     <button id="newsBtn" type="button" title="See what changed in each version">What's New</button>
-    <span id="version">v1.1.8</span>
+    <span id="version">v1.1.9</span>
   </span>
 </footer>
 <canvas id="fx"></canvas>
@@ -591,7 +721,7 @@ window.__solitaireLaunch = { done: false, boot: null };
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
-/* Klondike Solitaire v1.1.8 - single-file, no dependencies. */
+/* Klondike Solitaire v1.1.9 - single-file, no dependencies. */
 'use strict';
 
 /* ======================= Core rules engine (DOM-free) ======================= */
@@ -962,13 +1092,19 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Engine;
 
 /* ============================ Browser UI layer ============================ */
 if (typeof document !== 'undefined') (function () {
-  const VERSION = '1.1.8';
+  const VERSION = '1.1.9';
   const ARCADE_URL = '/arcade/';
   // The only network traffic in the game: the tylilo.com Arcade leaderboard (same origin, relative URL).
   const LB_API = '/api/scores.php';
   // In-game "What's New" notes, newest first. Plain-language version of CHANGELOG.md - update every release.
   // Shown only when the player opens it (footer button); it never opens by itself.
   const RELEASE_NOTES = [
+    { v: '1.1.9', date: '2026-11-27', items: [
+      'The UDLR launch splash is a little slower now, and fades into the dealt cards instead of cutting away.',
+      'It only plays the first time you open the game. To see it again, add ?splash=1 to the address.',
+      'Reopening the game no longer jumps to the end of the splash.',
+      'Checked the game against the playability-first rule: no accessibility feature was getting in the way of play.'
+    ] },
     { v: '1.1.8', date: '2026-11-21', items: [
       'Leaderboard: saved scores now also record which version of Solitaire you were playing, so the Arcade can tell scores from different versions apart. It is stored privately and never shown on the leaderboard. Nothing else about saving changes.'
     ] },
@@ -1848,7 +1984,7 @@ if (typeof document !== 'undefined') (function () {
   });
   let resizeRaf = 0;
   window.addEventListener('resize', () => {
-    if (!booted) return;
+    if (!revealed) return;
     cancelAnimationFrame(resizeRaf);
     resizeRaf = requestAnimationFrame(() => {
       computeLayout(); render({ instant: true });
@@ -1858,24 +1994,31 @@ if (typeof document !== 'undefined') (function () {
   // Test hook (handy for automated checks; harmless for players).
   window.__klondike = {
     get state() { return state; }, set state(s) { state = s; history = []; render({ instant: true }); },
-    render, Engine, version: VERSION, releaseNotes: RELEASE_NOTES, arcadeUrl: ARCADE_URL, get inProgress() { return gameInProgress(); }, backdate(ms) { if (startTime) startTime -= ms; }, lb: LB, get booted() { return booted; }, sound: Sound, get stats() { return stats; }, keys: KEYS
+    render, Engine, version: VERSION, releaseNotes: RELEASE_NOTES, arcadeUrl: ARCADE_URL, get inProgress() { return gameInProgress(); }, backdate(ms) { if (startTime) startTime -= ms; }, lb: LB, get revealed() { return revealed; }, get booted() { return booted; }, sound: Sound, get stats() { return stats; }, keys: KEYS
   };
 
   /* ---------- Boot (after the UDLR launch splash) ---------- */
-  // Until boot nothing runs: no deal, no timer, no sounds, no stats changes, no leaderboard request, no input.
-  // The splash listens on window (capture) first, so its skip and the audio unlock still see the gesture;
-  // the guards below stop that same gesture reaching the game.
-  let booted = false;
+  // onReveal (start of the crossfade, or at once if the splash was already seen): deal the table under the overlay.
+  // onDone (overlay gone): unlock input and play. Sounds and the leaderboard start request wait for a real move.
+  // Until then a document-capture guard stops keys and clicks reaching the game; the splash and the audio
+  // unlock listen on window first, so a skip gesture can still unlock audio.
+  let revealed = false, booted = false;
   const blockUntilBoot = e => { if (!booted) { e.stopImmediatePropagation(); if (e.type === 'click') e.preventDefault(); } };
   ['keydown', 'pointerdown', 'pointerup', 'click', 'dblclick'].forEach(t => document.addEventListener(t, blockUntilBoot, true));
-  function boot() {
-    if (booted) return;
-    booted = true;
+  function reveal() {
+    if (revealed) return;
+    revealed = true;
     if (stats.pending) { Engine.statsLose(stats); saveStats(); }
     computeLayout();
     newGame();
   }
+  function boot() {
+    if (!revealed) reveal();
+    if (booted) return;
+    booted = true;
+  }
   const launch = window.__solitaireLaunch;
+  if (!launch || launch.revealed) reveal(); else launch.reveal = reveal;
   if (!launch || launch.done) boot(); else launch.boot = boot;
 })();
 </script>
