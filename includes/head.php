@@ -18,11 +18,12 @@ $pageImage = $pageImage ?? '/assets/img/og.png';
 $pageImageAlt = $pageImageAlt ?? 'Tylilo logo on a navy background';
 $nonce = tylilo_e($cspNonce);
 $tyliloPublic = !tylilo_request_is_admin();
-$themeColorLight = $tyliloPublic ? '#071525' : '#0A3161';
-$themeColorDark = $tyliloPublic ? '#050B14' : '#071526';
+$themeColorLight = '#071525';
+$themeColorDark = '#050B14';
+$htmlClass = $tyliloPublic ? 'signal' : 'signal admin';
 ?>
 <!DOCTYPE html>
-<html lang="en" data-theme="auto"<?= $tyliloPublic ? ' class="signal"' : '' ?>>
+<html lang="en" data-theme="auto" class="<?= $htmlClass ?>">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -56,11 +57,6 @@ $themeColorDark = $tyliloPublic ? '#050B14' : '#071526';
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="UDLR Arcade">
   <link rel="manifest" href="/site.webmanifest">
-<?php if (!$tyliloPublic): ?>
-  <link rel="preload" as="image" href="/assets/img/logo-round.webp" type="image/webp" fetchpriority="high">
-  <link rel="preload" as="font" href="/assets/fonts/nunito-800.woff2" type="font/woff2" crossorigin>
-  <link rel="preload" as="font" href="/assets/fonts/nunito-500.woff2" type="font/woff2" crossorigin>
-<?php endif; ?>
   <script nonce="<?= $nonce ?>">
     (function () {
       var theme = "auto";

@@ -35,12 +35,18 @@ if (!defined('TYLILO_BOOTSTRAPPED')) {
     </div>
     <p class="legal">© <?= tylilo_e(TYLILO_YEAR) ?> <?= tylilo_e(TYLILO_LEGAL_NAME) ?><a class="legal-sign" href="/admin/" rel="nofollow">Sign in</a></p>
 <?php else: ?>
-    <nav aria-label="Footer">
-      <a href="/arcade/">UDLR Arcade</a>
-      <a href="/accessibility">Accessibility</a>
-      <a href="/privacy">Privacy</a>
-    </nav>
-    <p>© <?= tylilo_e(TYLILO_YEAR) ?> <?= tylilo_e(TYLILO_LEGAL_NAME) ?></p>
+    <div class="footer-pro footer-admin">
+      <div class="footer-brand">
+        <p class="footer-name"><?= tylilo_e(TYLILO_LEGAL_NAME) ?></p>
+      </div>
+      <nav aria-label="Footer">
+        <p class="footer-label">Site</p>
+        <a href="/arcade/">UDLR Arcade</a>
+        <a href="/accessibility">Accessibility</a>
+        <a href="/privacy">Privacy</a>
+      </nav>
+    </div>
+    <p class="legal">© <?= tylilo_e(TYLILO_YEAR) ?> <?= tylilo_e(TYLILO_LEGAL_NAME) ?></p>
 <?php endif; ?>
   </footer>
 <?php if (!empty($pageA2hs)): ?>

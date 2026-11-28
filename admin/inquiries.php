@@ -6,7 +6,7 @@ require __DIR__ . '/_init.php';
 require_once dirname(__DIR__) . '/includes/inquiry.php';
 
 $me = tylilo_admin_guard();
-if (!tylilo_admin_can($me, 'inquiries')) {
+if (!tylilo_admin_can($me, 'inquiries.view')) {
     tylilo_admin_forbid();
 }
 

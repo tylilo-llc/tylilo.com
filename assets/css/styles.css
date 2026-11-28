@@ -1617,6 +1617,36 @@ input[type="file"] {
   margin: 0;
 }
 
+.perm-group {
+  margin: 0.75rem 0 0;
+  padding: 0.65rem 0 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+
+.perm-group:first-of-type {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.perm-group legend {
+  padding: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.perm-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.75rem;
+  margin: 0;
+}
+
 .idea-card {
   padding: 0.55rem 1.1rem;
 }
@@ -2467,3 +2497,143 @@ html.signal .inq-thanks { margin: 0 0 16px; }
 .inq-admin-fit { margin: 1rem 0; padding: 0.8rem 1rem; border-radius: 1rem; background: var(--chip-bg); }
 .inq-admin-fit p, .inq-admin-fit ul { margin: 0.2rem 0; }
 .inq-admin-delete { margin-top: 1rem; }
+
+/* Admin, restyled to match Signal. */
+html.signal.admin .hero {
+  padding-bottom: 16px;
+}
+
+html.signal.admin .admin-subhead {
+  position: relative;
+  z-index: 3;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 0 4px;
+}
+
+html.signal.admin .admin-menu-toggle {
+  border-radius: 4px;
+  border: 1px solid #8FB0D4;
+  background: transparent;
+  color: var(--hero-text);
+  font-weight: 600;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 16px;
+  gap: 8px;
+}
+
+html.signal.admin .admin-menu-toggle:hover {
+  background: rgba(247, 249, 252, 0.1);
+}
+
+html.signal.admin .admin-menu-bar .tagline {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--hero-text);
+}
+
+html.signal.admin .admin-menu-panel {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  box-shadow: none;
+  padding: 8px;
+}
+
+html.signal.admin .admin-menu-label {
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+html.signal.admin .admin-menu-divider {
+  border-top-width: 1px;
+  border-top-color: var(--line);
+}
+
+html.signal.admin .admin-menu-panel a,
+html.signal.admin .admin-menu-panel button {
+  border: 0;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+html.signal.admin .admin-menu-panel a[aria-current="page"],
+html.signal.admin .admin-menu-panel a[aria-current="page"]:hover {
+  background: var(--hero-bg);
+  color: var(--hero-text);
+}
+
+html.signal.admin .wrap {
+  padding-top: 32px;
+  padding-bottom: 64px;
+}
+
+html.signal.admin .wrap > .card:first-child,
+html.signal.admin .wrap > .form-status:first-child {
+  margin-top: 0;
+}
+
+html.signal.admin .btn,
+html.signal.admin a.btn,
+html.signal.admin button.btn,
+html.signal.admin main form button,
+html.signal.admin .user-card-body button,
+html.signal.admin .idea-form button,
+html.signal.admin .admin-menu-toggle {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.2;
+  text-align: center;
+}
+
+html.signal.admin .user-card,
+html.signal.admin .idea-card,
+html.signal.admin .beta-card,
+html.signal.admin .admin-qr,
+html.signal.admin .form-status,
+html.signal.admin .idea-dialog,
+html.signal.admin .session-warn,
+html.signal.admin dialog.card,
+html.signal.admin .inq-admin-fit,
+html.signal.admin .score-board,
+html.signal.admin .idea-help {
+  border-radius: 4px;
+}
+
+html.signal.admin .user-card summary,
+html.signal.admin .idea-card summary,
+html.signal.admin .idea-info,
+html.signal.admin .score-toggle {
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+html.signal.admin h2,
+html.signal.admin .user-card summary h2,
+html.signal.admin .idea-card h2,
+html.signal.admin .beta-card h2 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+html.signal.admin .footer-admin {
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+}
+
+html.signal.admin .footer-admin nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--hero-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+html.signal.admin .footer-admin nav a:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+}

@@ -67,7 +67,7 @@ check(str_contains($ownerPage, 'action="/admin/logout.php"'), 'log out still pos
 check(str_contains($ownerPage, 'name="csrf"'), 'log out still sends the CSRF token');
 check(str_contains($ownerPage, '>Log out</button>'), 'log out keeps its label');
 
-$labels = ['Home', 'Workspace', 'Games', 'Team', 'Account'];
+$labels = ['Home', 'Workspace', 'Consulting', 'Games', 'Team', 'Account'];
 $cursor = 0;
 $orderOk = true;
 foreach ($labels as $label) {
@@ -80,7 +80,7 @@ foreach ($labels as $label) {
 }
 check($orderOk, 'group headings stay in order');
 
-$links = ['Notes', 'To-dos', 'Ideas', 'Feedback', 'Games', 'Beta', 'Scores', 'Users', 'Activity', 'Settings', 'Log out'];
+$links = ['Notes', 'To-dos', 'Ideas', 'Feedback', 'Inquiries', 'Games', 'Beta', 'Scores', 'Users', 'Activity', 'Settings', 'Log out'];
 $cursor = strpos($ownerPage, 'id="admin-menu-panel"');
 $linkOrder = is_int($cursor);
 foreach ($links as $label) {
@@ -114,6 +114,7 @@ check(!str_contains($ideasMenu, '>Feedback<'), 'feedback stays hidden without th
 check(!str_contains($ideasMenu, '>Games</h2>') && !str_contains($ideasMenu, '>Games<'), 'the Games group is omitted when it would be empty');
 check(!str_contains($ideasMenu, '>Team</h2>'), 'the Team group is omitted for a team member');
 check(!str_contains($ideasMenu, '>Users<') && !str_contains($ideasMenu, '>Activity<') && !str_contains($ideasMenu, '>Beta<') && !str_contains($ideasMenu, '>Scores<'), 'owner and other gated links stay hidden');
+check(!str_contains($ideasMenu, '>Consulting</h2>') && !str_contains($ideasMenu, '>Inquiries<'), 'Inquiries stay hidden without the consulting permission');
 check(substr_count($ideasMenu, 'class="admin-menu-divider"') === 2, 'empty groups do not leave a divider behind');
 check(str_contains($ideasMenu, '>Settings<') && str_contains($ideasMenu, '>Log out</button>'), 'account links stay available');
 
@@ -130,6 +131,21 @@ $plain = [
     ],
 ];
 $plainMenu = tylilo_admin_menu_html($plain, '/admin/');
+$arcadeOnly = [
+    'id' => 4,
+    'role' => 'member',
+    'disabled' => 0,
+    'permissions' => [
+        'notes' => 0,
+        'feedback' => 1,
+        'ideas' => 1,
+        'leaderboards' => 1,
+        'beta' => 1,
+    ],
+];
+$arcadeMenu = tylilo_admin_menu_html($arcadeOnly, '/admin/scores.php');
+check(str_contains($arcadeMenu, '>Games</h2>') && str_contains($arcadeMenu, '>Scores<') && str_contains($arcadeMenu, '>Beta<'), 'an arcade-only person still sees Games, Beta, and Scores');
+check(!str_contains($arcadeMenu, '>Consulting</h2>') && !str_contains($arcadeMenu, 'href="/admin/inquiries.php"'), 'an arcade-only person does not see Inquiries in the menu');
 check(str_contains($plainMenu, 'href="/admin/" aria-current="page"'), 'Home is current on the admin index');
 check(!str_contains($plainMenu, '>Workspace</h2>'), 'Workspace is hidden when none of its links are allowed');
 check(substr_count($plainMenu, 'class="admin-menu-divider"') === 1, 'only Home and Account remain, with one divider');

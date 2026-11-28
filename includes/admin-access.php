@@ -13,28 +13,83 @@ const TYLILO_ADMIN_WARN = 120;
 const TYLILO_ADMIN_INVITE_TTL = 604800;
 const TYLILO_ADMIN_RESET_TTL = 86400;
 
-function tylilo_admin_default_permissions(bool $leaderboards = false): array
+/**
+ * Grouped permissions shown on the Users page. Future consulting or
+ * software admin tools get their own key in the matching group, off by
+ * default. The owner can always open every section.
+ *
+ * @return array<string, array<string, array{label: string, short: string, invite_default: bool}>>
+ */
+function tylilo_admin_permission_catalog(): array
 {
     return [
-        'notes' => 1,
-        'feedback' => 1,
-        'ideas' => 1,
-        'leaderboards' => $leaderboards ? 1 : 0,
-        'beta' => 0,
-        'inquiries' => 0,
+        'Workspace' => [
+            'notes' => ['label' => 'Own private notes and to-dos', 'short' => 'Notes', 'invite_default' => true],
+            'feedback' => ['label' => 'Game feedback', 'short' => 'Feedback', 'invite_default' => true],
+            'ideas' => ['label' => 'Shared ideas board', 'short' => 'Ideas', 'invite_default' => true],
+        ],
+        'Consulting' => [
+            'inquiries.view' => ['label' => 'View consulting inquiries', 'short' => 'Inquiries', 'invite_default' => false],
+        ],
+        'Games' => [
+            'leaderboards' => ['label' => 'Leaderboard moderation', 'short' => 'Leaderboards', 'invite_default' => false],
+            'beta' => ['label' => 'Play beta games', 'short' => 'Beta games', 'invite_default' => false],
+        ],
     ];
+}
+
+function tylilo_admin_permission_post_name(string $key): string
+{
+    return 'perm_' . str_replace('.', '_', $key);
+}
+
+function tylilo_admin_default_permissions(bool $leaderboards = false): array
+{
+    $out = [];
+    foreach (tylilo_admin_permission_catalog() as $group) {
+        foreach ($group as $key => $meta) {
+            $out[$key] = !empty($meta['invite_default']) ? 1 : 0;
+        }
+    }
+    if ($leaderboards) {
+        $out['leaderboards'] = 1;
+    }
+
+    return $out;
 }
 
 function tylilo_admin_permissions_from_post(): array
 {
-    return [
-        'notes' => isset($_POST['perm_notes']) ? 1 : 0,
-        'feedback' => isset($_POST['perm_feedback']) ? 1 : 0,
-        'ideas' => isset($_POST['perm_ideas']) ? 1 : 0,
-        'leaderboards' => isset($_POST['perm_leaderboards']) ? 1 : 0,
-        'beta' => isset($_POST['perm_beta']) ? 1 : 0,
-        'inquiries' => isset($_POST['perm_inquiries']) ? 1 : 0,
-    ];
+    $out = [];
+    foreach (tylilo_admin_permission_catalog() as $group) {
+        foreach (array_keys($group) as $key) {
+            $out[$key] = isset($_POST[tylilo_admin_permission_post_name($key)]) ? 1 : 0;
+        }
+    }
+
+    return $out;
+}
+
+/**
+ * Permission checkboxes for an invite (defaults) or an existing member.
+ *
+ * @param array<string, mixed>|null $current
+ */
+function tylilo_admin_permissions_fields_html(?array $current, bool $short = false): string
+{
+    $html = '';
+    foreach (tylilo_admin_permission_catalog() as $group => $perms) {
+        $html .= '<fieldset class="perm-group"><legend>' . tylilo_e($group) . '</legend>';
+        foreach ($perms as $key => $meta) {
+            $name = tylilo_admin_permission_post_name($key);
+            $label = $short ? (string) $meta['short'] : (string) $meta['label'];
+            $on = $current === null ? !empty($meta['invite_default']) : !empty($current[$key]);
+            $html .= '<label><input type="checkbox" name="' . tylilo_e($name) . '"' . ($on ? ' checked' : '') . '> ' . tylilo_e($label) . '</label>';
+        }
+        $html .= '</fieldset>';
+    }
+
+    return $html;
 }
 
 function tylilo_admin_migrate(array $data): array
@@ -52,6 +107,9 @@ function tylilo_admin_migrate(array $data): array
             $ownerId = (int) $user['id'];
         }
         $user['disabled'] = (int) ($user['disabled'] ?? 0);
+        // Existing permission maps are left as stored. New keys such as
+        // inquiries.view are not added or granted. Missing maps get the
+        // current defaults, where consulting and software keys stay off.
         if (!isset($user['permissions']) || !is_array($user['permissions'])) {
             $user['permissions'] = tylilo_admin_default_permissions(($user['role'] ?? '') === 'owner');
         }

@@ -20,7 +20,7 @@ $nonce = tylilo_e($cspNonce);
         <a class="nav-cta" href="/inquiry"<?php if (($pageCanonical ?? '') === TYLILO_URL . '/inquiry'): ?> aria-current="page"<?php endif; ?>>Start an inquiry</a>
       </nav>
 <?php else: ?>
-      <a class="wordmark" href="/" aria-label="Tylilo, home">Tylilo</a>
+      <a class="wordmark" href="/" aria-label="Tylilo, home"><img class="brand-mark" src="/resources/Tylilo-Logo/Tylilo-Logo-Small.png" alt="" width="96" height="36"></a>
 <?php endif; ?>
       <div class="theme">
         <button type="button" data-theme-toggle aria-label="Theme: Auto. Click to switch to Light" title="Theme: Auto. Click to switch to Light">

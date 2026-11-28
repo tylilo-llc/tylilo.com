@@ -152,10 +152,7 @@ $html .= '<button type="button" class="btn send" id="open-invite">Invite someone
 $html .= '<dialog id="invite-dialog" class="card" aria-labelledby="invite-title">';
 $html .= '<h2 id="invite-title">Invite someone</h2>';
 $html .= '<form method="post" action="/admin/users.php"><input type="hidden" name="csrf" value="' . tylilo_e(tylilo_admin_csrf()) . '"><input type="hidden" name="action" value="invite">';
-foreach (['perm_notes' => 'Own private notes and to-dos', 'perm_feedback' => 'Game feedback', 'perm_ideas' => 'Shared ideas board', 'perm_leaderboards' => 'Leaderboard moderation', 'perm_beta' => 'Play beta games', 'perm_inquiries' => 'Consulting inquiries'] as $name => $label) {
-    $checked = in_array($name, ['perm_leaderboards', 'perm_beta', 'perm_inquiries'], true) ? '' : ' checked';
-    $html .= '<label><input type="checkbox" name="' . $name . '"' . $checked . '> ' . tylilo_e($label) . '</label>';
-}
+$html .= tylilo_admin_permissions_fields_html(null);
 $html .= '<button class="btn send" type="submit">Create invite link</button> ';
 $html .= '<button type="button" id="close-invite">Cancel</button></form></dialog></div>';
 
@@ -175,11 +172,7 @@ foreach ($data['users'] as $user) {
         $html .= '<p><a href="/admin/notes.php?user=' . $uid . '">View notes</a> · <a href="/admin/todos.php?user=' . $uid . '">View to-dos</a></p>';
         $perms = is_array($user['permissions'] ?? null) ? $user['permissions'] : [];
         $html .= '<form method="post" action="/admin/users.php#user-' . $uid . '"><input type="hidden" name="csrf" value="' . tylilo_e(tylilo_admin_csrf()) . '"><input type="hidden" name="action" value="permissions"><input type="hidden" name="id" value="' . $uid . '">';
-        foreach (['perm_notes' => 'Notes', 'perm_feedback' => 'Feedback', 'perm_ideas' => 'Ideas', 'perm_leaderboards' => 'Leaderboards', 'perm_beta' => 'Beta games', 'perm_inquiries' => 'Inquiries'] as $name => $label) {
-            $key = str_replace('perm_', '', $name);
-            $checked = !empty($perms[$key]) ? ' checked' : '';
-            $html .= '<label><input type="checkbox" name="' . $name . '"' . $checked . '> ' . tylilo_e($label) . '</label>';
-        }
+        $html .= tylilo_admin_permissions_fields_html($perms, true);
         $html .= '<button type="submit">Save permissions</button></form>';
         $toggle = $off ? 'enable' : 'disable';
         $html .= '<form method="post" action="/admin/users.php#user-' . $uid . '"><input type="hidden" name="csrf" value="' . tylilo_e(tylilo_admin_csrf()) . '"><input type="hidden" name="action" value="' . $toggle . '"><input type="hidden" name="id" value="' . $uid . '"><button type="submit">' . ($toggle === 'enable' ? 'Turn on' : 'Turn off') . '</button></form>';

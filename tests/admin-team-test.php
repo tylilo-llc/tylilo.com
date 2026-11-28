@@ -26,7 +26,7 @@ function check(bool $ok, string $label): void
 }
 
 $defaults = tylilo_admin_default_permissions();
-check($defaults['notes'] === 1 && $defaults['feedback'] === 1 && $defaults['ideas'] === 1 && $defaults['leaderboards'] === 0 && $defaults['beta'] === 0, 'new invites default to notes, feedback, and ideas');
+check($defaults['notes'] === 1 && $defaults['feedback'] === 1 && $defaults['ideas'] === 1 && $defaults['leaderboards'] === 0 && $defaults['beta'] === 0 && ($defaults['inquiries.view'] ?? 1) === 0, 'new invites default to notes, feedback, and ideas, with Inquiries off');
 
 tylilo_admin_with(static function (array $data): array {
     $data['users'][] = [
@@ -72,7 +72,7 @@ tylilo_admin_with(static function (array $data): array {
 $owner = tylilo_admin_user_by_name('ryan');
 $member = tylilo_admin_user_by_name('sam');
 check(is_array($owner) && tylilo_admin_is_owner($owner), 'an admin account is the owner');
-check(is_array($member) && tylilo_admin_can($member, 'feedback') && !tylilo_admin_can($member, 'leaderboards') && !tylilo_admin_can($member, 'beta'), 'a member has the default permissions');
+check(is_array($member) && tylilo_admin_can($member, 'feedback') && !tylilo_admin_can($member, 'leaderboards') && !tylilo_admin_can($member, 'beta') && !tylilo_admin_can($member, 'inquiries.view'), 'a member has the default permissions and cannot open Inquiries');
 $expected = ['crash-cars' => ['Crash Cars', '2.3'], 'jumpy-jumperton' => ['Jumpy Jumperton', '1.4'], 'starbase-defender' => ['Starbase Defender', '1.5.0']];
 foreach ($expected as $slug => [$title, $version]) {
     $game = tylilo_beta_game($slug);

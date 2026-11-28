@@ -43,7 +43,7 @@ function tylilo_admin_menu_html(array $user, string $path): string
         $groups[] = ['Workspace', $workspace, false];
     }
 
-    if (tylilo_admin_can($user, 'inquiries')) {
+    if (tylilo_admin_can($user, 'inquiries.view')) {
         $groups[] = ['Consulting', [['/admin/inquiries.php', 'Inquiries']], false];
     }
 
@@ -101,9 +101,9 @@ function tylilo_admin_layout(string $title, string $main): void
     echo '<body>';
     echo '<script nonce="' . tylilo_e($cspNonce) . '">document.documentElement.classList.add("js");</script>';
     echo '<a class="skip-link" href="#main">Skip to content</a>';
-    echo '<header class="hero"><div class="hero-shapes" aria-hidden="true"><span class="blob a"></span><span class="blob b"></span><span class="blob c"></span></div>';
+    echo '<header class="hero">';
     require dirname(__DIR__) . '/includes/topbar.php';
-    echo '<div class="hero-inner">';
+    echo '<div class="admin-subhead">';
     if ($user !== null) {
         $path = parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH);
         $path = is_string($path) ? $path : '/';
