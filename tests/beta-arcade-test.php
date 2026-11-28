@@ -159,6 +159,9 @@ check(!str_contains($privacy, 'Other unpublished beta games') && !str_contains($
 $starbase = $root . '/beta/starbase-defender/index.html';
 $crashFile = tylilo_beta_arcade_public_file('crash-cars');
 check(is_file($starbase) && md5_file($starbase) === 'fc4a0aaa283bacf5d12c569fc49871ff', 'the Starbase Defender file is the unchanged 1.5.0 build');
+$jumpy = $root . '/beta/jumpy-jumperton/index.html';
+check(is_file($jumpy) && md5_file($jumpy) === '6ea36927d3d99b797aed076b822af468', 'the Jumpy Jumperton file is the unchanged 1.6 Alpha build');
+check(empty(tylilo_beta_visibility_defaults()['jumpy-jumperton']), 'Jumpy Jumperton still defaults to hidden from the Arcade');
 check(is_string($crashFile) && md5_file($crashFile) === '875c72a7b950fa554cab0faa293e0fbd', 'the public Crash Cars file stays the unchanged 2.4.1 build after the stage work');
 
 echo "\n{$checks} checks, {$failed} failed\n";
