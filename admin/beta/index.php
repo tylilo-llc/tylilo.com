@@ -10,7 +10,6 @@ if (!tylilo_admin_can($me, 'beta')) {
 }
 
 require_once dirname(__DIR__, 2) . '/includes/beta-arcade.php';
-require_once dirname(__DIR__, 2) . '/includes/playtest.php';
 
 $error = '';
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
@@ -29,8 +28,6 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             tylilo_admin_field('stage'),
             tylilo_admin_field('csrf')
         );
-    } elseif ($action === 'playtest-delete') {
-        $result = tylilo_playtest_admin_delete($me, tylilo_admin_field('id'), tylilo_admin_field('csrf'));
     } else {
         $result = null;
     }
@@ -107,8 +104,5 @@ foreach ($games as $game) {
 }
 if ($games !== []) {
     $html .= '</div>';
-}
-if ($canPublish) {
-    $html .= tylilo_playtest_admin_html();
 }
 tylilo_admin_layout('Alpha/Beta games', $html);
