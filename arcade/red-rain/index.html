@@ -2,6 +2,40 @@
 <!--
   RED RAIN - changelog
   ====================
+  v2.2.9 (2026-11-27)
+  - New shared UDLR launch splash (Ryan, Nov 21: "a little too fast", it showed only the end of the splash when he
+    reopened a game, it should fade out to the game, and show only the first time a game is played).
+    /workspace/brand/udlr-splash/udlr-splash.js, md5 95b99f5c3114f905df1af061a76acd92, inlined byte for byte
+    between the UDLR-SPLASH markers (replaces the 49be43... version). Slower: 600 ms per letter, a 1.2 s hold
+    and a 450 ms crossfade, about 4 s in all. The overlay now crossfades into the finished title screen (never
+    to black or blank) and shows only the first time Red Rain is played on a device: the splash sets
+    localStorage udlr_splash_seen_red-rain (cookie of the same name if storage is blocked); add ?splash=1 to the
+    URL to see it again. The reopen glitch is fixed in the splash itself: it waits until the page is visible and
+    painted and restarts from the R if the page is hidden mid-way.
+  - Red Rain hook: UDLRSplash.show({ id: 'red-rain', onReveal, onDone }). onReveal redraws the title at the
+    current window size as the crossfade starts (it also fires at once, with no overlay, when the splash was
+    already seen); onDone (overlay fully gone) starts the main loop: title demo, music, input. As before,
+    nothing runs and no input is accepted until then, the skip press never starts a game, presses a button
+    or opens audio, and a tap held through the end of the splash never starts audio on release.
+  - Accessibility review (Ryan's UDLR standard, Nov 21: playability comes first; accessibility must not
+    hurt gameplay): Red Rain has no automatic accessibility behavior that touches play. The game script does not
+    read prefers-reduced-motion or any other OS accessibility setting; reduced-motion only changes the splash.
+    Brightness / contrast / saturation / screen shake / particle options are player-chosen and default to
+    100 / 100 / 100 / 100 / normal, so nothing changes unless the player picks it. Pinch zoom (2.2.1) needs a
+    deliberate two-finger pinch; one-finger taps, drags and key play are unaffected. Result: nothing found that
+    hurts gameplay, so nothing was changed.
+  - New saved key: udlr_splash_seen_red-rain (written by the splash, "1"). Existing keys unchanged.
+    Leaderboards untouched.
+  - How to Play: the skip-intro lines now say the splash only plays the first time.
+  v2.2.8 (2026-11-27)
+  - Fix: wave-2 enemy pile-up on Expert and Insane. Those levels pull enemy types in early by shifting the
+    wave recipe (Expert +3 waves, Insane +5). On wave 2 that shift handed the player wave-5 / wave-7 content
+    on top of the already-bigger Expert/Insane missile count: a salvo, extra fast and splitting missiles and,
+    on Insane, a bomber and a drone - 16-19 threats in the air at once on Insane (peak ~9-10 on Expert).
+    Now wave 2 shifts by 1 (the Normal amount) on Expert and Insane: no salvo, bomber or drone, at most one
+    fast missile. Missile count, speed and spacing are unchanged. Wave 1, wave 3 and later, Easy and
+    Normal are unchanged. Simulated wave-2 peak enemies alive (undefended): Expert ~8 -> ~7, Insane ~18 -> ~8.
+    No new saved keys; leaderboards untouched.
   v2.2.7 (2026-11-21)
   - Leaderboard fix (Ryan's 1,011,970 Easy run on v2.2.6 never reached the board; the live boards were still
     empty). The server would have accepted it (score cap 5,000,000; token valid 6 h; the run was under an
@@ -369,8 +403,17 @@
  * UDLR launch splash — drop-in, no dependencies.
  *
  * Usage (inline this file near the start of <body>):
- *   UDLRSplash.show({ onDone: startGame });
+ *   UDLRSplash.show({
+ *     id: 'red-rain',               // per-game key; splash shows on first play only
+ *     onReveal: drawFirstScreen,    // draw title/menu NOW; it sits under the fading overlay
+ *     onDone: startGame             // overlay fully gone
+ *   });
  *   // also returns a Promise that resolves after the overlay is removed
+ *
+ * Seen flag: localStorage "udlr_splash_seen_<id>" (cookie fallback), set when
+ * the splash completes or is skipped. Add ?splash=1 to the URL (or pass
+ * {force:true}) to show it again. Sequence starts only when the page is
+ * visible and painted; hidden mid-run or bfcache restore restarts it.
  *
  * Skip: any key, click, tap, or gamepad button. The skip event is not
  * cancelled, so a game can still use that first gesture to unlock audio.
@@ -380,9 +423,9 @@
 
   var COLOR = "#0399BC";
   var Z = 2147483646;
-  var FLY_MS = 340;
-  var HOLD_MS = 700;
-  var FADE_MS = 300;
+  var FLY_MS = 600;
+  var HOLD_MS = 1200;
+  var FADE_MS = 450;
   var SKIP_FADE_MS = 150;
   var REDUCED_FADE_IN_MS = 200;
   var FLY_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
@@ -550,9 +593,44 @@
     return LETTERS.length * FLY_MS;
   }
 
+  // ---- first-play-only memory (per game id; arcade games share one origin) ----
+  var KEY_PREFIX = "udlr_splash_seen_";
+
+  function slug(id) {
+    return String(id == null || id === "" ? "default" : id).toLowerCase().replace(/[^a-z0-9_-]+/g, "-");
+  }
+
+  function forced() {
+    try { return /[?&]splash=1(?:&|#|$)/.test(root.location.search || ""); } catch (e) { return false; }
+  }
+
+  function wasSeen(id) {
+    var key = KEY_PREFIX + slug(id);
+    try {
+      return root.localStorage.getItem(key) === "1";
+    } catch (e) {
+      try {
+        return (root.document.cookie || "").split(/;\s*/).indexOf(key + "=1") !== -1;
+      } catch (e2) { return false; }
+    }
+  }
+
+  function markSeen(id) {
+    var key = KEY_PREFIX + slug(id);
+    try {
+      root.localStorage.setItem(key, "1");
+    } catch (e) {
+      try {
+        root.document.cookie = key + "=1; max-age=31536000; path=/; SameSite=Lax";
+      } catch (e2) {}
+    }
+  }
+
   function show(opts) {
     opts = opts || {};
     var onDone = typeof opts.onDone === "function" ? opts.onDone : null;
+    var onReveal = typeof opts.onReveal === "function" ? opts.onReveal : null;
+    var hasId = opts.id != null && opts.id !== "";
 
     if (active) {
       if (onDone) {
@@ -561,13 +639,40 @@
       return active.promise;
     }
 
+    // Already seen on this device: draw the game's first screen and finish now.
+    if (hasId && !opts.force && !forced() && wasSeen(opts.id)) {
+      try { if (onReveal) onReveal(); } catch (e) {}
+      try { if (onDone) onDone(); } catch (e) {}
+      return Promise.resolve();
+    }
+
     var settled = false;
     var fading = false;
+    var revealed = false;
     var resolve;
     var promise = new Promise(function (res) { resolve = res; });
-    var timers = [];
+    var runTimers = [];
+    var endTimers = [];
     var rafId = 0;
+    var gateRaf = 0;
+    var runToken = 0;
     var overlay, styleEl;
+
+    function reveal() {
+      if (revealed) return;
+      revealed = true;
+      try { if (onReveal) onReveal(); } catch (e) {}
+    }
+
+    function clearRun() {
+      runTimers.forEach(function (id) { clearTimeout(id); });
+      runTimers = [];
+      runToken++;
+      if (gateRaf) {
+        try { root.cancelAnimationFrame(gateRaf); } catch (e) {}
+        gateRaf = 0;
+      }
+    }
 
     function done() {
       if (settled) return;
@@ -579,33 +684,94 @@
     }
 
     function cleanup() {
-      timers.forEach(function (id) { clearTimeout(id); });
-      timers = [];
+      clearRun();
+      endTimers.forEach(function (id) { clearTimeout(id); });
+      endTimers = [];
       if (rafId) {
         try { root.cancelAnimationFrame(rafId); } catch (e) {}
         rafId = 0;
       }
       try { root.removeEventListener("keydown", onSkip, true); } catch (e) {}
       try { root.removeEventListener("pointerdown", onSkip, true); } catch (e) {}
+      try { root.document.removeEventListener("visibilitychange", onVisibility, false); } catch (e) {}
+      try { root.removeEventListener("pageshow", onPageShow, false); } catch (e) {}
       if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
       overlay = null;
       if (styleEl && styleEl.parentNode) styleEl.parentNode.removeChild(styleEl);
       styleEl = null;
     }
 
+    function isVisible() {
+      try { return root.document.visibilityState !== "hidden"; } catch (e) { return true; }
+    }
+
+    // The splash counts as seen only once it finished or was skipped.
     function fadeOut(ms) {
       if (fading || settled) return;
       fading = true;
+      clearRun();
+      if (hasId) markSeen(opts.id);
       if (!overlay) { done(); return; }
-      overlay.style.transitionDuration = (ms || FADE_MS) + "ms";
-      overlay.classList.add("udlr-splash-exit");
-      timers.push(setTimeout(done, (ms || FADE_MS) + 40));
+      var dur = ms || FADE_MS;
+      var started = false;
+      // Draw the game's first screen underneath the still-opaque overlay,
+      // then crossfade the whole overlay (background included) away.
+      reveal();
+      function startFade() {
+        if (started || settled || !overlay) return;
+        started = true;
+        overlay.style.transitionDuration = dur + "ms";
+        overlay.classList.add("udlr-splash-exit");
+        endTimers.push(setTimeout(done, dur + 60));
+      }
+      void overlay.offsetWidth;
+      try { rafId = root.requestAnimationFrame(function () { rafId = 0; startFade(); }); } catch (e) {}
+      endTimers.push(setTimeout(startFade, 120));
     }
 
     function onSkip() {
       // Intentionally does not preventDefault or stopPropagation:
       // the same user gesture can unlock game audio.
       fadeOut(SKIP_FADE_MS);
+    }
+
+    // (Re)start the letter sequence from the beginning, but only once the
+    // page is visible and has painted (visible + two animation frames).
+    // Anything that runs before first paint, or while hidden, is never seen:
+    // that is what used to show only the tail end of the splash on reopen.
+    function startRun() {
+      if (settled || fading || !overlay) return;
+      clearRun();
+      overlay.classList.remove("udlr-splash-ready");
+      void overlay.offsetWidth;
+      if (!isVisible()) return; // visibilitychange will call startRun again
+      var token = runToken;
+      gateRaf = root.requestAnimationFrame(function () {
+        gateRaf = root.requestAnimationFrame(function () {
+          gateRaf = 0;
+          if (token !== runToken || settled || fading || !overlay || !isVisible()) return;
+          setOffscreenStarts(overlay);
+          overlay.classList.add("udlr-splash-ready");
+          var reduced = reducedMotion();
+          var total = reduced ? REDUCED_FADE_IN_MS + HOLD_MS : (flyDuration() + HOLD_MS);
+          runTimers.push(setTimeout(function () { fadeOut(FADE_MS); }, total));
+        });
+      });
+    }
+
+    function onVisibility() {
+      if (settled) return;
+      if (!isVisible()) {
+        if (fading) { done(); return; } // nobody is watching the fade
+        clearRun();
+        if (overlay) overlay.classList.remove("udlr-splash-ready");
+      } else {
+        startRun();
+      }
+    }
+
+    function onPageShow(ev) {
+      if (ev && ev.persisted) startRun();
     }
 
     function pollGamepad() {
@@ -645,21 +811,18 @@
       overlay.innerHTML = svgMarkup();
       (doc.body || doc.documentElement).appendChild(overlay);
 
-      // Force layout, then set viewport-based starts before animations begin.
-      void overlay.offsetWidth;
-      setOffscreenStarts(overlay);
-      overlay.classList.add("udlr-splash-ready");
-
       root.addEventListener("keydown", onSkip, true);
       root.addEventListener("pointerdown", onSkip, true);
+      doc.addEventListener("visibilitychange", onVisibility, false);
+      root.addEventListener("pageshow", onPageShow, false);
       rafId = root.requestAnimationFrame(pollGamepad);
 
-      var reduced = reducedMotion();
-      var holdAfter = reduced ? REDUCED_FADE_IN_MS + HOLD_MS : (flyDuration() + HOLD_MS);
-      timers.push(setTimeout(function () { fadeOut(FADE_MS); }, holdAfter));
+      active = { promise: promise };
+      startRun();
     } catch (e) {
       cleanup();
       active = null;
+      try { if (onReveal) onReveal(); } catch (err) {}
       if (onDone) {
         try { onDone(); } catch (err) {}
       }
@@ -667,7 +830,6 @@
       return promise;
     }
 
-    active = { promise: promise };
     return promise;
   }
 
@@ -677,12 +839,20 @@
 </script>
 <!-- UDLR-SPLASH:END -->
 <script>
-// v2.2.6: start the shared UDLR splash as soon as <body> exists, so it covers the page from the first paint.
-// The game script (below) registers RR_SPLASH.boot; the main loop starts only from the splash's onDone.
-window.RR_SPLASH = { done: false, boot: null };
+// v2.2.9: start the shared UDLR splash as soon as <body> exists, so it covers the page from the first paint.
+// The game script (below) registers RR_SPLASH.reveal (draw the title) and RR_SPLASH.boot (start the loop).
+// When the splash was already seen, show() calls onReveal and onDone at once - before the game script has
+// run - so both are latched here and replayed when the game script registers its hooks.
+// onReveal: the title is fully drawn under the overlay as the crossfade starts. onDone: the overlay is gone;
+// only now does the main loop (title demo, music, input) start.
+window.RR_SPLASH = { revealed: false, done: false, reveal: null, boot: null };
 try {
-  UDLRSplash.show({ onDone: function () { RR_SPLASH.done = true; if (RR_SPLASH.boot) RR_SPLASH.boot(); } });
-} catch (e) { RR_SPLASH.done = true; }   // splash missing / broken: the game boots straight to the title
+  UDLRSplash.show({
+    id: 'red-rain',
+    onReveal: function () { RR_SPLASH.revealed = true; if (RR_SPLASH.reveal) RR_SPLASH.reveal(); },
+    onDone: function () { RR_SPLASH.done = true; if (RR_SPLASH.boot) RR_SPLASH.boot(); }
+  });
+} catch (e) { RR_SPLASH.revealed = RR_SPLASH.done = true; }   // splash missing / broken: the game boots straight to the title
 </script>
 <canvas id="c" aria-label="Red Rain game"></canvas>
 <div id="safe"></div>
@@ -691,7 +861,7 @@ try {
 <script>
 (() => {
 'use strict';
-const VERSION = '2.2.7';   // MAJOR.MINOR.BUILD - BUILD +1 per shipped release, never reset
+const VERSION = '2.2.9';   // MAJOR.MINOR.BUILD - BUILD +1 per shipped release, never reset
 document.title = 'Red Rain v' + VERSION;
 // ---------- helpers ----------
 const canvas = document.getElementById('c');
@@ -1156,7 +1326,9 @@ const shieldR = () => SHIELD_R * gs;
 function waveSpec(n) {
   const d = DF();
   if (d === DIFFS.easy) return waveSpecBase(n);
-  const b = waveSpecBase(n), t = waveSpecBase(n <= 1 ? 1 : n + d.shift);   // t: enemy-type schedule shifted earlier (never on wave 1)
+  // t: enemy-type schedule shifted earlier (never on wave 1). v2.2.8: wave 2 only shifts by 1 (the Normal shift) so Expert/Insane
+  // don't open wave 2 with wave-5/7 content (salvos, bomber, drone, extra fast/split) on top of the bigger count - that was the pile-up.
+  const b = waveSpecBase(n), t = waveSpecBase(n <= 1 ? 1 : n + (n === 2 ? Math.min(d.shift, 1) : d.shift));
   const count = Math.round(b.count * d.count);
   const maxSpecial = Math.floor(count * 0.6);
   const nFast = Math.min(t.nFast, Math.ceil(maxSpecial / 2)), nSplit = Math.min(t.nSplit, maxSpecial - nFast);
@@ -1745,7 +1917,7 @@ function helpContent() {
     ['Pinch (two fingers)', 'Zoom in for a closer look; pinch out to return'],
     ['BACK TO ARCADE button', 'Leave for the Tylilo Arcade (title and pause screens; asks first during a run)'],
     ['Name box (game over)', 'Optional: save a run of 30 s or more to the Arcade leaderboard; SKIP drops it (leaving asks first if it isn\'t saved)'],
-    ['Tap (at launch)', 'Skips the UDLR intro'],
+    ['Tap (at launch)', 'Skips the UDLR intro (only the first time; add ?splash=1 to see it again)'],
   ]) : [
     ['Click / tap', 'Fire an interceptor at that point'],
     ['P / Esc', 'Pause / resume'],
@@ -1758,7 +1930,7 @@ function helpContent() {
     ['W', 'What\'s New: what changed in each version (also a button on the title and pause screens)'],
     ['A', 'Back to the Arcade (title and pause screens only; asks first during a run)'],
     ['Tab, Enter / Esc', 'Game over: type a name to save a 30 s+ run to the Arcade leaderboard; Enter saves, Esc skips (optional)'],
-    ['Any key / click (at launch)', 'Skips the UDLR intro'],
+    ['Any key / click (at launch)', 'Skips the UDLR intro (only the first time; add ?splash=1 to see it again)'],
   ];
   const how = [
     'Protect the 6 cities - the game ends when all of them fall.',
@@ -1823,6 +1995,12 @@ function drawHelp() {
 // Player-facing release notes, newest first, written from the changelog. Opens ONLY from the
 // WHAT'S NEW button or the W key - never automatically.
 const WHATS_NEW = [
+  { v: '2.2.9', d: '2026-11-27', items: [
+    'New UDLR splash: slower (about 4 seconds), it fades into the Red Rain title screen, and it only plays the first time you play on a device (add ?splash=1 to the address to see it again).',
+    'Fixed the glitch where reopening the game showed only the end of the splash.',
+    'Checked accessibility against gameplay: nothing in Red Rain gets in the way of play, so nothing changed there.' ] },
+  { v: '2.2.8', d: '2026-11-27', items: [
+    'Fixed the enemy pile-up on wave 2 of Expert and Insane: wave 2 no longer throws a salvo, bomber and drone at you all at once. Later waves are unchanged.' ] },
   { v: '2.2.7', d: '2026-11-21', items: [
     'Leaderboard fix: leaving the game-over screen no longer throws away a score you haven\'t saved. The first tap warns you; tap again to leave anyway.',
     'Quitting a run from the pause menu now takes you to the game-over screen so you can still save your score.',
@@ -4724,9 +4902,11 @@ function frame(now) {
     musicUpdate();
   } catch (err) { console.error(err); }
 }
-// v2.2.6: the loop starts only when the UDLR splash is done (RR_SPLASH.boot is called from its onDone).
+// v2.2.9: the loop starts only when the UDLR splash is done (RR_SPLASH.boot is called from its onDone).
 // Before that, one static title frame (no time advanced, no title demo, no music) is drawn so the splash
-// fades out onto the title rather than a blank canvas.
+// crossfades onto the finished title rather than a blank canvas. RR_SPLASH.reveal (the splash's onReveal)
+// redraws that frame at the current viewport size just as the crossfade starts; when the splash was already
+// seen it fires at once, with no overlay.
 G._booted = false;
 function boot() {
   if (booted) return;
@@ -4734,8 +4914,17 @@ function boot() {
   last = performance.now(); G._lastNow = last;
   requestAnimationFrame(frame);
 }
+function revealTitle() {
+  if (booted) return;
+  try { layoutDirty = false; layout(); render(); } catch (err) { console.error(err); }
+  G._revealed = (G._revealed || 0) + 1;
+}
 try { render(); } catch (err) { console.error(err); }
-if (window.RR_SPLASH && !window.RR_SPLASH.done) window.RR_SPLASH.boot = boot; else boot();
+if (window.RR_SPLASH) {
+  window.RR_SPLASH.reveal = revealTitle;
+  if (window.RR_SPLASH.revealed) revealTitle();
+  if (window.RR_SPLASH.done) boot(); else window.RR_SPLASH.boot = boot;
+} else boot();
 })();
 </script>
 </body>
