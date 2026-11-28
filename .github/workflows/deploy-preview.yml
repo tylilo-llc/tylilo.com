@@ -184,11 +184,14 @@ jobs:
           fi
 
           docroot=""
+          # Later deploys already have Basic auth on, so send the preview login.
+          probe_netrc="$work/probe-netrc"
+          printf 'machine preview.tylilo.com\nlogin ryan\npassword %s\n' "${PREVIEW_PASSWORD}" > "$probe_netrc"
           for url in \
             "https://preview.tylilo.com/tylilo-preview-docroot.php" \
             "http://preview.tylilo.com/tylilo-preview-docroot.php"
           do
-            body=$(curl -k --silent --show-error --connect-timeout 20 --max-time 20 "$url" || true)
+            body=$(curl -k --silent --show-error --netrc-file "$probe_netrc" --connect-timeout 20 --max-time 20 "$url" || true)
             case "$body" in
               */preview.tylilo.com)
                 docroot="$body"
@@ -196,6 +199,7 @@ jobs:
                 ;;
             esac
           done
+          rm -f "$probe_netrc"
 
           # Always try to remove the probe, even if the read failed.
           python3 - << 'PY'
