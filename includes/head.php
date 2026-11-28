@@ -94,7 +94,8 @@ $themeColorDark = $tyliloPublic ? '#050B14' : '#071526';
         "and": [
           {"href_matches": "/*"},
           {"not": {"href_matches": "/contact.php*"}},
-          {"not": {"selector_matches": "a.game-tile"}}
+          {"not": {"selector_matches": "a.game-tile"}},
+          {"not": {"selector_matches": "a[target=_blank]"}}
         ]
       },
       "eagerness": "moderate"

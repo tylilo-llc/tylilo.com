@@ -131,6 +131,7 @@ require __DIR__ . '/includes/head.php';
           <div class="form-status success inq-thanks" id="inquiry-thanks" tabindex="-1" role="status" aria-live="polite">
             <p><?= tylilo_e(TYLILO_INQUIRY_THANKS) ?></p>
           </div>
+          <script nonce="<?= tylilo_e($cspNonce) ?>">try { sessionStorage.removeItem("tyliloInquiryDraft"); } catch (e) {}</script>
           <p class="lede-quiet">A copy of your answers is on its way to your inbox. If it does not arrive in a few minutes, check your spam folder.</p>
           <p><a class="btn" href="/">Back to the home page</a></p>
 <?php else: ?>

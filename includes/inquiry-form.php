@@ -17,21 +17,77 @@ require_once __DIR__ . '/inquiry.php';
 
 function tylilo_inquiry_when_note(array $when): string
 {
-    if (isset($when['stage'])) {
-        $labels = array_map(static fn (string $v): string => '“' . tylilo_inquiry_label('stage', $v) . '”', $when['stage']);
-
-        return 'If you chose ' . implode(' or ', $labels) . ':';
+    $parts = [];
+    foreach ($when as $key => $values) {
+        if ($key === 'goals_none_of') {
+            $parts[] = 'If none of the goals above have their own questions here';
+            continue;
+        }
+        if (!is_array($values) || $values === []) {
+            continue;
+        }
+        $labels = array_map(static fn (string $v): string => '“' . tylilo_inquiry_label((string) $key, $v) . '”', $values);
+        $parts[] = 'If you chose ' . implode(' or ', $labels);
     }
-    if (isset($when['goals'])) {
-        $labels = array_map(static fn (string $v): string => '“' . tylilo_inquiry_label('goals', $v) . '”', $when['goals']);
-
-        return 'If you chose ' . implode(' or ', $labels) . ':';
-    }
-    if (isset($when['goals_none_of'])) {
-        return 'If none of the goals above have their own questions here:';
+    if ($parts === []) {
+        return '';
     }
 
-    return '';
+    return implode(', and ', $parts) . ':';
+}
+
+
+/**
+ * Questions rendered under a parent option, in form order.
+ *
+ * @return array<string, array<string, list<string>>>
+ */
+function tylilo_inquiry_under_children(): array
+{
+    $map = [];
+    foreach (tylilo_inquiry_questions() as $key => $q) {
+        $under = $q['under'] ?? null;
+        if (!is_array($under) || !is_string($under['field'] ?? null) || $under['field'] === '') {
+            continue;
+        }
+        $opts = $under['option'] ?? [];
+        $opts = is_array($opts) ? $opts : [$opts];
+        foreach ($opts as $opt) {
+            if (!is_string($opt) && !is_int($opt)) {
+                continue;
+            }
+            $map[$under['field']][(string) $opt][] = $key;
+        }
+    }
+
+    return $map;
+}
+
+/**
+ * True when this option is the last trigger for the child in the parent options list.
+ *
+ * @param array<string, mixed> $parent
+ */
+function tylilo_inquiry_under_here(array $parent, string $option, string $childKey): bool
+{
+    $child = tylilo_inquiry_questions()[$childKey] ?? null;
+    if (!is_array($child) || !is_array($child['under'] ?? null)) {
+        return false;
+    }
+    $opts = $child['under']['option'] ?? [];
+    $opts = is_array($opts) ? $opts : [$opts];
+    $opts = array_map('strval', $opts);
+    if (!in_array($option, $opts, true)) {
+        return false;
+    }
+    $last = null;
+    foreach (array_keys($parent['options'] ?? []) as $value) {
+        if (in_array((string) $value, $opts, true)) {
+            $last = (string) $value;
+        }
+    }
+
+    return $last === $option;
 }
 
 /**
@@ -42,6 +98,11 @@ function tylilo_inquiry_when_note(array $when): string
 function tylilo_inquiry_field_html(string $key, array $q, array $old, array $errors): string
 {
     $id = 'inq-' . str_replace('_', '-', $key);
+    // A text follow-up such as goals_other would otherwise share
+    // inq-goals-other with the parent option that reveals it.
+    if (isset($q['under']) && ($q['type'] ?? '') !== 'radio' && ($q['type'] ?? '') !== 'checkbox') {
+        $id .= '-text';
+    }
     $required = !empty($q['required']);
     $error = $errors[$key] ?? '';
     $hint = (string) ($q['hint'] ?? '');
@@ -68,6 +129,8 @@ function tylilo_inquiry_field_html(string $key, array $q, array $old, array $err
         }
         $html .= '<div class="inq-options">';
         $current = $old[$key] ?? ($q['type'] === 'checkbox' ? [] : '');
+        $children = tylilo_inquiry_under_children()[$key] ?? [];
+        $renderedReveal = [];
         foreach ($q['options'] as $value => $label) {
             $value = (string) $value;
             $optId = $id . '-' . str_replace('_', '-', $value);
@@ -76,16 +139,40 @@ function tylilo_inquiry_field_html(string $key, array $q, array $old, array $err
                 : $current === $value;
             $optHint = (string) ($q['option_hints'][$value] ?? '');
             $name = $q['type'] === 'checkbox' ? $key . '[]' : $key;
+            $revealIds = [];
+            foreach ($children[$value] ?? [] as $childKey) {
+                $revealIds[] = 'inq-reveal-' . str_replace('_', '-', $childKey);
+            }
+            $controls = $revealIds !== [] ? ' aria-controls="' . implode(' ', array_unique($revealIds)) . '"' : '';
+            $html .= '<div class="inq-option-block">';
             $html .= '<label class="inq-option" for="' . $optId . '">'
                 . '<input type="' . $q['type'] . '" id="' . $optId . '" name="' . tylilo_e($name) . '" value="' . tylilo_e($value) . '"'
                 . ($checked ? ' checked' : '')
-                . ($required && $q['type'] === 'radio' ? ' required' : '')
+                . ($required && $q['type'] === 'radio' && empty($q['when']) ? ' required' : '')
                 . ($error !== '' ? ' aria-invalid="true"' : '')
+                . $controls
                 . ($optHint !== '' ? ' aria-describedby="' . $optId . '-hint"' : '')
                 . '>'
                 . '<span class="inq-option-text"><span class="inq-option-label">' . tylilo_e((string) $label) . '</span>'
                 . ($optHint !== '' ? '<span class="inq-option-hint" id="' . $optId . '-hint">' . tylilo_e($optHint) . '</span>' : '')
                 . '</span></label>';
+            foreach ($children[$value] ?? [] as $childKey) {
+                if (isset($renderedReveal[$childKey]) || !tylilo_inquiry_under_here($q, $value, $childKey)) {
+                    continue;
+                }
+                $renderedReveal[$childKey] = true;
+                $child = tylilo_inquiry_questions()[$childKey];
+                $when = is_array($child['when'] ?? null) ? $child['when'] : [];
+                $revealId = 'inq-reveal-' . str_replace('_', '-', $childKey);
+                $html .= '<div class="inq-reveal" id="' . $revealId . '" data-reveal-when="' . tylilo_e((string) json_encode($when, JSON_UNESCAPED_SLASHES)) . '">';
+                $note = tylilo_inquiry_when_note($when);
+                if ($note !== '') {
+                    $html .= '<p class="inq-when">' . tylilo_e($note) . '</p>';
+                }
+                $html .= tylilo_inquiry_field_html($childKey, $child, $old, $errors);
+                $html .= '</div>';
+            }
+            $html .= '</div>';
         }
         $html .= '</div></fieldset>';
 
@@ -97,7 +184,10 @@ function tylilo_inquiry_field_html(string $key, array $q, array $old, array $err
     if (isset($q['max'])) {
         $attrs .= ' maxlength="' . (int) $q['max'] . '"';
     }
-    if ($required) {
+    // Conditional questions get a required check in JS and on the server.
+    // A static required attribute would block a no-JS submit when the
+    // follow-up does not apply.
+    if ($required && empty($q['when'])) {
         $attrs .= ' required aria-required="true"';
     }
     if (isset($q['autocomplete'])) {
@@ -109,7 +199,7 @@ function tylilo_inquiry_field_html(string $key, array $q, array $old, array $err
     if ($error !== '') {
         $attrs .= ' aria-invalid="true"';
     }
-    $html .= '<div class="inq-q" data-field="' . tylilo_e($key) . '">';
+    $html .= '<div class="inq-q" data-field="' . tylilo_e($key) . '"' . ($required ? ' data-required="1"' : '') . '>';
     $html .= '<label class="inq-label" for="' . $id . '">' . tylilo_e((string) $q['label']) . $req . '</label>';
     if ($hint !== '') {
         $html .= '<p class="inq-hint" id="' . $id . '-hint">' . tylilo_e($hint) . '</p>';
@@ -128,7 +218,7 @@ function tylilo_inquiry_field_html(string $key, array $q, array $old, array $err
         $html .= '<input type="' . $type . '"' . $attrs . $extra . ' value="' . tylilo_e($value) . '">';
     }
     if ($key === 'email') {
-        $html .= '<p class="inq-hint inq-privacy">We use your email only to reply and to send you a copy of your answers. See the <a href="/privacy#inquiries">privacy policy</a>.</p>';
+        $html .= '<p class="inq-hint inq-privacy">We use your email only to reply and to send you a copy of your answers. See the <a href="/privacy#inquiries" target="_blank" rel="noopener">privacy policy<span class="visually-hidden"> (opens in a new window)</span></a>.</p>';
     }
     $html .= '</div>';
 
@@ -160,6 +250,9 @@ function tylilo_inquiry_form_html(array $old, array $errors, string $csrf, strin
         $groupWhen = null;
         foreach ($step['fields'] as $key) {
             $q = $questions[$key];
+            if (isset($q['under'])) {
+                continue;
+            }
             $when = $q['when'] ?? null;
             $whenJson = $when === null ? null : json_encode($when, JSON_UNESCAPED_SLASHES);
             if ($whenJson !== $groupWhen) {

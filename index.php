@@ -7,7 +7,7 @@ require __DIR__ . '/includes/bootstrap.php';
 /**
  * HOMEPAGE COPY
  * -------------
- * Consulting comes first. Software is second. The Arcade is a side note.
+ * Consulting comes first. Software is second. The UDLR Arcade lives in the footer only.
  * Testimonials are the array in includes/testimonials.php. Leave it empty
  * until a real quote exists. Messages go to TYLILO_CONTACT_EMAIL in config.php.
  * That address is not shown on the page.
@@ -174,11 +174,6 @@ require __DIR__ . '/includes/head.php';
       </div>
     </section>
 
-    <aside class="side-note" aria-label="Side project">
-      <div class="signal-inner">
-        <p>Also from Tylilo, LLC: the <a href="/arcade/">Arcade</a>, a side project of browser games.</p>
-      </div>
-    </aside>
   </main>
   <script type="application/ld+json" nonce="<?= tylilo_e($cspNonce) ?>">
     <?= json_encode([

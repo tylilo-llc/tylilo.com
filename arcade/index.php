@@ -49,11 +49,11 @@ $games = [
     ],
 ];
 
-$pageTitle = 'Arcade — Tylilo';
-$pageDescription = 'Browser games from Tylilo, including Solitaire, Red Rain, Pop Spiral, and Jungle Rescue.';
+$pageTitle = 'UDLR Arcade — Tylilo, LLC';
+$pageDescription = 'The UDLR Arcade is a side project of browser games from Tylilo, LLC, including Solitaire, Red Rain, Pop Spiral, and Jungle Rescue.';
 $pageCanonical = TYLILO_URL . '/arcade/';
 $pageImage = '/assets/img/og-arcade.jpg';
-$pageImageAlt = 'Tylilo Arcade: a neon ARCADE sign over a montage of Solitaire, Red Rain, Pop Spiral, and Jungle Rescue box art';
+$pageImageAlt = 'The UDLR Arcade: a neon ARCADE sign over a montage of Solitaire, Red Rain, Pop Spiral, and Jungle Rescue box art';
 $pageRobots = 'index, follow';
 
 $gameParts = [];
@@ -87,8 +87,9 @@ require __DIR__ . '/../includes/head.php';
   <main id="main" tabindex="-1">
     <div class="wrap wide">
       <div class="card about-card arcade-lead">
-        <p class="kicker">Play</p>
-        <h1>Arcade</h1>
+        <img class="udlr-logo" src="<?= tylilo_e(tylilo_asset('/assets/img/udlr-logo.webp')) ?>" alt="UDLR logo" width="280" height="107" decoding="async" fetchpriority="high">
+        <h1>UDLR Arcade</h1>
+        <p>The UDLR Arcade is a side project I build with my sons.</p>
       </div>
       <div class="arcade-grid">
 <?php foreach ($games as $index => $game): ?>
@@ -123,7 +124,7 @@ require __DIR__ . '/../includes/head.php';
     <?= json_encode([
         '@context' => 'https://schema.org',
         '@type' => 'CollectionPage',
-        'name' => 'Arcade',
+        'name' => 'UDLR Arcade',
         'url' => TYLILO_URL . '/arcade/',
         'description' => $pageDescription,
         'image' => TYLILO_URL . $pageImage,

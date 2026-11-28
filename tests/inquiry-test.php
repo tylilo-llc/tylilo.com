@@ -143,6 +143,65 @@ check(str_contains($html, 'href="/privacy#inquiries"'), 'the email field links t
 check(!preg_match('/\$\s?\d/', $html) && stripos($html, 'price') === false, 'the form shows no prices');
 check(stripos($html, 'faceless') === false, 'the form does not use the word faceless');
 
+
+check(str_contains($html, 'href="/privacy#inquiries" target="_blank" rel="noopener"'), 'the privacy link opens in a new window');
+check(str_contains($html, 'opens in a new window'), 'the privacy link tells screen readers it opens in a new window');
+check(str_contains($html, 'type="email"') && str_contains($html, 'id="inq-email"') && str_contains($html, 'autocomplete="email"'), 'the email field is type=email with autocomplete=email');
+check(strpos($html, 'id="inq-stage-idea"') < strpos($html, 'name="idea_what"') && strpos($html, 'name="idea_what"') < strpos($html, 'id="inq-stage-first-year"'), 'the idea text box sits under the idea option');
+check(strpos($html, 'id="inq-goals-other"') < strpos($html, 'name="goals_other"') && str_contains($html, 'id="inq-reveal-goals-other"'), 'the Other text box sits under the Other option');
+check(strpos($html, 'id="inq-goals-financing"') < strpos($html, 'name="money_purpose"') && strpos($html, 'name="money_purpose"') < strpos($html, 'id="inq-goals-mission"'), 'the financing text box sits under the financing and sale options');
+check(strpos($html, 'id="inq-growth-bottleneck-other"') < strpos($html, 'name="growth_other"'), 'the Something else text box sits under that option');
+check(str_contains($html, 'aria-controls="inq-reveal-goals-other"'), 'the Other option names the text box it reveals');
+
+$ids = [];
+preg_match_all('/\\sid="([^"]+)"/', $html, $m);
+foreach (array_count_values($m[1]) as $id => $n) {
+    if ($n > 1) {
+        $ids[] = $id;
+    }
+}
+check($ids === [], 'every form id is unique' . ($ids !== [] ? ' (duplicates: ' . implode(', ', $ids) . ')' : ''));
+check(str_contains($html, 'id="inq-goals-other-text"') && str_contains($html, 'for="inq-goals-other-text"'), 'the Other text box has its own id');
+
+$r = tylilo_inquiry_validate(['stage' => 'idea', 'idea_what' => ''] + $base, 'token');
+check(isset($r['errors']['idea_what']) && str_contains($r['errors']['idea_what'], 'What is the idea?'), 'an idea without a description is rejected and the error names the field');
+$r = tylilo_inquiry_validate(['stage' => 'idea', 'idea_what' => 'A lawn care route in Knoxville.', 'idea_tested' => 'talked', 'idea_launch' => 'year'] + $base, 'token');
+check(!isset($r['errors']['idea_what']) && !isset($r['errors']['idea_tested']) && !isset($r['errors']['idea_launch']), 'a described idea with its follow-ups passes those checks');
+
+$r = tylilo_inquiry_validate(['goals' => ['other'], 'goals_other' => ''] + $base, 'token');
+check(isset($r['errors']['goals_other']) && str_contains($r['errors']['goals_other'], 'success looks like'), 'Other without a description is rejected');
+$r = tylilo_inquiry_validate(['goals' => ['other'], 'goals_other' => 'Stay open after I step back.', 'obstacle' => 'Finding the right person.'] + $base, 'token');
+check(!isset($r['errors']['goals_other']) && $r['clean']['obstacle'] === 'Finding the right person.', 'Other alone uses the biggest-obstacle follow-up');
+$rows = tylilo_inquiry_summary($r['clean']);
+$joined = implode("\n", array_map(static fn (array $row): string => $row[0] . ' ' . $row[1], $rows));
+check(str_contains($joined, 'Stay open after I step back.'), 'the Other text is in the summary used for email and admin');
+
+$r = tylilo_inquiry_validate(['goals' => ['growth'], 'growth_bottleneck' => 'other', 'growth_other' => ''] + $base, 'token');
+check(isset($r['errors']['growth_other']), 'Something else without a description is rejected');
+$r = tylilo_inquiry_validate(['goals' => ['growth'], 'growth_bottleneck' => 'other', 'growth_other' => 'Insurance paperwork.'] + $base, 'token');
+check(!isset($r['errors']['growth_other']) && $r['clean']['growth_other'] === 'Insurance paperwork.', 'Something else with a description is kept');
+
+$r = tylilo_inquiry_validate(['goals' => ['exit'], 'money_purpose' => '', 'money_timeline' => '1to3'] + $base, 'token');
+check(isset($r['errors']['money_purpose']) && str_contains($r['errors']['money_purpose'], 'financing or sale'), 'a blank financing purpose is rejected when that branch is shown');
+$r = tylilo_inquiry_validate(['goals' => ['exit'], 'money_purpose' => 'A sale to a family member.', 'money_timeline' => '1to3'] + $base, 'token');
+check(!isset($r['errors']['money_purpose']) && !isset($r['errors']['money_timeline']), 'a financing purpose and timeline pass when that branch is shown');
+
+check(tylilo_inquiry_email_suggestion('ryan@gmial.com') === 'ryan@gmail.com', 'gmial.com is suggested as gmail.com');
+check(tylilo_inquiry_email_suggestion('ryan@yaho.com') === 'ryan@yahoo.com', 'yaho.com is suggested as yahoo.com');
+check(tylilo_inquiry_email_suggestion('ryan@hotmial.com') === 'ryan@hotmail.com', 'hotmial.com is suggested as hotmail.com');
+check(tylilo_inquiry_email_suggestion('ryan@outlok.com') === 'ryan@outlook.com', 'outlok.com is suggested as outlook.com');
+check(tylilo_inquiry_email_suggestion('ryan@gmail.com') === '', 'a correct Gmail address gets no suggestion');
+$r = tylilo_inquiry_validate(['email' => str_repeat('a', 240) . '@x.com'] + $base, 'token');
+check(isset($r['errors']['email']), 'an over-long email is rejected');
+check(tylilo_inquiry_email_domain_ok('tylilo.com') === true, 'a real domain passes the mail lookup');
+check(tylilo_inquiry_email_domain_ok('nodot') === false, 'a domain without a dot is rejected');
+
+$privacy = (string) file_get_contents(dirname(__DIR__) . '/privacy.php');
+check(str_contains($privacy, 'tyliloInquiryDraft'), 'the privacy policy names the inquiry draft key');
+check(str_contains($privacy, 'jungleRescueLbQueue'), 'the Arcade storage-key paragraph is still intact');
+check(str_contains((string) file_get_contents(dirname(__DIR__) . '/assets/js/inquiry.js'), 'tyliloInquiryDraft'), 'the form script saves a draft under that key');
+check(str_contains((string) file_get_contents(dirname(__DIR__) . '/inquiry.php'), 'sessionStorage.removeItem("tyliloInquiryDraft")'), 'a successful send clears the draft');
+
 $_SERVER['HTTP_HOST'] = 'tylilo.com';
 check(tylilo_inquiry_selftest_ok(str_repeat('a', 40)) === false, 'the preview self-test token never works on the live host');
 

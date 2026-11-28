@@ -260,40 +260,54 @@ a { color: inherit; }
 
 .theme {
   display: inline-flex;
-  background: rgba(255, 246, 234, 0.12);
-  border: 1px solid rgba(255, 246, 234, 0.2);
-  border-radius: 999px;
-  padding: 0.18rem;
-  gap: 0.1rem;
+  margin-left: auto;
 }
 
 .theme button {
   appearance: none;
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
+  gap: 0.4rem;
   min-width: 2.75rem;
   min-height: 2.75rem;
-  padding: 0;
-  border: 2px solid transparent;
-  background: transparent;
+  height: 2.75rem;
+  padding: 0 0.7rem;
+  border: 1px solid rgba(255, 246, 234, 0.35);
+  background: rgba(255, 246, 234, 0.12);
   color: var(--hero-text);
   border-radius: 999px;
   cursor: pointer;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1;
 }
 
-.theme button svg {
+.theme button:hover {
+  background: rgba(255, 246, 234, 0.22);
+}
+
+.theme-icon {
   display: block;
+  flex: 0 0 auto;
   width: 1.375rem;
   height: 1.375rem;
 }
 
-.theme button[aria-pressed="true"] {
-  background: var(--btn-bg);
-  color: var(--btn-text);
-  border-color: var(--btn-text);
+.theme-icon[hidden] {
+  display: none;
+}
+
+.theme-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.theme-label {
+  line-height: 1;
 }
 
 .hero-inner {
@@ -332,9 +346,16 @@ a { color: inherit; }
 }
 
 .hero-cta,
-.btn {
-  display: inline-block;
+.btn,
+a.btn,
+button.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
   appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
   border: 0;
   cursor: pointer;
   font-family: inherit;
@@ -343,24 +364,34 @@ a { color: inherit; }
   line-height: 1.2;
   text-decoration: none;
   text-align: center;
-  min-height: 2.75rem;
+  min-height: 44px;
+  padding: 0 1.2rem;
   border-radius: 999px;
+}
+
+.hero-cta p,
+.btn p,
+a.btn p,
+button.btn p {
+  margin: 0;
 }
 
 .hero-cta {
   margin-top: 1.35rem;
   background: var(--btn-bg);
   color: var(--btn-text);
-  padding: 0.8rem 1.5rem;
+  padding: 0 1.5rem;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
 .hero-cta:hover { background: #ffffff; }
 
-.btn {
+.btn,
+a.btn,
+button.btn {
   background: var(--btn2-bg);
   color: var(--btn2-text);
-  padding: 0.8rem 1.2rem;
+  padding: 0 1.2rem;
 }
 
 .btn:hover { filter: brightness(1.08); }
@@ -523,10 +554,11 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
   width: 100%;
-  min-height: 2.75rem;
+  min-height: 44px;
   margin-top: 0.45rem;
-  padding: 0.55rem 0.75rem;
+  padding: 0 0.75rem;
   border: 2px solid var(--field-border);
   border-radius: 999px;
   background: var(--card-bg);
@@ -734,8 +766,11 @@ h2 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 2.75rem;
-  padding: 0.4rem 0.8rem;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 0 0.8rem;
+  line-height: 1.2;
+  text-align: center;
   border-radius: 999px;
   background: var(--card-bg);
   color: var(--ink);
@@ -854,10 +889,12 @@ html.js .admin-menu-panel.is-open {
 .admin-menu-panel button {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
+  box-sizing: border-box;
   width: 100%;
-  min-height: 2.75rem;
+  min-height: 44px;
   margin: 0.1rem 0;
-  padding: 0.4rem 0.8rem;
+  padding: 0 0.8rem;
   border: 2px solid transparent;
   border-radius: 0.75rem;
   background: transparent;
@@ -1279,10 +1316,16 @@ dialog label {
 }
 
 main form button {
-  min-height: 2.75rem;
-  padding: 0.45rem 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 0 0.9rem;
   font: inherit;
   font-weight: 800;
+  line-height: 1.2;
+  text-align: center;
   color: var(--ink);
   background: var(--card-bg);
   border: 2px solid var(--navy);
@@ -1391,7 +1434,7 @@ main form button.btn {
   .hero-cta,
   .btn,
   .arcade-tile,
-  .theme button[aria-pressed="true"],
+  .theme button,
   .admin-menu-toggle,
   .admin-menu-panel,
   .idea-dialog,
@@ -1783,10 +1826,12 @@ html.signal .site-nav a {
 
 html.signal .site-nav a[aria-current="page"] { border-bottom-color: #FFFFFF; }
 
-html.signal .theme { margin-left: auto; border-color: #8FB0D4; border-radius: 4px; }
+html.signal .theme { margin-left: auto; }
 
-html.signal .theme button,
-html.signal .theme button[aria-pressed="true"] { border-radius: 4px; }
+html.signal .theme button {
+  border-radius: 4px;
+  border-color: #8FB0D4;
+}
 
 html.signal .skip-link:focus,
 html.signal .skip-link:focus-visible {
@@ -1849,13 +1894,29 @@ html.signal .hero-actions {
 }
 
 html.signal .btn,
+html.signal a.btn,
 html.signal button.btn,
-html.signal main form button.btn {
+html.signal main form button.btn,
+html.signal .signal-hero .btn,
+html.signal .signal-hero .btn-quiet {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
   border-radius: 4px;
   box-shadow: none;
   font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
   min-height: 48px;
-  padding: 8px 24px;
+  padding: 0 24px;
+  margin: 0;
+}
+
+html.signal .btn p,
+html.signal a.btn p,
+html.signal button.btn p {
+  margin: 0;
 }
 
 html.signal .signal-hero .btn {
@@ -2005,6 +2066,22 @@ html.signal .game-tile-art {
 
 html.signal .arcade-lead.card { background: transparent; border: 0; padding-left: 0; padding-right: 0; }
 
+html.signal .udlr-logo {
+  display: block;
+  width: min(280px, 100%);
+  height: auto;
+  margin: 0 0 12px;
+}
+
+html.signal .arcade-lead h1 { margin: 0 0 12px; }
+
+html.signal .arcade-lead p {
+  max-width: 36rem;
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.0625rem;
+}
+
 @media (min-width: 720px) {
   html.signal .signal-inner,
   html.signal .wrap,
@@ -2135,8 +2212,15 @@ html.signal .form-status ul { margin: 8px 0 0; padding-left: 20px; font-weight: 
 html.signal .form-status a { color: inherit; text-decoration: underline; }
 
 html.signal .site-nav .nav-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
   margin-left: 8px;
-  padding: 8px 16px;
+  min-height: 44px;
+  padding: 0 16px;
+  line-height: 1.2;
+  text-align: center;
   border: 1px solid #8FB0D4;
   border-radius: 4px;
 }
@@ -2270,6 +2354,45 @@ html.signal .inq-option-label { font-weight: 600; }
 
 html.signal .inq-option-hint { color: var(--muted); font-size: 0.9375rem; line-height: 1.45; }
 
+html.signal .inq-option-block { display: grid; gap: 8px; }
+
+html.signal .inq-reveal {
+  margin: 0;
+  padding: 4px 0 8px 2.75rem;
+}
+
+html.signal .inq-reveal .inq-q { margin: 0; }
+
+html.signal .inq-suggest {
+  margin: -4px 0 12px;
+  color: var(--muted);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+html.signal .inq-suggest[hidden] { display: none; }
+
+html.signal .inq-suggest-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  line-height: 1.2;
+  text-align: center;
+  border: 0;
+  background: none;
+  color: var(--focus);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+  cursor: pointer;
+}
+
+
 html.signal .inq-branch { display: grid; gap: 24px; }
 
 html.signal .inq-when { margin: 0; color: var(--muted); font-size: 0.875rem; font-weight: 600; }
@@ -2307,8 +2430,14 @@ html.signal .inq-actions {
 }
 
 html.signal main form button.inq-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
   min-height: 48px;
-  padding: 8px 20px;
+  padding: 0 20px;
+  line-height: 1.2;
+  text-align: center;
   border: 1px solid var(--line);
   border-radius: 4px;
   background: transparent;

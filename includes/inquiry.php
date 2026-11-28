@@ -49,27 +49,33 @@ function tylilo_inquiry_questions(): array
             'label' => 'What is the idea?',
             'type' => 'textarea',
             'max' => 1000,
+            'required' => true,
             'when' => ['stage' => ['idea']],
+            'under' => ['field' => 'stage', 'option' => 'idea'],
         ],
         'idea_tested' => [
             'label' => 'Has it been tested with real customers yet?',
             'type' => 'radio',
+            'required' => true,
             'options' => [
                 'not_yet' => 'Not yet',
                 'talked' => 'I have talked with possible customers',
                 'early' => 'Some early sales or a pilot',
             ],
             'when' => ['stage' => ['idea']],
+            'under' => ['field' => 'stage', 'option' => 'idea'],
         ],
         'idea_launch' => [
             'label' => 'When would you like to launch?',
             'type' => 'radio',
+            'required' => true,
             'options' => [
                 'soon' => 'Within 3 months',
                 'year' => 'In 3 to 12 months',
                 'open' => 'No date yet',
             ],
             'when' => ['stage' => ['idea']],
+            'under' => ['field' => 'stage', 'option' => 'idea'],
         ],
         'goals' => [
             'label' => 'What would success look like?',
@@ -85,14 +91,25 @@ function tylilo_inquiry_questions(): array
                 'exit' => 'Succession or exit',
                 'financing' => 'Ready for financing',
                 'mission' => 'Serve our mission or community',
+                'other' => 'Other',
             ],
             'option_hints' => [
                 'mission' => 'For charities, ministries, and nonprofits.',
             ],
         ],
+        'goals_other' => [
+            'label' => 'Tell us what success looks like for you',
+            'hint' => 'Required if you chose “Other”.',
+            'type' => 'textarea',
+            'max' => 1000,
+            'required' => true,
+            'when' => ['goals' => ['other']],
+            'under' => ['field' => 'goals', 'option' => 'other'],
+        ],
         'time_hours' => [
             'label' => 'About how many hours a week do you work?',
             'type' => 'radio',
+            'required' => true,
             'options' => [
                 'under40' => 'Under 40',
                 '40to55' => '40 to 55',
@@ -105,11 +122,13 @@ function tylilo_inquiry_questions(): array
             'label' => 'What can only you do right now?',
             'type' => 'textarea',
             'max' => 1000,
+            'required' => true,
             'when' => ['goals' => ['time']],
         ],
         'growth_bottleneck' => [
             'label' => 'What limits how much more you can take on?',
             'type' => 'radio',
+            'required' => true,
             'options' => [
                 'leads' => 'Finding enough customers',
                 'delivery' => 'Delivering the work',
@@ -120,15 +139,27 @@ function tylilo_inquiry_questions(): array
             ],
             'when' => ['goals' => ['growth']],
         ],
+        'growth_other' => [
+            'label' => 'Tell us what else limits how much more you can take on',
+            'hint' => 'Required if you chose “Something else”.',
+            'type' => 'textarea',
+            'max' => 1000,
+            'required' => true,
+            'when' => ['growth_bottleneck' => ['other']],
+            'under' => ['field' => 'growth_bottleneck', 'option' => 'other'],
+        ],
         'money_purpose' => [
             'label' => 'What is the financing or sale for?',
             'type' => 'textarea',
             'max' => 1000,
+            'required' => true,
             'when' => ['goals' => ['financing', 'exit']],
+            'under' => ['field' => 'goals', 'option' => ['exit', 'financing']],
         ],
         'money_timeline' => [
             'label' => 'What is the timeline?',
             'type' => 'radio',
+            'required' => true,
             'options' => [
                 'under6' => 'Under 6 months',
                 '6to12' => '6 to 12 months',
@@ -141,6 +172,7 @@ function tylilo_inquiry_questions(): array
             'label' => 'Where do things feel unclear?',
             'hint' => 'Choose all that apply.',
             'type' => 'checkbox',
+            'required' => true,
             'options' => [
                 'roles' => 'Who is responsible for what',
                 'processes' => 'How the work gets done',
@@ -153,6 +185,7 @@ function tylilo_inquiry_questions(): array
             'label' => 'Where would help matter most?',
             'hint' => 'Choose all that apply.',
             'type' => 'checkbox',
+            'required' => true,
             'options' => [
                 'reach' => 'Reach',
                 'people' => 'Volunteers and staff',
@@ -165,6 +198,7 @@ function tylilo_inquiry_questions(): array
             'label' => 'What is the biggest obstacle right now?',
             'type' => 'textarea',
             'max' => 1000,
+            'required' => true,
             'when' => ['goals_none_of' => ['time', 'growth', 'financing', 'exit', 'team', 'mission']],
         ],
         'size' => [
@@ -276,8 +310,8 @@ function tylilo_inquiry_steps(): array
 {
     return [
         ['id' => 'stage', 'title' => 'Where things stand', 'fields' => ['stage', 'idea_what', 'idea_tested', 'idea_launch']],
-        ['id' => 'goals', 'title' => 'What success looks like', 'fields' => ['goals']],
-        ['id' => 'detail', 'title' => 'A little more detail', 'fields' => ['time_hours', 'time_only_me', 'growth_bottleneck', 'money_purpose', 'money_timeline', 'team_unclear', 'mission_focus', 'obstacle']],
+        ['id' => 'goals', 'title' => 'What success looks like', 'fields' => ['goals', 'goals_other']],
+        ['id' => 'detail', 'title' => 'A little more detail', 'fields' => ['time_hours', 'time_only_me', 'growth_bottleneck', 'growth_other', 'money_purpose', 'money_timeline', 'team_unclear', 'mission_focus', 'obstacle']],
         ['id' => 'size', 'title' => 'Size', 'fields' => ['size', 'industry']],
         ['id' => 'timeline', 'title' => 'Timing', 'fields' => ['timeline']],
         ['id' => 'help', 'title' => 'Kind of help', 'fields' => ['help']],
@@ -355,6 +389,131 @@ function tylilo_inquiry_applies(array $question, array $answers): bool
  *
  * @return array{spam: bool, errors: array<string, string>, clean: array<string, mixed>}
  */
+
+/**
+ * Common mailbox-domain typos and the corrected domain.
+ *
+ * @return array<string, string>
+ */
+function tylilo_inquiry_email_typo_map(): array
+{
+    return [
+        'gmial.com' => 'gmail.com',
+        'gmal.com' => 'gmail.com',
+        'gamil.com' => 'gmail.com',
+        'gnail.com' => 'gmail.com',
+        'gmaill.com' => 'gmail.com',
+        'gmail.con' => 'gmail.com',
+        'gmail.co' => 'gmail.com',
+        'gmai.com' => 'gmail.com',
+        'googlemail.com' => 'gmail.com',
+        'yaho.com' => 'yahoo.com',
+        'yahho.com' => 'yahoo.com',
+        'yahooo.com' => 'yahoo.com',
+        'yahoo.con' => 'yahoo.com',
+        'yahoocom' => 'yahoo.com',
+        'hotmial.com' => 'hotmail.com',
+        'hotmal.com' => 'hotmail.com',
+        'hotmai.com' => 'hotmail.com',
+        'hotmail.con' => 'hotmail.com',
+        'outlok.com' => 'outlook.com',
+        'outlock.com' => 'outlook.com',
+        'outloo.com' => 'outlook.com',
+        'outlook.con' => 'outlook.com',
+        'iclod.com' => 'icloud.com',
+        'icloud.con' => 'icloud.com',
+        'protonmai.com' => 'protonmail.com',
+        'protonmal.com' => 'protonmail.com',
+        'live.con' => 'live.com',
+        'msn.con' => 'msn.com',
+        'aol.con' => 'aol.com',
+        'me.con' => 'me.com',
+    ];
+}
+
+/**
+ * @return list<string>
+ */
+function tylilo_inquiry_email_known_domains(): array
+{
+    return [
+        'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com',
+        'aol.com', 'live.com', 'msn.com', 'me.com', 'mac.com', 'ymail.com',
+        'proton.me', 'protonmail.com', 'comcast.net', 'verizon.net', 'att.net',
+        'sbcglobal.net', 'googlemail.com',
+    ];
+}
+
+/**
+ * A corrected address if the domain looks like a common typo, otherwise "".
+ */
+function tylilo_inquiry_email_suggestion(string $email): string
+{
+    $email = strtolower(trim($email));
+    $at = strrpos($email, '@');
+    if ($at === false || $at === 0 || $at === strlen($email) - 1) {
+        return '';
+    }
+    $local = substr($email, 0, $at);
+    $domain = rtrim(substr($email, $at + 1), '.');
+    if ($local === '' || $domain === '') {
+        return '';
+    }
+    $map = tylilo_inquiry_email_typo_map();
+    if (isset($map[$domain]) && $map[$domain] !== $domain) {
+        return $local . '@' . $map[$domain];
+    }
+    if (in_array($domain, tylilo_inquiry_email_known_domains(), true)) {
+        return '';
+    }
+    $best = '';
+    $bestDist = 3;
+    foreach (tylilo_inquiry_email_known_domains() as $candidate) {
+        $dist = levenshtein($domain, $candidate);
+        if ($dist > 0 && $dist < $bestDist) {
+            $bestDist = $dist;
+            $best = $candidate;
+        }
+    }
+    if ($best !== '' && $bestDist <= 2) {
+        return $local . '@' . $best;
+    }
+
+    return '';
+}
+
+/**
+ * True if the domain has an MX, A, or AAAA record. DNS failures return true
+ * so a temporary lookup problem does not reject a real address.
+ */
+function tylilo_inquiry_email_domain_ok(string $domain): bool
+{
+    if (defined('TYLILO_INQUIRY_SKIP_EMAIL_DNS') && TYLILO_INQUIRY_SKIP_EMAIL_DNS) {
+        return true;
+    }
+    $domain = rtrim(strtolower($domain), '.');
+    if ($domain === '' || !str_contains($domain, '.')) {
+        return false;
+    }
+    try {
+        $mx = @dns_get_record($domain, DNS_MX);
+        if ($mx === false) {
+            return true;
+        }
+        if ($mx !== []) {
+            return true;
+        }
+        $a = @dns_get_record($domain, DNS_A | DNS_AAAA);
+        if ($a === false) {
+            return true;
+        }
+
+        return $a !== [];
+    } catch (Throwable $e) {
+        return true;
+    }
+}
+
 function tylilo_inquiry_validate(array $post, string $expectedCsrf): array
 {
     $questions = tylilo_inquiry_questions();
@@ -394,11 +553,13 @@ function tylilo_inquiry_validate(array $post, string $expectedCsrf): array
         $value = $clean[$key];
         $empty = $value === '' || $value === [];
         if (!empty($q['required']) && $empty) {
+            $label = trim((string) ($q['label'] ?? ''));
+            $named = $label === '' ? 'Please fill this in.' : ('Please fill in: ' . $label . (preg_match('/[?.!]$/u', $label) === 1 ? '' : '.'));
             $errors[$key] = match ($q['type']) {
                 'checkbox' => 'Please choose at least one.',
                 'radio' => 'Please choose one.',
                 'email' => 'Please enter your email address.',
-                default => 'Please fill this in.',
+                default => $named,
             };
             continue;
         }
@@ -407,8 +568,15 @@ function tylilo_inquiry_validate(array $post, string $expectedCsrf): array
         }
     }
 
-    if (!isset($errors['email']) && $clean['email'] !== '' && filter_var($clean['email'], FILTER_VALIDATE_EMAIL) === false) {
-        $errors['email'] = 'That email address does not look right.';
+    if (!isset($errors['email']) && $clean['email'] !== '') {
+        if (filter_var($clean['email'], FILTER_VALIDATE_EMAIL) === false) {
+            $errors['email'] = 'That email address does not look right.';
+        } else {
+            $domain = substr($clean['email'], strrpos($clean['email'], '@') + 1);
+            if (!tylilo_inquiry_email_domain_ok($domain)) {
+                $errors['email'] = 'We could not find that email domain. Please check the spelling.';
+            }
+        }
     }
 
     $clean['consent'] = isset($post['consent']) && $post['consent'] === 'yes';

@@ -33,8 +33,8 @@ require __DIR__ . '/includes/head.php';
         <h2>Using this site</h2>
         <p>The information on this site is general and provided as is. We work to keep it accurate, but we do not promise it is complete or current. Please do not misuse the site, try to break its security, or send automated submissions through its forms.</p>
 
-        <h2>Arcade</h2>
-        <p>The Arcade games are offered for fun, free of charge, and as is. Names saved to the leaderboard must not be offensive or impersonate someone, and we may remove any entry.</p>
+        <h2>UDLR Arcade</h2>
+        <p>The UDLR Arcade games are offered for fun, free of charge, and as is. Names saved to the leaderboard must not be offensive or impersonate someone, and we may remove any entry.</p>
 
         <h2>Your information</h2>
         <p>The <a href="/privacy">privacy policy</a> explains what the site collects and how it is used.</p>

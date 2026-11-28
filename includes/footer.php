@@ -21,7 +21,7 @@ if (!defined('TYLILO_BOOTSTRAPPED')) {
         <a href="/#software">Software</a>
         <a href="/#about">About</a>
         <a href="/#contact">Contact</a>
-        <a href="/arcade/"<?php if (($pageCanonical ?? '') === TYLILO_URL . '/arcade/'): ?> aria-current="page"<?php endif; ?>>Arcade</a>
+        <a href="/arcade/"<?php if (($pageCanonical ?? '') === TYLILO_URL . '/arcade/'): ?> aria-current="page"<?php endif; ?>>UDLR Arcade</a>
       </nav>
       <nav aria-label="Company">
         <p class="footer-label">Company</p>
@@ -36,7 +36,7 @@ if (!defined('TYLILO_BOOTSTRAPPED')) {
     <p class="legal">© <?= tylilo_e(TYLILO_YEAR) ?> <?= tylilo_e(TYLILO_LEGAL_NAME) ?><a class="legal-sign" href="/admin/" rel="nofollow">Sign in</a></p>
 <?php else: ?>
     <nav aria-label="Footer">
-      <a href="/arcade/">Arcade</a>
+      <a href="/arcade/">UDLR Arcade</a>
       <a href="/accessibility">Accessibility</a>
       <a href="/privacy">Privacy</a>
     </nav>
