@@ -50,7 +50,7 @@ $guardAt = strpos($usersPage, 'tylilo_admin_is_owner');
 $actionAt = strpos($usersPage, "\$action === 'reset'");
 check($guardAt !== false && $actionAt !== false && $guardAt < $actionAt, 'the users page checks the owner before it can issue a reset');
 check(str_contains($usersPage, 'Reset password<span class="visually-hidden"> for '), 'each reset button names the account');
-check(str_contains($privacy, 'November 27, 2026') && str_contains($privacy, 'a hash of that link') && str_contains($privacy, '24 hours'), 'privacy describes hashed reset links that expire after 24 hours');
+check(str_contains($privacy, 'November 28, 2026') && str_contains($privacy, 'a hash of that link') && str_contains($privacy, '24 hours'), 'privacy describes hashed reset links that expire after 24 hours');
 
 $samHash = tylilo_admin_hash_password('old-sam-password');
 $totp = 'JBSWY3DPEHPK3PXP';
