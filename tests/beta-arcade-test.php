@@ -41,7 +41,7 @@ check(tylilo_beta_stage('crash-cars') === 'alpha' && tylilo_beta_stage('jumpy-ju
 check(count($early) === 1 && $early[0]['slug'] === 'crash-cars' && $early[0]['badge'] === 'Alpha' && $early[0]['href'] === '/arcade/crash-cars/', 'the Arcade section lists only Crash Cars by default, with an Alpha badge');
 
 $path = tylilo_beta_arcade_public_file('crash-cars');
-check(is_string($path) && is_file($path) && md5_file($path) === '4f66cf2f558c80a3ed010c1e41d0b6dd', 'the public Crash Cars file is the unchanged 2.4 build');
+check(is_string($path) && is_file($path) && md5_file($path) === '875c72a7b950fa554cab0faa293e0fbd', 'the public Crash Cars file is the unchanged 2.4.1 build');
 check(tylilo_beta_arcade_public_file('solitaire') === null, 'released Arcade games are not served through the beta gate file helper');
 
 $htaccess = (string) file_get_contents($root . '/.htaccess');
@@ -159,7 +159,7 @@ check(!str_contains($privacy, 'Other unpublished beta games') && !str_contains($
 $starbase = $root . '/beta/starbase-defender/index.html';
 $crashFile = tylilo_beta_arcade_public_file('crash-cars');
 check(is_file($starbase) && md5_file($starbase) === 'fc4a0aaa283bacf5d12c569fc49871ff', 'the Starbase Defender file is the unchanged 1.5.0 build');
-check(is_string($crashFile) && md5_file($crashFile) === '4f66cf2f558c80a3ed010c1e41d0b6dd', 'the public Crash Cars file stays the unchanged 2.4 build after the stage work');
+check(is_string($crashFile) && md5_file($crashFile) === '875c72a7b950fa554cab0faa293e0fbd', 'the public Crash Cars file stays the unchanged 2.4.1 build after the stage work');
 
 echo "\n{$checks} checks, {$failed} failed\n";
 

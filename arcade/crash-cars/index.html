@@ -83,6 +83,7 @@
   @media (min-width:900px){#title{align-items:flex-start;padding-left:7vw;box-sizing:border-box;background:linear-gradient(90deg,rgba(20,90,220,.35),rgba(0,0,0,0) 55%)} #title h1{font-size:130px} .help{text-align:left}}
   @keyframes wob{50%{transform:rotate(-1deg) scale(1.04)}}
   #ver{position:fixed;right:14px;bottom:10px;font-size:16px;color:#fff;-webkit-text-stroke:1px #111;opacity:.9}
+  #stageLbl{margin-top:10px;font-size:22px;letter-spacing:3px;color:#fff;background:#ff3030;border:4px solid #111;border-radius:14px;padding:2px 14px 0;box-shadow:0 4px 0 #111;-webkit-text-stroke:1px #111}
   .credit{margin-top:16px;font-size:16px;color:#fff;-webkit-text-stroke:1px #111;text-shadow:0 2px 0 #111}
   #arcadeBack{margin-top:8px}
   .menu .credit{margin-top:2px;font-size:14px;color:#222;-webkit-text-stroke:0;text-shadow:none;letter-spacing:.4px}
@@ -465,6 +466,7 @@
 <div id="aftHint" class="fnt hidden"><span id="aftTxt">TAP / PRESS ANY KEY TO SKIP</span><i id="aftBar"><b id="aftFill"></b></i><em id="aftPts"></em></div>
 <div id="title" class="fnt">
   <h1>CRASH<br><span>CARS</span></h1>
+  <div id="stageLbl">ALPHA</div>
   <div class="panel">
     <div class="lbl">PICK YOUR RIDE</div>
     <div class="swatches" id="swatches"></div>
@@ -863,8 +865,8 @@ function waterAt(x, z) { return Math.abs(x) > RAIL_X + 0.15 && terrainH(x, z) < 
 
 // ---------------- settings (persisted) ----------------
 // Single version string: the page title and the corner label are both set from this.
-const VERSION = '2.4';
-document.title = 'CRASH CARS ' + VERSION;
+const VERSION = '2.4.1';
+document.title = 'CRASH CARS ' + VERSION + ' ALPHA';
 { const verEl = document.getElementById('ver'); if (verEl) verEl.textContent = 'v' + VERSION; }
 const SKEY = 'crashcars.settings.v1';
 const DEFAULTS = { master: 80, sfx: 80, mute: false, music: true, musicVol: 55, quality: 'auto', shadows: true, shake: true, shakeAmt: 100, fps: false, units: 'mph',
