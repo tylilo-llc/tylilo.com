@@ -148,7 +148,7 @@ if ($case === '') {
     check(tylilo_contacts_purge_expired($now) === 0, 'a second purge finds nothing');
     check(!str_contains((string) file_get_contents($dir . '/contacts.json'), 'olly'), 'the purge log holds a count, not who');
 
-    foreach (['arcade-get', 'arcade-post', 'inq-get', 'owner-list', 'owner-profile', 'owner-note', 'owner-export', 'owner-delete', 'owner-delete-unconfirmed', 'lee-list'] as $name) {
+    foreach (['arcade-get', 'arcade-post', 'inq-get', 'owner-list', 'owner-profile', 'owner-note', 'owner-export', 'owner-delete', 'owner-delete-unconfirmed', 'lee-list', 'lee-profile', 'lee-export', 'lee-delete', 'lee-export-get', 'lee-delete-get'] as $name) {
         passthru(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__FILE__) . ' ' . escapeshellarg($name), $code);
         if ($code !== 0) {
             $failed++;
@@ -177,13 +177,13 @@ $token = bin2hex(random_bytes(32));
 $userId = match (true) {
     str_starts_with($case, 'arcade') => 2,
     $case === 'inq-get' => 3,
-    $case === 'lee-list' => 4,
+    str_starts_with($case, 'lee') => 4,
     default => 1,
 };
 if ($case === 'arcade-post') {
     $_SERVER['REQUEST_METHOD'] = 'POST';
     $_POST = ['csrf' => $token, 'action' => 'delete', 'confirm' => 'yes', 'id' => $alice];
-} elseif ($case === 'owner-profile') {
+} elseif ($case === 'owner-profile' || $case === 'lee-profile') {
     $_GET = ['c' => $alice];
 } elseif ($case === 'owner-note') {
     $_SERVER['REQUEST_METHOD'] = 'POST';
@@ -194,6 +194,16 @@ if ($case === 'arcade-post') {
 } elseif ($case === 'owner-delete' || $case === 'owner-delete-unconfirmed') {
     $_SERVER['REQUEST_METHOD'] = 'POST';
     $_POST = ['csrf' => $token, 'action' => 'delete', 'id' => $alice] + ($case === 'owner-delete' ? ['confirm' => 'yes'] : []);
+} elseif ($case === 'lee-export') {
+    $_SERVER['REQUEST_METHOD'] = 'POST';
+    $_POST = ['csrf' => $token, 'action' => 'export', 'id' => $alice, 'format' => 'json'];
+} elseif ($case === 'lee-delete') {
+    $_SERVER['REQUEST_METHOD'] = 'POST';
+    $_POST = ['csrf' => $token, 'action' => 'delete', 'confirm' => 'yes', 'id' => $alice];
+} elseif ($case === 'lee-export-get') {
+    $_GET = ['action' => 'export', 'id' => $alice, 'format' => 'json', 'c' => $alice];
+} elseif ($case === 'lee-delete-get') {
+    $_GET = ['action' => 'delete', 'confirm' => 'yes', 'id' => $alice, 'c' => $alice];
 }
 
 ini_set('session.save_path', $dir);
@@ -240,6 +250,15 @@ register_shutdown_function(static function () use (&$failed, $dir, $case, $alice
         check(!str_contains($inq, 'Ames Bakery') && str_contains($inq, 'Bob Bell'), 'deletes that person only');
     } elseif ($case === 'owner-delete-unconfirmed') {
         check(str_contains($html, 'confirm') && str_contains($inq, 'Ames Bakery'), 'refuses to delete without confirmation');
+    } elseif ($case === 'lee-profile') {
+        check($status === 200 || $status === false, 'returns a page');
+        check(str_contains($html, 'Ames Bakery Co') && str_contains($html, 'First message'), 'can still view the profile');
+        check(!str_contains($html, 'name="action" value="export"') && !str_contains($html, 'Export data') && !str_contains($html, 'name="action" value="delete"') && !str_contains($html, 'Delete person'), 'hides export and delete');
+    } elseif (in_array($case, ['lee-export', 'lee-delete', 'lee-export-get', 'lee-delete-get'], true)) {
+        check($status === 403, 'returns 403');
+        check(str_contains($html, 'You do not have access to that page.'), 'shows the not-allowed message');
+        check(!str_contains($html, 'First message') && !str_contains($html, 'Ames Bakery'), 'does not export or show the answers');
+        check(str_contains($inq, 'Ames Bakery'), 'deletes nothing');
     }
     exit($failed === 0 ? 0 : 1);
 });

@@ -10,6 +10,12 @@ if (!tylilo_admin_can($me, 'contacts.view')) {
     tylilo_admin_forbid();
 }
 
+$owner = tylilo_admin_is_owner($me);
+$requested = is_string($_POST['action'] ?? null) ? trim($_POST['action']) : (is_string($_GET['action'] ?? null) ? trim($_GET['action']) : '');
+if (in_array($requested, ['export', 'delete'], true) && !$owner) {
+    tylilo_admin_forbid();
+}
+
 $notice = '';
 $error = '';
 $statuses = tylilo_contact_statuses();
@@ -177,16 +183,18 @@ if ($selected !== null) {
     }
     $html .= '</div>';
 
-    $html .= '<div class="card"><h2>Access and deletion requests</h2>';
-    $html .= '<p>Export everything held about this person, or delete it. Deleting removes the profile, every inquiry from this email, and all notes.</p>';
-    $html .= '<form class="contact-export" method="post" action="/admin/contacts.php">'
-        . '<input type="hidden" name="csrf" value="' . $csrf . '"><input type="hidden" name="action" value="export"><input type="hidden" name="id" value="' . tylilo_e($cid) . '">'
-        . '<label for="contact-format">Export format</label><select id="contact-format" name="format"><option value="json">JSON</option><option value="text">Plain text</option></select>'
-        . '<button type="submit">Export data</button></form>';
-    $html .= '<form class="inq-admin-delete" method="post" action="/admin/contacts.php">'
-        . '<input type="hidden" name="csrf" value="' . $csrf . '"><input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="' . tylilo_e($cid) . '">'
-        . '<label for="contact-del"><input type="checkbox" id="contact-del" name="confirm" value="yes"> Yes, permanently delete this person, their inquiries, and their notes</label>'
-        . '<button type="submit">Delete person</button></form></div>';
+    if ($owner) {
+        $html .= '<div class="card"><h2>Access and deletion requests</h2>';
+        $html .= '<p>Export everything held about this person, or delete it. Deleting removes the profile, every inquiry from this email, and all notes.</p>';
+        $html .= '<form class="contact-export" method="post" action="/admin/contacts.php">'
+            . '<input type="hidden" name="csrf" value="' . $csrf . '"><input type="hidden" name="action" value="export"><input type="hidden" name="id" value="' . tylilo_e($cid) . '">'
+            . '<label for="contact-format">Export format</label><select id="contact-format" name="format"><option value="json">JSON</option><option value="text">Plain text</option></select>'
+            . '<button type="submit">Export data</button></form>';
+        $html .= '<form class="inq-admin-delete" method="post" action="/admin/contacts.php">'
+            . '<input type="hidden" name="csrf" value="' . $csrf . '"><input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="' . tylilo_e($cid) . '">'
+            . '<label for="contact-del"><input type="checkbox" id="contact-del" name="confirm" value="yes"> Yes, permanently delete this person, their inquiries, and their notes</label>'
+            . '<button type="submit">Delete person</button></form></div>';
+    }
     tylilo_admin_layout('Contact: ' . $title, $html);
     exit;
 }
