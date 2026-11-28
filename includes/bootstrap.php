@@ -20,50 +20,67 @@ require_once __DIR__ . '/../config.php';
 
 $cspNonce = bin2hex(random_bytes(16));
 
-header('Content-Type: text/html; charset=UTF-8');
-// no-cache still revalidates, and unlike no-store it can enter the back/forward cache.
-header('Cache-Control: no-cache, private');
-header('X-Content-Type-Options: nosniff');
-header('Referrer-Policy: strict-origin-when-cross-origin');
-header('X-Frame-Options: SAMEORIGIN');
-header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
-// OTRadio (/otradio/) loads a public catalog, JPEG artwork, AAC audio, and
-// WebVTT captions from one R2 bucket. Other pages keep the original policy.
-$imgSrc = "'self'";
-$requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
-$requestPath = is_string($requestPath) ? $requestPath : '/';
-$scriptSrc = "'self' 'nonce-{$cspNonce}'";
-$frameSrc = "'self'";
-$connectSrc = "'self'";
-$mediaSrc = '';
-$home = $requestPath === '/' || $requestPath === '/index.php';
-$needsTurnstile = $home || $requestPath === '/admin' || str_starts_with($requestPath, '/admin/');
-if ($needsTurnstile) {
-    $scriptSrc .= ' https://challenges.cloudflare.com';
-    $frameSrc .= ' https://challenges.cloudflare.com';
-    $connectSrc .= ' https://challenges.cloudflare.com';
-}
-if ($requestPath === '/otradio' || str_starts_with($requestPath, '/otradio/')) {
-    $otradioOrigin = 'https://pub-a3eee908554d4a948d807c160caa454e.r2.dev';
-    $imgSrc .= ' ' . $otradioOrigin;
-    $connectSrc .= ' ' . $otradioOrigin;
-    $mediaSrc = "; media-src 'self' {$otradioOrigin}";
+function tylilo_send_core_headers(): void
+{
+    if (defined('TYLILO_CORE_HEADERS_SENT')) {
+        return;
+    }
+    define('TYLILO_CORE_HEADERS_SENT', true);
+
+    global $cspNonce;
+    if (!is_string($cspNonce) || $cspNonce === '') {
+        $cspNonce = bin2hex(random_bytes(16));
+    }
+
+    header('Content-Type: text/html; charset=UTF-8');
+    // no-cache still revalidates, and unlike no-store it can enter the back/forward cache.
+    header('Cache-Control: no-cache, private');
+    header('X-Content-Type-Options: nosniff');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('X-Frame-Options: SAMEORIGIN');
+    header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+    // OTRadio (/otradio/) loads a public catalog, JPEG artwork, AAC audio, and
+    // WebVTT captions from one R2 bucket. Other pages keep the original policy.
+    $imgSrc = "'self'";
+    $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+    $requestPath = is_string($requestPath) ? $requestPath : '/';
+    $scriptSrc = "'self' 'nonce-{$cspNonce}'";
+    $frameSrc = "'self'";
+    $connectSrc = "'self'";
+    $mediaSrc = '';
+    $home = $requestPath === '/' || $requestPath === '/index.php';
+    $needsTurnstile = $home || $requestPath === '/admin' || str_starts_with($requestPath, '/admin/');
+    if ($needsTurnstile) {
+        $scriptSrc .= ' https://challenges.cloudflare.com';
+        $frameSrc .= ' https://challenges.cloudflare.com';
+        $connectSrc .= ' https://challenges.cloudflare.com';
+    }
+    if ($requestPath === '/otradio' || str_starts_with($requestPath, '/otradio/')) {
+        $otradioOrigin = 'https://pub-a3eee908554d4a948d807c160caa454e.r2.dev';
+        $imgSrc .= ' ' . $otradioOrigin;
+        $connectSrc .= ' ' . $otradioOrigin;
+        $mediaSrc = "; media-src 'self' {$otradioOrigin}";
+    }
+
+    header(
+        "Content-Security-Policy: default-src 'self'; "
+        . "base-uri 'self'; "
+        . "form-action 'self'; "
+        . "frame-ancestors 'self'; "
+        . "frame-src {$frameSrc}; "
+        . "object-src 'none'; "
+        . "img-src {$imgSrc}; "
+        . "font-src 'self'; "
+        . "style-src 'self' 'nonce-{$cspNonce}'; "
+        . "script-src {$scriptSrc}; "
+        . "connect-src {$connectSrc}"
+        . $mediaSrc
+    );
 }
 
-header(
-    "Content-Security-Policy: default-src 'self'; "
-    . "base-uri 'self'; "
-    . "form-action 'self'; "
-    . "frame-ancestors 'self'; "
-    . "frame-src {$frameSrc}; "
-    . "object-src 'none'; "
-    . "img-src {$imgSrc}; "
-    . "font-src 'self'; "
-    . "style-src 'self' 'nonce-{$cspNonce}'; "
-    . "script-src {$scriptSrc}; "
-    . "connect-src {$connectSrc}"
-    . $mediaSrc
-);
+if (!defined('TYLILO_SEND_HEADERS') || TYLILO_SEND_HEADERS !== false) {
+    tylilo_send_core_headers();
+}
 
 function tylilo_e(string $value): string
 {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 http_response_code(404);
 
 require __DIR__ . '/includes/bootstrap.php';
+tylilo_send_core_headers();
 
 $pageTitle = 'Page not found — Tylilo';
 $pageDescription = 'That page is not on the Tylilo site.';
