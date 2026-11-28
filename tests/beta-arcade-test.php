@@ -37,7 +37,8 @@ check(!empty($defaults['crash-cars']), 'Crash Cars is visible by default');
 check(empty($defaults['jumpy-jumperton']) && empty($defaults['starbase-defender']), 'other beta games are hidden by default');
 
 $early = tylilo_arcade_visible_early_games();
-check(count($early) === 1 && $early[0]['slug'] === 'crash-cars' && $early[0]['badge'] === 'Beta' && $early[0]['href'] === '/arcade/crash-cars/', 'the Arcade section lists only Crash Cars by default');
+check(tylilo_beta_stage('crash-cars') === 'alpha' && tylilo_beta_stage('jumpy-jumperton') === 'alpha' && tylilo_beta_stage('starbase-defender') === 'alpha', 'current pre-release games start as Alpha');
+check(count($early) === 1 && $early[0]['slug'] === 'crash-cars' && $early[0]['badge'] === 'Alpha' && $early[0]['href'] === '/arcade/crash-cars/', 'the Arcade section lists only Crash Cars by default, with an Alpha badge');
 
 $path = tylilo_beta_arcade_public_file('crash-cars');
 check(is_string($path) && is_file($path) && md5_file($path) === '4f66cf2f558c80a3ed010c1e41d0b6dd', 'the public Crash Cars file is the unchanged 2.4 build');
@@ -101,7 +102,7 @@ check(tylilo_arcade_visible_early_games() === [], 'the Alpha/Beta Games section 
 $shown = tylilo_beta_arcade_toggle($owner, 'jumpy-jumperton', true, $token);
 check($shown['status'] === 204 && tylilo_beta_visible('jumpy-jumperton'), 'the owner can show another beta');
 $listed = tylilo_arcade_visible_early_games();
-check(count($listed) === 1 && $listed[0]['slug'] === 'jumpy-jumperton', 'the Arcade section lists only the betas that are visible');
+check(count($listed) === 1 && $listed[0]['slug'] === 'jumpy-jumperton' && $listed[0]['badge'] === 'Alpha', 'a newly visible game keeps its stored Alpha badge');
 
 $data = tylilo_admin_with(static fn (array $stored): array => $stored);
 $actions = array_values(array_filter($data['activity'], static fn (array $row): bool => ($row['action'] ?? '') === 'beta-arcade'));
@@ -114,12 +115,51 @@ $betaPage = (string) file_get_contents($root . '/admin/beta/index.php');
 $sitemap = (string) file_get_contents($root . '/sitemap.xml');
 check(str_contains($source, 'tylilo_arcade_visible_early_games()') && str_contains($source, 'if ($earlyGames !== []):'), 'the Arcade page renders Alpha/Beta Games from the live visibility state');
 check(!str_contains($sitemap, 'crash-cars') && !str_contains($sitemap, '/beta/'), 'early games stay out of the sitemap');
-check(str_contains($betaPage, 'Show in Arcade') && str_contains($betaPage, 'Hide from Arcade') && !str_contains($betaPage, 'They are not in the Arcade'), 'the Beta tab uses a show/hide button and no longer says the games are not in the Arcade');
-check(str_contains($betaPage, 'Some can also be played in the Arcade under Alpha/Beta Games'), 'the Beta tab intro matches the public Arcade section');
+check(str_contains($betaPage, 'Show in Arcade') && str_contains($betaPage, 'Hide from Arcade') && !str_contains($betaPage, 'They are not in the Arcade'), 'the Alpha/Beta tab uses a show/hide button and no longer says the games are not in the Arcade');
+check(str_contains($betaPage, 'Some can also be played in the Arcade under Alpha/Beta Games'), 'the Alpha/Beta tab intro matches the public Arcade section');
+check(str_contains($betaPage, 'action" value="arcade-stage"') && str_contains($betaPage, '>Save</button>') && str_contains($betaPage, 'type="radio" name="stage"') && str_contains($betaPage, "'alpha' => 'Alpha'") && str_contains($betaPage, "'beta' => 'Beta'"), 'the Alpha/Beta tab has an Alpha or Beta stage control with a Save button');
+check(str_contains((string) file_get_contents($root . '/admin/_init.php'), "'/admin/beta/', 'Alpha/Beta'"), 'the admin tab is labeled Alpha/Beta and keeps the /admin/beta/ URL');
 check(!preg_match('/header\s*\([^;]*Content-Security-Policy/', (string) file_get_contents($root . '/arcade/early.php')), 'the public game gate does not send the site CSP');
 
 $earlySrc = (string) file_get_contents($root . '/arcade/early.php');
-check(str_contains($earlySrc, "header('Location: /arcade/'") && !str_contains($earlySrc, "require __DIR__ . '/../404.php'"), 'hidden beta URLs redirect to the Arcade instead of including the 404 page');
+check(str_contains($earlySrc, "header('Location: /arcade/'") && !str_contains($earlySrc, "require __DIR__ . '/../404.php'"), 'hidden early-game URLs redirect to the Arcade instead of including the 404 page');
+
+$stageForbidden = tylilo_beta_arcade_set_stage($member, 'crash-cars', 'beta', $token);
+check($stageForbidden['status'] === 403 && tylilo_beta_stage('crash-cars') === 'alpha', 'a team member without permission cannot change the stage');
+$stageBadCsrf = tylilo_beta_arcade_set_stage($owner, 'crash-cars', 'beta', 'not-the-token');
+check($stageBadCsrf['status'] === 400 && tylilo_beta_stage('crash-cars') === 'alpha', 'a bad CSRF token does not change the stage');
+$stageInvalid = tylilo_beta_arcade_set_stage($owner, 'crash-cars', 'gamma', $token);
+check($stageInvalid['status'] === 400 && tylilo_beta_stage('crash-cars') === 'alpha', 'an invalid stage is rejected');
+$stageSet = tylilo_beta_arcade_set_stage($owner, 'crash-cars', 'beta', $token);
+check($stageSet['status'] === 204 && tylilo_beta_stage('crash-cars') === 'beta', 'the owner can set Crash Cars to Beta');
+tylilo_beta_set_visible('crash-cars', true);
+$relisted = tylilo_arcade_visible_early_games();
+$crash = null;
+foreach ($relisted as $row) {
+    if ($row['slug'] === 'crash-cars') {
+        $crash = $row;
+        break;
+    }
+}
+check(is_array($crash) && $crash['badge'] === 'Beta', 'the Arcade badge follows a live stage change without a redeploy');
+$stageBack = tylilo_beta_arcade_set_stage($owner, 'crash-cars', 'alpha', $token);
+check($stageBack['status'] === 204 && tylilo_beta_stage('crash-cars') === 'alpha', 'the owner can set Crash Cars back to Alpha');
+$noop = tylilo_beta_arcade_set_stage($owner, 'crash-cars', 'alpha', $token);
+check($noop['status'] === 204, 'saving the current stage still succeeds');
+$stageLog = tylilo_admin_with(static fn (array $stored): array => $stored);
+$stageActions = array_values(array_filter($stageLog['activity'], static fn (array $row): bool => ($row['action'] ?? '') === 'beta-stage'));
+$stageDetails = array_map(static fn (array $row): string => (string) $row['detail'], $stageActions);
+check(count($stageActions) === 2, 'each actual stage change is written to the activity log');
+check(in_array('Set Crash Cars to Beta', $stageDetails, true) && in_array('Set Crash Cars to Alpha', $stageDetails, true), 'the activity log names the game and the new stage');
+
+$privacy = (string) file_get_contents($root . '/privacy.php');
+check(str_contains($privacy, 'Crash Cars, an Alpha game') && str_contains($privacy, 'Jumpy Jumperton and Starbase Defender are also Alpha games'), 'the privacy policy describes the current early games as Alpha');
+check(!str_contains($privacy, 'Other unpublished beta games') && !str_contains($privacy, 'unpublished beta games, can also save'), 'the privacy policy no longer calls those games unpublished beta games');
+
+$starbase = $root . '/beta/starbase-defender/index.html';
+$crashFile = tylilo_beta_arcade_public_file('crash-cars');
+check(is_file($starbase) && md5_file($starbase) === 'fc4a0aaa283bacf5d12c569fc49871ff', 'the Starbase Defender file is the unchanged 1.5.0 build');
+check(is_string($crashFile) && md5_file($crashFile) === '4f66cf2f558c80a3ed010c1e41d0b6dd', 'the public Crash Cars file stays the unchanged 2.4 build after the stage work');
 
 echo "\n{$checks} checks, {$failed} failed\n";
 

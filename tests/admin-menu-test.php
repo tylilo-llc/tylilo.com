@@ -79,7 +79,7 @@ foreach ($labels as $label) {
 }
 check($orderOk, 'group headings stay in order');
 
-$links = ['Notes', 'To-dos', 'Ideas', 'Feedback', 'Games', 'Beta', 'Scores', 'Users', 'Activity', 'Settings', 'Log out'];
+$links = ['Notes', 'To-dos', 'Ideas', 'Feedback', 'Games', 'Alpha/Beta', 'Scores', 'Users', 'Activity', 'Settings', 'Log out'];
 $cursor = strpos($ownerPage, 'id="admin-menu-panel"');
 $linkOrder = is_int($cursor);
 foreach ($links as $label) {
@@ -112,7 +112,7 @@ check(!str_contains($ideasMenu, '>To-dos<'), 'to-dos stay hidden without that pe
 check(!str_contains($ideasMenu, '>Feedback<'), 'feedback stays hidden without that permission');
 check(!str_contains($ideasMenu, '>Games</h2>') && !str_contains($ideasMenu, '>Games<'), 'the Games group is omitted when it would be empty');
 check(!str_contains($ideasMenu, '>Team</h2>'), 'the Team group is omitted for a team member');
-check(!str_contains($ideasMenu, '>Users<') && !str_contains($ideasMenu, '>Activity<') && !str_contains($ideasMenu, '>Beta<') && !str_contains($ideasMenu, '>Scores<'), 'owner and other gated links stay hidden');
+check(!str_contains($ideasMenu, '>Users<') && !str_contains($ideasMenu, '>Activity<') && !str_contains($ideasMenu, '>Alpha/Beta<') && !str_contains($ideasMenu, '>Scores<'), 'owner and other gated links stay hidden');
 check(substr_count($ideasMenu, 'class="admin-menu-divider"') === 2, 'empty groups do not leave a divider behind');
 check(str_contains($ideasMenu, '>Settings<') && str_contains($ideasMenu, '>Log out</button>'), 'account links stay available');
 
@@ -134,14 +134,14 @@ check(!str_contains($plainMenu, '>Workspace</h2>'), 'Workspace is hidden when no
 check(substr_count($plainMenu, 'class="admin-menu-divider"') === 1, 'only Home and Account remain, with one divider');
 
 $beta = tylilo_admin_menu_html($ideasOnly, '/admin/beta/g/harbor/');
-check(!str_contains($beta, 'aria-current="page"'), 'a beta page is not current when that person cannot open Beta');
+check(!str_contains($beta, 'aria-current="page"'), 'an early-game page is not current when that person cannot open Alpha/Beta');
 $ownerBeta = tylilo_admin_menu_html([
     'id' => 1,
     'role' => 'owner',
     'disabled' => 0,
     'permissions' => [],
 ], '/admin/beta/g/harbor/');
-check(str_contains($ownerBeta, 'href="/admin/beta/" aria-current="page"'), 'Beta stays current on a beta game page');
+check(str_contains($ownerBeta, 'href="/admin/beta/" aria-current="page"'), 'Alpha/Beta stays current on an early-game page');
 
 echo $failed === 0 ? "\n{$checks} checks passed\n" : "\n{$failed} failed\n";
 exit($failed === 0 ? 0 : 1);

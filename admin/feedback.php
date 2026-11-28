@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require __DIR__ . '/_init.php';
+require_once dirname(__DIR__) . '/includes/beta-arcade.php';
 
 $me = tylilo_admin_guard();
 if (!tylilo_admin_can($me, 'feedback')) {
@@ -129,7 +130,7 @@ if (!$owner) {
     }
     if (tylilo_admin_can($me, 'beta')) {
         foreach (tylilo_beta_games() as $beta) {
-            $html .= '<option value="beta:' . tylilo_e($beta['slug']) . '">' . tylilo_e($beta['title']) . ' (beta)</option>';
+            $html .= '<option value="beta:' . tylilo_e($beta['slug']) . '">' . tylilo_e($beta['title']) . ' (' . tylilo_e(tylilo_beta_stage_label(tylilo_beta_stage($beta['slug']))) . ')</option>';
         }
     }
     $html .= '</select><label for="type">Type</label><select id="type" name="type"><option value="bug">Bug</option><option value="idea">Idea</option><option value="other">Other</option></select>';
