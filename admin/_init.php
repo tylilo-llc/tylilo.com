@@ -43,8 +43,15 @@ function tylilo_admin_menu_html(array $user, string $path): string
         $groups[] = ['Workspace', $workspace, false];
     }
 
+    $consulting = [];
     if (tylilo_admin_can($user, 'inquiries.view')) {
-        $groups[] = ['Consulting', [['/admin/inquiries.php', 'Inquiries']], false];
+        $consulting[] = ['/admin/inquiries.php', 'Inquiries'];
+    }
+    if (tylilo_admin_can($user, 'contacts.view')) {
+        $consulting[] = ['/admin/contacts.php', 'Contacts'];
+    }
+    if ($consulting !== []) {
+        $groups[] = ['Consulting', $consulting, false];
     }
 
     $games = [];

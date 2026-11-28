@@ -80,7 +80,7 @@ foreach ($labels as $label) {
 }
 check($orderOk, 'group headings stay in order');
 
-$links = ['Notes', 'To-dos', 'Ideas', 'Feedback', 'Inquiries', 'Games', 'Beta', 'Scores', 'Users', 'Activity', 'Settings', 'Log out'];
+$links = ['Notes', 'To-dos', 'Ideas', 'Feedback', 'Inquiries', 'Contacts', 'Games', 'Beta', 'Scores', 'Users', 'Activity', 'Settings', 'Log out'];
 $cursor = strpos($ownerPage, 'id="admin-menu-panel"');
 $linkOrder = is_int($cursor);
 foreach ($links as $label) {
@@ -146,6 +146,7 @@ $arcadeOnly = [
 $arcadeMenu = tylilo_admin_menu_html($arcadeOnly, '/admin/scores.php');
 check(str_contains($arcadeMenu, '>Games</h2>') && str_contains($arcadeMenu, '>Scores<') && str_contains($arcadeMenu, '>Beta<'), 'an arcade-only person still sees Games, Beta, and Scores');
 check(!str_contains($arcadeMenu, '>Consulting</h2>') && !str_contains($arcadeMenu, 'href="/admin/inquiries.php"'), 'an arcade-only person does not see Inquiries in the menu');
+check(!str_contains($arcadeMenu, 'href="/admin/contacts.php"') && !str_contains($arcadeMenu, '>Contacts<'), 'an arcade-only person does not see Contacts in the menu');
 check(str_contains($plainMenu, 'href="/admin/" aria-current="page"'), 'Home is current on the admin index');
 check(!str_contains($plainMenu, '>Workspace</h2>'), 'Workspace is hidden when none of its links are allowed');
 check(substr_count($plainMenu, 'class="admin-menu-divider"') === 1, 'only Home and Account remain, with one divider');

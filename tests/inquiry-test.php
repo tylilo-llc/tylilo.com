@@ -114,13 +114,23 @@ $visitor = $parts[1] ?? '';
 $owner = $parts[2] ?? '';
 check(str_starts_with($visitor, 'ryan@tylilo.com') && str_starts_with($owner, 'ryan@tylilo.com'), 'the test sends to ryan@tylilo.com only');
 check(str_contains($visitor, 'From: "Ryan Thorpe, Tylilo, LLC" <consulting@tylilo.com>'), 'mail is from consulting@ with the right name');
-check(str_contains($visitor, 'Reply-To: ryan@tylilo.com') && str_contains($owner, 'Reply-To: ryan@tylilo.com'), 'replies go to ryan@tylilo.com');
+check(str_contains($visitor, 'Reply-To: ryan@tylilo.com'), 'the visitor copy replies go to ryan@tylilo.com');
+check(preg_match('/^Reply-To: "[^"]+" <[^>]+@[^>]+>\r?$/m', $owner) === 1 && !str_contains($owner, 'Reply-To: ryan@tylilo.com'), 'the owner notice replies go to the submitter');
+check(str_contains($owner, '<' . $clean['email'] . '>'), 'the Reply-To address is the submitter email');
+
 check(str_contains($visitor, 'Subject: [Preview] Your inquiry with Tylilo, LLC'), 'preview mail is marked in the subject');
 check(str_contains($owner, 'Subject: [Preview] New inquiry #1'), 'the owner notice names the inquiry');
 check(str_contains($visitor, 'multipart/alternative') && str_contains($visitor, 'text/html'), 'mail has text and HTML parts');
 $visitorDecoded = quoted_printable_decode($visitor);
 check(!str_contains($visitorDecoded, 'Suggested fit') && !str_contains($visitorDecoded, $fit['fit'] . "\n"), 'the visitor copy does not include the suggested fit');
 check(str_contains(quoted_printable_decode($owner), 'Suggested fit (private): Improvement'), 'the owner notice includes the suggested fit');
+$ownerDecoded = quoted_printable_decode($owner);
+$replyLine = 'Replying to this email goes to ' . ($clean['name'] !== '' ? $clean['name'] . ' ' : '') . '<' . $clean['email'] . '>.';
+$firstBody = strpos($ownerDecoded, 'Content-Type: text/plain');
+check($firstBody !== false && str_starts_with(ltrim(substr($ownerDecoded, strpos($ownerDecoded, "\r\n\r\n", $firstBody) + 4)), $replyLine), 'the owner notice starts with who a reply goes to');
+check(!str_contains($visitorDecoded, 'Replying to this email goes to'), 'the visitor copy has no reply line');
+$injected = tylilo_smtp_message('x@example.com', 's', 't', 'h', tylilo_smtp_address("O'Brien\r\nBcc: z@example.com", 'a@example.com'));
+check(preg_match('/^Reply-To: ".*" <a@example\.com>\r?$/m', $injected) === 1 && preg_match('/^Bcc:/mi', $injected) === 0, 'a name in Reply-To cannot inject headers');
 check(str_contains($visitorDecoded, 'Quotes and hiring.'), 'the visitor copy includes their answers');
 check(tylilo_inquiry_subject('X', false) === 'X', 'live mail has no preview mark');
 check(str_contains($visitorDecoded, '[Preview] This is a test message from the private preview site'), 'the preview visitor copy says it is a preview test in the body');
@@ -151,6 +161,9 @@ check(strpos($html, 'id="inq-stage-idea"') < strpos($html, 'name="idea_what"') &
 check(strpos($html, 'id="inq-goals-other"') < strpos($html, 'name="goals_other"') && str_contains($html, 'id="inq-reveal-goals-other"'), 'the Other text box sits under the Other option');
 check(strpos($html, 'id="inq-goals-financing"') < strpos($html, 'name="money_purpose"') && strpos($html, 'name="money_purpose"') < strpos($html, 'id="inq-goals-mission"'), 'the financing text box sits under the financing and sale options');
 check(strpos($html, 'id="inq-growth-bottleneck-other"') < strpos($html, 'name="growth_other"'), 'the Something else text box sits under that option');
+check(str_contains($html, 'We keep your answers so we can follow up and understand your business. You can ask us to see or delete them at any time.'), 'the form says we keep answers and they can ask to see or delete them');
+check(str_contains($html, 'id="inq-retain"') && str_contains(substr($html, (int) strpos($html, 'id="inq-retain"')), 'href="/privacy#inquiries" target="_blank" rel="noopener"'), 'that line links to the privacy policy in a new window');
+check(strpos($html, 'id="inq-retain"') < strpos($html, 'data-inq-submit'), 'that line is above the Send button');
 check(str_contains($html, 'aria-controls="inq-reveal-goals-other"'), 'the Other option names the text box it reveals');
 
 $ids = [];

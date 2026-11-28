@@ -37,7 +37,7 @@ require __DIR__ . '/includes/head.php';
         <p>The UDLR Arcade games are offered for fun, free of charge, and as is. Names saved to the leaderboard must not be offensive or impersonate someone, and we may remove any entry.</p>
 
         <h2>Your information</h2>
-        <p>The <a href="/privacy">privacy policy</a> explains what the site collects and how it is used.</p>
+        <p>The <a href="/privacy">privacy policy</a> explains what the site collects and how it is used. For what we keep from an inquiry and how long, see <a href="/privacy#inquiries">Consulting inquiries</a> in that policy.</p>
 
         <h2>Changes</h2>
         <p>If these terms change, the new version will be posted here and the effective date above will change.</p>

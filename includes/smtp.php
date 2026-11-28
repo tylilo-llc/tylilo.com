@@ -43,7 +43,21 @@ function tylilo_smtp_header_text(string $value): string
 /**
  * Build the full RFC 5322 message: multipart text and HTML.
  */
-function tylilo_smtp_message(string $to, string $subject, string $text, string $html): string
+function tylilo_smtp_address(string $name, string $email): string
+{
+    $name = trim(str_replace(["\r", "\n", "\0", '"', '\\', '<', '>'], ' ', $name));
+    $name = trim(preg_replace('/\s+/', ' ', $name) ?? '');
+    if ($name === '') {
+        return '<' . $email . '>';
+    }
+    if (preg_match('/[^\x20-\x7E]/', $name) === 1) {
+        return tylilo_smtp_header_text($name) . ' <' . $email . '>';
+    }
+
+    return '"' . $name . '" <' . $email . '>';
+}
+
+function tylilo_smtp_message(string $to, string $subject, string $text, string $html, ?string $replyTo = null): string
 {
     $boundary = 'tyl-' . bin2hex(random_bytes(12));
     $text = str_replace(["\r\n", "\r"], "\n", $text);
@@ -51,7 +65,7 @@ function tylilo_smtp_message(string $to, string $subject, string $text, string $
     $headers = [
         'Date: ' . date(DATE_RFC2822),
         'From: "' . TYLILO_SMTP_FROM_NAME . '" <' . TYLILO_SMTP_FROM . '>',
-        'Reply-To: ' . TYLILO_SMTP_REPLY_TO,
+        'Reply-To: ' . ($replyTo !== null && $replyTo !== '' ? $replyTo : TYLILO_SMTP_REPLY_TO),
         'To: <' . $to . '>',
         'Subject: ' . tylilo_smtp_header_text($subject),
         'Message-ID: <' . bin2hex(random_bytes(16)) . '@tylilo.com>',
@@ -107,13 +121,13 @@ function tylilo_smtp_cmd($socket, string $command, array $expect): bool
  * Send one message. Returns false on any failure and logs a short reason
  * (never the password or the message body).
  */
-function tylilo_smtp_send(string $to, string $subject, string $text, string $html): bool
+function tylilo_smtp_send(string $to, string $subject, string $text, string $html, ?string $replyTo = null): bool
 {
     $to = trim($to);
     if ($to === '' || preg_match('/[\r\n<>]/', $to) === 1 || filter_var($to, FILTER_VALIDATE_EMAIL) === false) {
         return false;
     }
-    $message = tylilo_smtp_message($to, $subject, $text, $html);
+    $message = tylilo_smtp_message($to, $subject, $text, $html, $replyTo);
 
     if (defined('TYLILO_SMTP_TEST_SINK')) {
         return file_put_contents((string) constant('TYLILO_SMTP_TEST_SINK'), "RCPT " . $to . "\r\n" . $message . "\r\n.\r\n", FILE_APPEND) !== false;

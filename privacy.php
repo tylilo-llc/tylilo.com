@@ -32,8 +32,31 @@ require __DIR__ . '/includes/head.php';
       <article class="card about-card prose">
         <p class="kicker">Privacy</p>
         <h1>Privacy</h1>
-        <p><strong>Effective date:</strong> November 28, 2026</p>
+        <p><strong>Effective date:</strong> November 28, 2026<br><strong>Last updated:</strong> November 28, 2026</p>
         <p>Tylilo, LLC (“Tylilo”) runs <a href="/">tylilo.com</a>. This page says what the site actually does with information. It is short on purpose.</p>
+
+        <h2 id="summary">What we collect and who receives it</h2>
+        <p>These are the kinds of personal information the site collects, and who else receives them. Details for each are further down this page.</p>
+        <ul>
+          <li><strong>Contact form:</strong> your name, email address, and message. Sent by email to us through our email provider.</li>
+          <li><strong>Consulting inquiry form:</strong> your name, email address, and the answers you choose to give about your business, such as its name, website, general location, stage, size, and goals. Kept in our private storage and sent by email to us and to you through our email provider.</li>
+          <li><strong>Team accounts:</strong> a username, a password hash, and the notes and activity of people the owner invites. Kept in our private storage.</li>
+          <li><strong>Arcade leaderboard:</strong> the name you choose and your score, plus a hash of your network address used only to limit repeats.</li>
+          <li><strong>Spam checks:</strong> Cloudflare Turnstile receives signals such as your IP address and browser type to tell people from bots.</li>
+        </ul>
+        <p>We share personal information only with the service providers that run the site for us: our web host (HostM), our email provider, and Cloudflare for Turnstile. We do not sell it, and we do not share it with advertisers or data brokers.</p>
+
+        <h2 id="storage">Cookies and local storage</h2>
+        <p>In short: the site sets no advertising or tracking cookies. It uses only first-party storage that the site needs or that remembers your own choices, and Cloudflare Turnstile on the forms.</p>
+        <ul>
+          <li><strong>Essential:</strong> one session cookie, <code>tylilo</code>, that protects the forms and keeps the admin sign-in. It ends when you close the browser.</li>
+          <li><strong>Preferences:</strong> your theme choice, and arcade settings and high scores, saved in this browser’s local storage. They stay on your device.</li>
+          <li><strong>Spam check:</strong> Cloudflare Turnstile runs on the forms and may use its own storage to tell people from bots. We do not use it for advertising.</li>
+        </ul>
+        <p>The sections below list every key and what it holds.</p>
+
+        <h2 id="dnt">Do Not Track</h2>
+        <p>Some browsers send a “Do Not Track” signal. This site does not track you across other websites or over time, so that signal does not change what it does. We do not allow third parties to collect information about your browsing on this site for advertising or behavioral tracking, and the site has no analytics or ad scripts.</p>
 
         <h2>Contact form</h2>
         <p>If you write to us, the form asks for your name, email address, and message. We email those three things to ourselves so we can read them and reply. The site does not show our mailbox address. The site does not sell that information, and it does not send it to advertisers or other companies.</p>
@@ -42,8 +65,14 @@ require __DIR__ . '/includes/head.php';
 
         <h2 id="inquiries">Consulting inquiries</h2>
         <p>The <a href="/inquiry">inquiry form</a> asks about your business or organization so we can tell whether and how we can help: its stage, your goals, a few follow-up questions, its size and type, your timing, the kind of help you want, and your general location. It also asks for your name and email address, and, if you choose, a business name, a website or social link, how you heard about us, and anything else you want to add. It does not ask for financial account numbers, government ID numbers, or other sensitive details. Please do not include them.</p>
-        <p>We use your answers only to read and reply to your inquiry and to prepare for a first conversation. When you send the form, we email you a copy of your answers and email a notice to Ryan Thorpe at Tylilo, LLC. Those emails are sent from our own mailbox through our web host’s mail server. We also keep your answers in the site’s private storage, which is not public and is open only to the owner and to team members the owner allows, so we can follow up. We keep an inquiry for up to two years after our last contact, or delete it sooner if you ask.</p>
-        <p>To limit spam, we keep a keyed hash of your network address for one hour, not the address itself, and the same session cookie described below holds a security token and the times of recent sends. Before an inquiry is accepted, Cloudflare Turnstile checks that a person sent it, as described for the contact form above. We do not sell your information or share it with advertisers.</p>
+        <p><strong>What we collect and why.</strong> We collect only what you type into the form: your name, email address, and the answers described above. We use it to respond to you, to prepare for and provide consulting if you decide to work with us, and to keep a record of our conversations. When you send the form, we email you a copy of your answers and email a notice to Ryan Thorpe at Tylilo, LLC. Those emails are sent from our own mailbox through our email provider.</p>
+        <p><strong>A private record about you.</strong> We keep your answers in the site’s private storage, which is not public and is open only to the owner and to team members the owner has allowed. If you write to us more than once, the answers are grouped into one private profile for you, matched by email address. That profile is built only from what you send us and from our own notes about our conversations and where things stand. We do not look you up elsewhere, buy information about you, scrape websites or social profiles, or track you around the web.</p>
+        <p><strong>Who sees it.</strong> We do not sell your information, and we do not share it with anyone except the service providers that help us run this form: our web host, our email provider, and Cloudflare, which runs the Turnstile spam check described above. They handle it only to provide those services.</p>
+        <p><strong>How long we keep it.</strong> We keep your inquiry and profile while we are in contact and for up to 3 years after our last contact. After that we delete them. If you become a client, we keep the records for as long as we need them for the work and for our legal, tax, and accounting obligations.</p>
+        <p><strong>Your choices.</strong> You can ask to see what we have about you, to correct it, or to delete it at any time by emailing <a href="mailto:ryan@tylilo.com">ryan@tylilo.com</a>. We will send you a copy or delete your profile, your inquiries, and our notes about you, except records we must keep by law. Deleting your profile does not delete copies in emails you or we already sent.</p>
+        <p><strong>Children.</strong> The inquiry form is for business owners and leaders. It is not for anyone under 16, and we do not knowingly collect information from children under 13 or 16. If you believe a child has sent us information, please email us and we will delete it.</p>
+        <p><strong>Security.</strong> The form and the admin area use HTTPS. Inquiries and notes are stored in private files outside the public website, and only people the owner has allowed can open them. No system is perfectly secure, so please do not include sensitive details such as account numbers or government ID numbers.</p>
+        <p>To limit spam, we keep a keyed hash of your network address for one hour, not the address itself, and the same session cookie described below holds a security token and the times of recent sends. Before an inquiry is accepted, Cloudflare Turnstile checks that a person sent it, as described for the contact form above.</p>
         <p>If you start an inquiry and leave before sending it, this browser may keep a draft of your answers in session storage under <code>tyliloInquiryDraft</code>. The draft does not include your name or email address. It stays on this device, is used only to put your answers back in the form if you return, and is deleted when you send the inquiry or close the tab. The site does not send that draft to us.</p>
 
         <h2>Cookies</h2>
@@ -70,13 +99,14 @@ require __DIR__ . '/includes/head.php';
         <h2>Hosting</h2>
         <p>The site is hosted on HostM. Like most web hosts, their servers may keep ordinary access logs, such as an IP address, browser type, and the time of a visit. This site’s pages do not turn on a separate analytics log.</p>
 
-        <h2>Asking about your information</h2>
-        <p>You can ask what we have from a message or inquiry you sent or from a name on the leaderboard, ask us to correct it, or ask us to delete it. Use the <a href="/#contact">contact form</a>.</p>
+        <h2 id="review">Reviewing or changing your information</h2>
+        <p>You can ask what we have from a message or inquiry you sent or from a name on the leaderboard, ask us to correct it, or ask us to delete it. Email <a href="mailto:ryan@tylilo.com">ryan@tylilo.com</a> or use the <a href="/#contact">contact form</a>. We may ask you to confirm the email address you used so we give the information only to you.</p>
         <p>If you are in the UK or the European Economic Area, you can make those requests about the message you sent us or a leaderboard name. If you are in California, you can ask us to tell you what we have from that message or name and to delete it. We do not sell personal information.</p>
         <p>This site is not directed at children under 13, and we do not knowingly collect information from them.</p>
 
         <h2>Changes</h2>
-        <p>If this page changes, the new version will be posted here and the effective date above will change.</p>
+        <p>If this page changes, the new version will be posted here, the effective date and “last updated” date at the top will change, and we will add a note below saying what changed. If a change is significant, we will also put a notice on the site’s home page or the inquiry form for a while.</p>
+        <p><strong>November 28, 2026:</strong> added how we keep and delete consulting inquiry answers, the private record we keep about people who send inquiries, how we respond to Do Not Track, and a summary of cookies and local storage.</p>
       </article>
     </div>
   </main>

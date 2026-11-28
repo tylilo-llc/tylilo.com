@@ -79,6 +79,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         $done(['success' => false, 'errors' => ['form' => 'Something went wrong on our side, and your answers were not saved. Please try again in a few minutes.'], 'old' => $clean]);
     }
 
+    try {
+        require_once __DIR__ . '/includes/contacts.php';
+        tylilo_contacts_purge_expired();
+    } catch (Throwable $e) {
+        error_log('Inquiry: retention purge failed.');
+    }
+
     $mail = tylilo_inquiry_send($clean, $fit, $saved['id'], $preview);
     try {
         tylilo_inquiry_mark_mail($saved['id'], $mail['visitor'], $mail['owner']);

@@ -30,6 +30,7 @@ function tylilo_admin_permission_catalog(): array
         ],
         'Consulting' => [
             'inquiries.view' => ['label' => 'View consulting inquiries', 'short' => 'Inquiries', 'invite_default' => false],
+            'contacts.view' => ['label' => 'View private contact profiles', 'short' => 'Contacts', 'invite_default' => false],
         ],
         'Games' => [
             'leaderboards' => ['label' => 'Leaderboard moderation', 'short' => 'Leaderboards', 'invite_default' => false],

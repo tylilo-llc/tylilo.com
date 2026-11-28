@@ -276,6 +276,7 @@ function tylilo_inquiry_form_html(array $old, array $errors, string $csrf, strin
         if ($n === $total) {
             $consentError = $errors['consent'] ?? '';
             $html .= '<div class="inq-consent">';
+            $html .= '<p class="inq-retain" id="inq-retain">We keep your answers so we can follow up and understand your business. You can ask us to see or delete them at any time. <a href="/privacy#inquiries" target="_blank" rel="noopener">Read how we keep them<span class="visually-hidden"> (opens in a new window)</span></a>.</p>';
             $html .= '<p class="inq-disclaimer" id="inq-disclaimer">' . tylilo_e(TYLILO_INQUIRY_DISCLAIMER) . '</p>';
             if ($consentError !== '') {
                 $html .= '<p class="field-error" id="inq-consent-error">' . tylilo_e($consentError) . '</p>';

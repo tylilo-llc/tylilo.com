@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 require __DIR__ . '/_init.php';
 require_once dirname(__DIR__) . '/includes/inquiry.php';
+require_once dirname(__DIR__) . '/includes/contacts.php';
 
 $me = tylilo_admin_guard();
 if (!tylilo_admin_can($me, 'inquiries.view')) {
     tylilo_admin_forbid();
 }
 
+$canContacts = tylilo_admin_can($me, 'contacts.view');
 $notice = '';
 $error = '';
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
@@ -73,6 +75,9 @@ foreach ($rows as $row) {
     $html .= '<span class="user-status">' . tylilo_e($when((int) ($row['created_at'] ?? 0))) . ' · Suggested fit: ' . tylilo_e($fit) . (!empty($row['preview']) ? ' · preview' : '') . '</span></summary>';
     $html .= '<div class="user-card-body">';
     $html .= '<p><strong>Email:</strong> <a href="mailto:' . tylilo_e($email) . '">' . tylilo_e($email) . '</a></p>';
+    if ($canContacts && $email !== '') {
+        $html .= '<p><a href="/admin/contacts.php?c=' . tylilo_e(tylilo_contact_id_for_email($email)) . '">View this person&rsquo;s profile</a></p>';
+    }
     $html .= '<div class="inq-admin-fit"><p><strong>Suggested fit (private):</strong> ' . tylilo_e($fit) . '</p>';
     if ($reasons !== []) {
         $html .= '<ul>';

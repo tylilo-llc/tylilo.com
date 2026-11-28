@@ -901,16 +901,19 @@ function tylilo_inquiry_bodies(array $answers, array $fit, int $id, bool $previe
 
     $email = (string) ($answers['email'] ?? '');
     $fitText = $fit['fit'] . "\n- " . implode("\n- ", $fit['reasons']);
-    $ownerText = "New consulting inquiry #" . $id . ($preview ? ' (sent from the preview site)' : '') . "\n\n"
+    $replyLine = 'Replying to this email goes to ' . ($name !== '' ? $name . ' ' : '') . '<' . $email . '>.';
+    $ownerText = $replyLine . "\n\n"
+        . "New consulting inquiry #" . $id . ($preview ? ' (sent from the preview site)' : '') . "\n\n"
         . "From: " . $name . " <" . $email . ">\n\n"
         . "Suggested fit (private): " . $fitText . "\n\n"
         . $textRows
-        . "Reply to them at " . $email . ". Full details are in the admin under Inquiries.\n";
+        . "Full details are in the admin under Inquiries.\n";
     $fitHtml = '<p style="margin:0 0 16px;padding:12px;background:#EEF2F7"><strong>Suggested fit (private):</strong> '
         . htmlspecialchars($fit['fit'], ENT_QUOTES, 'UTF-8') . '<br>'
         . implode('<br>', array_map(static fn (string $r): string => htmlspecialchars($r, ENT_QUOTES, 'UTF-8'), $fit['reasons'])) . '</p>';
     $ownerHtml = $wrap(
-        '<p style="margin:0 0 16px"><strong>New consulting inquiry #' . $id . '</strong>' . ($preview ? ' (sent from the preview site)' : '') . '</p>'
+        '<p style="margin:0 0 16px;padding:8px 12px;background:#EEF2F7;font-size:14px">' . htmlspecialchars($replyLine, ENT_QUOTES, 'UTF-8') . '</p>'
+        . '<p style="margin:0 0 16px"><strong>New consulting inquiry #' . $id . '</strong>' . ($preview ? ' (sent from the preview site)' : '') . '</p>'
         . '<p style="margin:0 0 16px">From ' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8')
         . ' &lt;<a href="mailto:' . htmlspecialchars($email, ENT_QUOTES, 'UTF-8') . '" style="color:#0A3161">' . htmlspecialchars($email, ENT_QUOTES, 'UTF-8') . '</a>&gt;</p>'
         . $fitHtml
@@ -946,7 +949,8 @@ function tylilo_inquiry_send(array $answers, array $fit, int $id, bool $preview)
         TYLILO_INQUIRY_OWNER_EMAIL,
         tylilo_inquiry_subject('New inquiry #' . $id . ': ' . ($who !== '' ? $who : 'website visitor'), $preview),
         $bodies['owner_text'],
-        $bodies['owner_html']
+        $bodies['owner_html'],
+        tylilo_smtp_address($who, (string) $answers['email'])
     );
 
     return ['visitor' => $visitor, 'owner' => $owner];
