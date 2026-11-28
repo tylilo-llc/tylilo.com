@@ -60,6 +60,7 @@ check(str_contains($ownerPage, 'Menu</button>'), 'the menu button is labeled Men
 check(str_contains($ownerPage, '<h1 class="tagline">Ideas</h1>'), 'the current page name sits in the header');
 check(str_contains($ownerPage, 'class="js"') || str_contains($ownerPage, "classList.add(\"js\")"), 'scripted pages can hide the menu until it is opened');
 check(str_contains($ownerPage, 'class="admin-shell"') && str_contains($ownerPage, 'aria-label="Admin"'), 'the admin shell includes a labeled navigation');
+check(!str_contains($ownerPage, 'class="admin-verse"'), 'the verse is not on other admin pages');
 check(str_contains($ownerPage, 'data-group="consulting"') && str_contains($ownerPage, 'data-group="software"') && str_contains($ownerPage, 'data-group="arcade"') && str_contains($ownerPage, 'data-group="site"'), 'an owner sees Consulting, Software, Arcade, and Site');
 check(str_contains($ownerPage, 'class="admin-menu-note">Coming later</p>'), 'Software shows a coming-later note when no tools exist yet');
 check(str_contains($ownerPage, 'href="/admin/inquiries.php"'), 'an owner sees Inquiries in the menu');
@@ -164,6 +165,9 @@ $dashOwner = tylilo_admin_dashboard_html([
     'permissions' => [],
 ]);
 check(str_contains($dashOwner, 'data-dash="consulting"') && str_contains($dashOwner, 'data-dash="software"') && str_contains($dashOwner, 'data-dash="arcade"') && str_contains($dashOwner, 'data-dash="site"'), 'the owner dashboard has a card for each group');
+check(str_contains($dashOwner, '<blockquote class="admin-verse"><p>“Whatever you do, work at it with all your heart, as working for the Lord, not for human masters,”</p><cite>Colossians 3:23 NIV</cite></blockquote>'), 'the dashboard opens with the Colossians 3:23 NIV verse');
+check(!str_contains($dashOwner, '<h2>“Whatever you do') && !str_contains($dashOwner, '<h3>“Whatever you do'), 'the verse is not a heading');
+check(str_starts_with($dashOwner, '<blockquote class="admin-verse">'), 'the verse sits at the top of the dashboard');
 check(str_contains($dashOwner, 'Castmaker and other tools will appear here'), 'the Software card is a coming-later note');
 $dashArcade = tylilo_admin_dashboard_html($arcadeOnly);
 check(str_contains($dashArcade, 'data-dash="arcade"') && str_contains($dashArcade, 'data-dash="site"'), 'an arcade-only person sees Arcade and Site cards');

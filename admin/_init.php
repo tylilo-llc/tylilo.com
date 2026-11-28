@@ -157,7 +157,8 @@ function tylilo_admin_menu_html(array $user, string $path): string
  */
 function tylilo_admin_dashboard_html(array $user): string
 {
-    $html = '<div class="card"><h2>Hello, ' . tylilo_e((string) ($user['username'] ?? '')) . '</h2>';
+    $html = '<blockquote class="admin-verse"><p>' . tylilo_e('“Whatever you do, work at it with all your heart, as working for the Lord, not for human masters,”') . '</p><cite>Colossians 3:23 NIV</cite></blockquote>';
+    $html .= '<div class="card"><h2>Hello, ' . tylilo_e((string) ($user['username'] ?? '')) . '</h2>';
     $html .= '<p>Your role is ' . tylilo_e((string) ($user['role'] ?? 'member')) . '. Open a section from the cards below or from the menu.</p></div>';
     $html .= '<div class="admin-dash">';
     foreach (tylilo_admin_menu_groups($user) as $group) {

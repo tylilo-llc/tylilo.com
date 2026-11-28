@@ -2851,6 +2851,34 @@ html.signal.admin .admin-dash {
   margin-top: 16px;
 }
 
+html.signal.admin .admin-verse {
+  margin: 0 0 24px;
+  padding: 0;
+  border: 0;
+  max-width: 40rem;
+}
+
+html.signal.admin .admin-verse p {
+  margin: 0 0 8px;
+  color: var(--ink);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.35;
+  text-wrap: balance;
+}
+
+html.signal.admin .admin-verse cite {
+  display: block;
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+}
+
+
 html.signal.admin .admin-dash-card h2 {
   margin: 0 0 8px;
   font-size: 1.05rem;
