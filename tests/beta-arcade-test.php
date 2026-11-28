@@ -153,7 +153,7 @@ check(count($stageActions) === 2, 'each actual stage change is written to the ac
 check(in_array('Set Crash Cars to Beta', $stageDetails, true) && in_array('Set Crash Cars to Alpha', $stageDetails, true), 'the activity log names the game and the new stage');
 
 $privacy = (string) file_get_contents($root . '/privacy.php');
-check(str_contains($privacy, 'Crash Cars, an Alpha game') && str_contains($privacy, 'Jumpy Jumperton and Starbase Defender are also Alpha games'), 'the privacy policy describes the current early games as Alpha');
+check(str_contains($privacy, 'today Crash Cars, Jumpy Jumperton and Starbase Defender, all Alpha') && str_contains($privacy, 'A hidden early game is not publicly reachable') && !str_contains($privacy, 'they are not on the public Arcade'), 'the privacy policy describes early games generically and says hidden ones are not publicly reachable');
 check(!str_contains($privacy, 'Other unpublished beta games') && !str_contains($privacy, 'unpublished beta games, can also save'), 'the privacy policy no longer calls those games unpublished beta games');
 
 $starbase = $root . '/beta/starbase-defender/index.html';

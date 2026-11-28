@@ -45,6 +45,11 @@ header('Cache-Control: private, no-store');
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: strict-origin-when-cross-origin');
 if ($extension === 'html') {
+    // Games here may call only the two playtest endpoints (to send a report), nothing else on this site.
+    $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (int) ($_SERVER['SERVER_PORT'] ?? 0) === 443;
+    $hostName = (string) ($_SERVER['HTTP_HOST'] ?? '');
+    $playtestOrigin = preg_match('/^[A-Za-z0-9.\-]+(:[0-9]{1,5})?$/', $hostName) === 1 ? ($secure ? 'https://' : 'http://') . $hostName : '';
+    $playtestConnect = $playtestOrigin !== '' ? ' ' . $playtestOrigin . '/api/playtest-token.php ' . $playtestOrigin . '/api/playtest-upload.php' : '';
     header(
         "Content-Security-Policy: default-src 'self'; base-uri 'self'; form-action 'none'; frame-ancestors 'self'; "
         .         "frame-src 'none'; object-src 'none'; img-src 'self' data: blob: https://cdn-profiles.tunein.com https://*.tunein.com; "
@@ -52,7 +57,7 @@ if ($extension === 'html') {
         . "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
         . "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://cdn.jsdelivr.net https://opml.radiotime.com; "
         . "media-src 'self' data: blob: https:; worker-src 'self' blob:; "
-        . "connect-src https://opml.radiotime.com https://feed.tunein.com https://np.tritondigital.com https://api.live365.com"
+        . "connect-src https://opml.radiotime.com https://feed.tunein.com https://np.tritondigital.com https://api.live365.com" . $playtestConnect
     );
     if (basename($path) === 'index.html') {
         tylilo_admin_log((int) $me['id'], (string) $me['username'], 'play-beta', $slug);
