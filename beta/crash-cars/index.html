@@ -6,7 +6,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#7cc4ff">
-<title>CRASH CARS 2.2</title>
+<title>CRASH CARS</title>
 <link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -83,6 +83,9 @@
   @media (min-width:900px){#title{align-items:flex-start;padding-left:7vw;box-sizing:border-box;background:linear-gradient(90deg,rgba(20,90,220,.35),rgba(0,0,0,0) 55%)} #title h1{font-size:130px} .help{text-align:left}}
   @keyframes wob{50%{transform:rotate(-1deg) scale(1.04)}}
   #ver{position:fixed;right:14px;bottom:10px;font-size:16px;color:#fff;-webkit-text-stroke:1px #111;opacity:.9}
+  .credit{margin-top:16px;font-size:16px;color:#fff;-webkit-text-stroke:1px #111;text-shadow:0 2px 0 #111}
+  #arcadeBack{margin-top:8px}
+  .menu .credit{margin-top:2px;font-size:14px;color:#222;-webkit-text-stroke:0;text-shadow:none;letter-spacing:.4px}
   .panel{margin-top:30px;background:rgba(255,255,255,.9);border:4px solid #111;border-radius:22px;padding:14px 22px;text-align:center;box-shadow:0 8px 0 #111}
   .panel .lbl{font-size:20px;color:#111}
   .swatches{display:flex;gap:12px;justify-content:center;margin:10px 0 12px}
@@ -164,7 +167,7 @@
   #rList{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px;max-height:48vh;overflow:auto;padding:6px 4px 8px;text-align:left}
   .st{display:flex;align-items:center;gap:8px;font-family:system-ui,sans-serif;border:3px solid #111;border-radius:14px;background:#fff;box-shadow:0 3px 0 #111;padding:5px 8px;cursor:pointer;min-width:0;text-align:left;color:#111}
   .st:hover{background:#f3ecff}.st.on{background:#ffd21f}
-  .st .lg{flex:0 0 46px;height:46px;border-radius:10px;background:#e7e9ee;overflow:hidden}
+  .st .lg{flex:0 0 46px;height:46px;border-radius:10px;background:#e7e9ee;overflow:hidden;display:flex;align-items:center;justify-content:center;font:700 18px system-ui,sans-serif;color:#333;-webkit-text-stroke:0}
   .st .lg img{width:100%;height:100%;object-fit:cover}
   .st .tx{flex:1;min-width:0;display:flex;flex-direction:column}
   .st b,.st small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -181,6 +184,8 @@
   #rpName::before{content:"\1F4FB  "}
   #radioPill.live{background:rgba(255,236,120,.92)}
   body.touch #radioPill{top:calc(var(--sat) + 100px);right:calc(var(--sar) + 8px);max-width:44vw}
+  /* 2.4: radio is off. The buttons, menu, pill and head unit cannot be shown. */
+  #tRadio,#pRadio,#radio,#radioPill,#carRadio,#rToast{display:none!important}
   .btnrow{display:flex;gap:14px;justify-content:center;align-items:center}
   #over .btnrow{flex-wrap:wrap;gap:10px} /* 2.3: RESTART/REPLAY/TITLE were clipped on narrow portrait phones */
   @media (max-width:430px){ #over .btn{padding-left:16px;padding-right:16px} }
@@ -378,6 +383,7 @@
   #rpSpd{display:flex;gap:4px}
   #rpSpd .rpb{min-width:44px;padding:1px 6px 0}
   #rpExit{background:#2a2c33;color:#fff}
+  #rpExport.on{background:#ff3030;color:#fff}
   #rpHint{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--sab) + 82px);font-size:14px;color:#fff;-webkit-text-stroke:1px #111;text-shadow:0 2px 0 #111;white-space:nowrap}
   #rpHint.hidden{display:none}
   @media (max-width:760px){
@@ -420,19 +426,19 @@
   <div id="heat" class="hidden"></div>
   <div id="copArrows"><div class="ca"><svg viewBox="0 0 40 40"><path d="M34 20 L10 6 L15 20 L10 34 Z"/></svg></div><div class="ca"><svg viewBox="0 0 40 40"><path d="M34 20 L10 6 L15 20 L10 34 Z"/></svg></div><div class="ca"><svg viewBox="0 0 40 40"><path d="M34 20 L10 6 L15 20 L10 34 Z"/></svg></div><div class="ca"><svg viewBox="0 0 40 40"><path d="M34 20 L10 6 L15 20 L10 34 Z"/></svg></div><div class="ca"><svg viewBox="0 0 40 40"><path d="M34 20 L10 6 L15 20 L10 34 Z"/></svg></div></div>
   <div id="fps" class="hidden"></div>
-  <div id="carRadio" class="off"><div class="crb">
+  <div id="carRadio" class="off hidden"><div class="crb">
     <div class="crl" data-a="expand">
       <div class="crTop"><span id="crBand"></span><span id="crPre"></span><span id="crFlag"></span><span id="crSig"><i></i><i></i><i></i><i></i></span><span id="crAir"></span></div>
       <div id="crMq"><span id="crText"></span></div>
       <canvas id="crEq" width="140" height="16"></canvas>
     </div>
     <div class="crBtns">
-      <button data-a="prev" title="Previous preset">⏮</button><button data-a="voldn" title="Volume down">−</button>
+      <button type="button" data-a="prev" title="Previous preset">⏮</button><button type="button" data-a="voldn" title="Volume down">−</button>
       <div id="crKnob" title="Music volume"></div>
-      <button data-a="volup" title="Volume up">+</button><button data-a="next" title="Next preset">⏭</button>
-      <button data-a="mute" title="Mute radio">MUTE</button><button data-a="menu" title="Radio stations">☰</button>
+      <button type="button" data-a="volup" title="Volume up">+</button><button type="button" data-a="next" title="Next preset">⏭</button>
+      <button type="button" data-a="mute" title="Mute radio">MUTE</button><button type="button" data-a="menu" title="Radio stations">☰</button>
     </div></div></div>
-  <div id="radioPill" class="hidden fnt"><button id="rpPrev" title="Previous station">◀</button><span id="rpName" title="Radio stations"></span><button id="rpNext" title="Next station">▶</button></div>
+  <div id="radioPill" class="hidden fnt"><button type="button" id="rpPrev" title="Previous station">◀</button><span id="rpName" title="Radio stations"></span><button type="button" id="rpNext" title="Next station">▶</button></div>
   <div id="dmgBox"><div class="dl">DAMAGE</div>
     <svg id="dmgSvg" viewBox="0 0 64 112" width="58" height="102">
       <rect x="10" y="4" width="44" height="104" rx="14" fill="#fff" stroke="#111" stroke-width="3"/>
@@ -463,18 +469,22 @@
     <div class="lbl">PICK YOUR RIDE</div>
     <div class="swatches" id="swatches"></div>
     <label class="tog"><input type="checkbox" id="sandbox"> SANDBOX (car piles!)</label><br>
-    <div class="btnrow"><button id="play" class="btn">PLAY</button><button id="tSettings" class="btn blue sm">SETTINGS</button><button id="tRadio" class="btn radio sm">RADIO</button></div>
+    <div class="btnrow"><button id="play" class="btn">PLAY</button><button id="tSettings" class="btn blue sm">SETTINGS</button><button id="tRadio" class="btn radio sm hidden" hidden>RADIO</button></div>
   </div>
   <div class="help"><span class="tmob">LEFT THUMB: steer (in the air: ◀ ▶ roll, ▲ ▼ flip) &nbsp;•&nbsp; RIGHT THUMB: GAS, BRAKE, NITRO<br>Grab N2O canisters for nitro &nbsp;•&nbsp; Watch out for GAS TRUCKS! &nbsp;•&nbsp; ⟲ instant replay</span><span class="tkey">WASD / ARROWS drive &nbsp;•&nbsp; SPACE nitro (grab N2O canisters) &nbsp;•&nbsp; R reset &nbsp;•&nbsp; C camera &nbsp;•&nbsp; B car pile &nbsp;•&nbsp; T instant replay &nbsp;•&nbsp; ESC/P pause<br>In the air: W/S flip, A/D barrel roll &nbsp;•&nbsp; Watch out for GAS TRUCKS!</span></div>
-  <div id="ver">v2.2</div>
+  <div class="credit">© 2026 Tylilo, LLC</div>
+  <button type="button" id="arcadeBack" class="btn dark sm">BACK TO ARCADE</button>
+  <div id="ver"></div>
 </div>
 <div id="pause" class="overlay hidden fnt">
   <div class="menu"><h2>PAUSED</h2>
     <button class="btn" id="resume">RESUME</button>
     <button class="btn yellow" id="pReset">RESET CAR</button>
     <button class="btn blue" id="pSettings">SETTINGS</button>
-    <button class="btn radio" id="pRadio">RADIO</button>
+    <button class="btn radio hidden" id="pRadio" hidden>RADIO</button>
+    <button type="button" class="btn dark" id="pArcade">BACK TO ARCADE</button>
     <button class="btn dark" id="quit">QUIT TO TITLE</button>
+    <div class="credit">© 2026 Tylilo, LLC</div>
   </div>
 </div>
 <div id="settings" class="overlay hidden fnt">
@@ -485,21 +495,19 @@
 </div>
 <div id="radio" class="overlay hidden fnt">
   <div class="menu"><h2>RADIO</h2>
-    <div id="rTop"><button id="rCountry" title="Change country"></button></div>
     <div id="rTabs"></div>
     <div id="rNow"></div>
     <div id="rStatus"></div>
     <div id="rList"></div>
-    <div id="rPick" class="hidden"><input id="rcSearch" type="search" placeholder="Search countries…" autocomplete="off" spellcheck="false"><div id="rcList"></div></div>
-    <div class="rAttr">Stations via TuneIn &nbsp;•&nbsp; only stations that answered a live check just now are listed</div>
-    <div class="btnrow"><button class="btn blue sm" id="rRefresh">REFRESH</button><button class="btn dark sm" id="rArcade">ARCADE MUSIC</button><button class="btn yellow sm" id="rBack">BACK</button></div>
+    <div class="rAttr">Radio is off. Arcade music is the only music.</div>
+    <div class="btnrow"><button type="button" class="btn blue sm" id="rRefresh">REFRESH</button><button type="button" class="btn dark sm" id="rArcade">ARCADE MUSIC</button><button type="button" class="btn yellow sm" id="rBack">BACK</button></div>
   </div>
 </div>
 <div id="rToast" class="fnt hidden"></div>
 <div id="over" class="overlay hidden fnt">
   <div class="menu"><h2 style="color:#ff3030">RUN OVER!</h2>
     <div class="stats" id="overStats"></div>
-    <div class="btnrow" style="margin-top:16px"><button class="btn" id="restart">RESTART</button><button class="btn blue sm" id="oReplay">REPLAY</button><button class="btn dark sm" id="oTitle">TITLE</button></div>
+    <div class="btnrow" style="margin-top:16px"><button class="btn" id="restart">RESTART</button><button class="btn blue sm" id="oReplay">REPLAY</button><button class="btn dark sm" id="oTitle">TITLE</button><button type="button" class="btn dark sm" id="oArcade">BACK TO ARCADE</button></div>
   </div>
 </div>
 <div id="rpUI" class="hidden fnt">
@@ -513,6 +521,7 @@
     <div id="rpTL" title="Drag to scrub (← → seek, , . frame step)"><div class="trk"><div id="rpFill"></div></div><div id="rpMk"></div><div id="rpPh"></div></div>
     <span id="rpTime">0:00.0</span>
     <div id="rpSpd"><button class="rpb" data-s="0.25" title="Speed (− / +)">¼×</button><button class="rpb" data-s="0.5">½×</button><button class="rpb" data-s="1">1×</button><button class="rpb" data-s="2">2×</button></div>
+    <button type="button" class="rpb hidden" id="rpExport" title="Save this replay as a video file" disabled>VIDEO</button>
     <button class="rpb" id="rpExit" title="Exit replay (Esc)">EXIT</button>
   </div>
 </div>
@@ -528,6 +537,7 @@
 </div>
 <div id="rotHint" class="fnt">↻ ROTATE FOR THE BEST EXPERIENCE</div>
 <div id="safeProbe"></div>
+
 <script type="module">
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
@@ -850,11 +860,15 @@ function waterAt(x, z) { return Math.abs(x) > RAIL_X + 0.15 && terrainH(x, z) < 
 
 
 
+
 // ---------------- settings (persisted) ----------------
-const VERSION = '2.3';
+// Single version string: the page title and the corner label are both set from this.
+const VERSION = '2.4';
+document.title = 'CRASH CARS ' + VERSION;
+{ const verEl = document.getElementById('ver'); if (verEl) verEl.textContent = 'v' + VERSION; }
 const SKEY = 'crashcars.settings.v1';
 const DEFAULTS = { master: 80, sfx: 80, mute: false, music: true, musicVol: 55, quality: 'auto', shadows: true, shake: true, shakeAmt: 100, fps: false, units: 'mph',
-  steerMode: 'buttons', ctlSize: 50, ctlOpacity: 55, leftHanded: false, haptics: true, police: true, startTime: 'morning', weather: 'dynamic', dynTime: true, musicSrc: 'arcade', radioCountry: 227, carRadio: true };
+  steerMode: 'buttons', ctlSize: 50, ctlOpacity: 55, leftHanded: false, haptics: true, police: true, startTime: 'morning', weather: 'dynamic', dynTime: true, musicSrc: 'arcade', carRadio: true };
 const settings = Object.assign({}, DEFAULTS);
 try { Object.assign(settings, JSON.parse(localStorage.getItem(SKEY) || '{}')); } catch (e) { /* ignore */ }
 const saveSettings = () => { try { localStorage.setItem(SKEY, JSON.stringify(settings)); } catch (e) { /* ignore */ } };
@@ -866,6 +880,7 @@ const QUALITY = {
 let autoTier = 'high'; // 2.1: AUTO picks a tier from the device/GPU (set in g_ui) and scales resolution to hold fps
 const qTier = () => QUALITY[settings.quality] ? settings.quality : autoTier;
 const PM = () => QUALITY[qTier()].part;
+
 
 // ---------------- materials ----------------
 // v1.3 diecast-toy look (style reference: Matchbox 2010 line): metallic clearcoat paint, chrome bumpers/hubs,
@@ -1571,6 +1586,7 @@ class Car {
 }
 const G = 24;
 
+
 // ---------------- particles ----------------
 const _m = new THREE.Matrix4(), _s = new V3(), _c = new THREE.Color();
 // 2.3: smoke-type systems are see-through: per-instance alpha (iAlpha), soft fresnel edges, depthWrite off, faster fade,
@@ -1817,10 +1833,10 @@ function updateEmitters(dt) {
   }
 }
 
+
 // ---------------- audio: SFX + procedural music ----------------
 let actx = null, masterG, sfxG, musicG, engOsc, engGain, noiseBuf;
 function initAudio() {
-  radioResume(); // 1.6: first user gesture starts a remembered radio station
   if (actx) { if (actx.state === 'suspended') actx.resume().catch(() => {}); return; }
   try {
     actx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1838,11 +1854,11 @@ function initAudio() {
   } catch (e) { actx = null; }
 }
 function applyAudio() {
-  radioApply(); // 1.6: radio stream volume follows master x music volume
   if (!actx) return;
   masterG.gain.value = settings.mute ? 0 : settings.master / 100;
   sfxG.gain.value = settings.sfx / 100;
-  musicG.gain.value = settings.music && !radioActive() ? (settings.musicVol / 100) * 0.5 * (gameState === 'paused' ? 0.45 : 1) : 0;
+  // Arcade synth is the only music. Radio cannot duck it.
+  musicG.gain.value = settings.music ? (settings.musicVol / 100) * 0.5 * (gameState === 'paused' ? 0.45 : 1) : 0;
 }
 let sfxVoices = 0; const SFX_MAX = 24; // 2.1: cap concurrent one-shot voices (big pile-ups fired 100+ at once)
 function noiseHit(dur, freq, vol, type = 'lowpass', t0 = 0) {
@@ -1920,7 +1936,7 @@ function musicStep(s, t) {
   const m = MEL[s % 64]; if (m && s >= 64) tone(mtof(m), t, STEP * 1.8, 'square', 0.045, 2600);
 }
 setInterval(() => {
-  if (!actx || actx.state !== 'running' || !settings.music || radioActive()) { if (actx) musNext = actx.currentTime + 0.05; return; }
+  if (!actx || actx.state !== 'running' || !settings.music) { if (actx) musNext = actx.currentTime + 0.05; return; }
   while (musNext < actx.currentTime + 0.15) { musicStep(musStep, musNext); musNext += STEP; musStep = (musStep + 1) % 128; }
 }, 40);
 // 1.5 police siren: one synthesized voice (wail far away, yelp up close) for the nearest cruiser, routed through SFX volume
@@ -1941,6 +1957,7 @@ function sirenUpdate(level, yelp, dt) {
   siren.o.frequency.setTargetAtTime(fr, t, 0.02); siren.o2.frequency.setTargetAtTime(fr * 0.5, t, 0.02);
   siren.g.gain.setTargetAtTime(Math.max(0, Math.min(1, level)) * 0.11, t, 0.08);
 }
+
 const LANES_FWD = [-(MED + 3), -(MED + 7)], LANES_ONC = [MED + 3, MED + 7], LANES_FWD_START = LANES_FWD[0];
 
 // ---------------- debris & projectiles ----------------
@@ -3089,6 +3106,7 @@ function updatePickups(rdt) {
   pkGlowMat.opacity = 0.65 + 0.3 * Math.sin(t * 6);
 }
 
+
 // ---------------- police pursuit (1.5) ----------------
 // Heat (0..5 stars) rises with crashes you cause, destruction, explosions, wrong-way driving and nitro at speed; it decays
 // when calm. Cruisers spawn mostly from behind (sometimes from ahead on the other carriageway, plus roadblocks at 4+ stars)
@@ -3359,513 +3377,44 @@ function policeLights(t) {
   return best ? Math.sqrt(bd) : 1e9;
 }
 
-// ---------------- 1.6 radio: live TuneIn stations ----------------
-// TuneIn's public OPML/RadioTime API (no key) does not send CORS headers, so fetch() is blocked from a page origin.
-// It does support JSONP (&callback=), which works from https://, http:// and file:// pages alike.
-// Flow: Browse.ashx (category) -> free station items -> Tune.ashx (stream URLs) -> probe each stream with a muted <audio>.
-const TI = 'https://opml.radiotime.com', RKEY = 'crashcars.radio.v1';
-const RADIO_CATS = [ // keep in sync with tools/check_tunein.py
-  ['Oldies', ['g4562', 'c100000633', 'c100000955']], // Oldies Music genre + 60s + 50s
-  ['70s', ['c100000783']], ['80s', ['c100000781']], ['90s', ['c100000946']], ['2000s', ['c100000165']],
-  ['Current', ['c57943|popular', 'c57943']], // Top 40 & Pop (most popular first)
-  ['Christian', ['g99']], // Christian Contemporary
-];
-// 1.7 featured stations, pinned to the top of a country's lists (still live-checked like everything else).
-// K-LOVE's TuneIn entries only resolve when HLS is requested (Tune.ashx ... &formats=...,hls).
-const KLOVE_IMG = id => `https://cdn-profiles.tunein.com/${id}/images/logoq.png`;
-const FEATURED = { 227: [
-  { id: 's33828', name: 'K-LOVE', now: 'Positive & Encouraging Christian music', cats: ['Current', 'Christian'] },
-  { id: 's320959', name: 'K-LOVE 70s', now: 'The best 70s Christian music', cats: ['70s', 'Christian'] },
-  { id: 's320960', name: 'K-LOVE 80s', now: 'The best 80s Christian music', cats: ['80s', 'Christian'] },
-  { id: 's309605', name: 'K-LOVE 90s', now: 'The best 90s Christian music', cats: ['90s', 'Christian'] },
-  { id: 's309606', name: 'K-LOVE 2000s', now: 'The best 2000s Christian music', cats: ['2000s', 'Christian'] },
-] };
-const featuredFor = key => (FEATURED[settings.radioCountry] || []).filter(f => f.cats.includes(key)).map(f => ({ id: f.id, name: f.name, now: f.now, img: KLOVE_IMG(f.id), br: 0, feat: true }));
-const RADIO_TTL = 5 * 60e3, PROBE_MS = 7000, PROBE_CONC = 6, MAX_CANDS = 24;
-const radio = { tab: 'Current', genre: null, genres: null, cache: {}, prog: {}, cur: null, el: null, want: false, from: null,
-  stallT: 0, skips: [], booting: false };
-try { const s = JSON.parse(localStorage.getItem(RKEY) || 'null'); if (s && s.id && s.url) radio.saved = s; } catch (e) { /* ignore */ }
-const saveRadio = () => { try { localStorage.setItem(RKEY, JSON.stringify(radio.cur)); } catch (e) { /* ignore */ } };
-const escH = s => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const radioActive = () => settings.musicSrc === 'radio' && !!radio.cur;
-
-let jsonpN = 0;
-function tuneinGet(path, ms = 9000) {
-  return new Promise((res, rej) => {
-    const cb = '__ti' + (++jsonpN), s = document.createElement('script'); let done = false;
-    const fin = (err, d) => { if (done) return; done = true; clearTimeout(t); s.remove(); window[cb] = () => { delete window[cb]; }; err ? rej(err) : res(d); };
-    const t = setTimeout(() => fin(new Error('timeout')), ms);
-    window[cb] = d => { delete window[cb]; fin(null, d); };
-    s.onerror = () => fin(new Error('network'));
-    s.src = TI + path + (path.includes('?') ? '&' : '?') + 'render=json&callback=' + cb;
-    document.head.appendChild(s);
-  });
+// ---------------- 2.4 radio is off ----------------
+// Arcade music is the only music source. This file makes no network requests:
+// no station list, no stream, no audio element, no third-party host.
+// A saved selection falls back to arcade and is not played:
+//   crashcars.radio.v1 (older builds stored third-party stream URLs — not parsed)
+//   crashcars.radio.v2 (a station id — not parsed, and never written)
+//   crashcars.settings.v1 with musicSrc 'radio' (rewritten to 'arcade')
+const radio = { cur: null, stations: [], want: false, failed: false, el: null, saved: null };
+const radioActive = () => false;
+function radioResume() {}
+function radioApply() {}
+function radioPill() {}
+function openRadio() {}
+function closeRadio() {}
+function playStation() {}
+function radioFail() {}
+function radioSkip() {}
+function loadStations() { return Promise.resolve([]); }
+function fallbackArcade() {
+  if (settings.musicSrc !== 'arcade') { settings.musicSrc = 'arcade'; saveSettings(); }
 }
-function* walkOutline(items) { for (const x of items || []) { yield x; yield* walkOutline(x.children); } }
-function stationsFrom(d) { // only free, playable stations
-  const out = [];
-  for (const x of walkOutline(d && d.body)) {
-    if (x.type !== 'audio' || x.item !== 'station' || x.key === 'unavailable') continue;
-    const txt = ((x.text || '') + ' ' + (x.subtext || '')).toLowerCase();
-    if (/not available|unavailable|premium/.test(txt)) continue;
-    const id = x.guide_id || x.preset_id; if (!id) continue;
-    out.push({ id, name: x.text || id, now: x.subtext || x.playing || '', img: (x.image || '').replace(/^http:/, 'https:'), br: +x.bitrate || 0 });
+function carRadioHUD() {}
+function hideRadioChrome() {
+  for (const id of ['tRadio', 'pRadio', 'radio', 'radioPill', 'carRadio', 'rToast']) {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('hidden');
   }
-  return out;
 }
-// 1.7: HLS streams (e.g. K-LOVE) play natively where supported (Safari, recent Chrome/Edge); elsewhere hls.js is lazy-loaded
-// from the CDN (TuneIn's HLS hosts send CORS headers, which hls.js needs).
-const HLS_URLS = new Set(), nativeHls = () => !!radioEl().canPlayType('application/vnd.apple.mpegurl');
-let hlsLib = null;
-function loadHls() {
-  if (window.Hls) return Promise.resolve(window.Hls);
-  return hlsLib || (hlsLib = new Promise((res, rej) => {
-    const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js';
-    s.onload = () => window.Hls ? res(window.Hls) : rej(new Error('hls.js')); s.onerror = () => { hlsLib = null; rej(new Error('hls.js')); };
-    document.head.appendChild(s);
-  }));
-}
-const hasMSE = () => !!(window.MediaSource || window.ManagedMediaSource);
-const needsHlsJs = url => HLS_URLS.has(url) && (hasMSE() || !nativeHls()); // hls.js wherever MSE exists (native HLS in Chrome proved flaky); native only on iOS-style browsers
-async function setMediaSrc(a, url) { // returns once the element has a source
-  const tok = a._srcTok = (a._srcTok || 0) + 1; // 2.1: a slower, older call must not attach after a newer one
-  if (a._hls) { a._hls.destroy(); a._hls = null; }
-  if (!needsHlsJs(url)) { a.src = url; return; }
-  const Hls = await loadHls(); if (!Hls.isSupported()) throw new Error('hls unsupported');
-  if (tok !== a._srcTok) return;
-  const h = a._hls = new Hls({ lowLatencyMode: false, maxBufferLength: 20 });
-  h.on(Hls.Events.ERROR, (e, d) => { if (d && d.fatal) a.dispatchEvent(new Event('error')); });
-  h.loadSource(url); h.attachMedia(a);
-}
-function clearMediaSrc(a) { if (a._hls) { a._hls.destroy(); a._hls = null; } a.removeAttribute('src'); a.load(); }
-async function tuneUrls(id) {
-  const d = await tuneinGet('/Tune.ashx?id=' + encodeURIComponent(id) + '&formats=mp3,aac,ogg,hls'); // hls must be asked for explicitly
-  const hlsOk = nativeHls() || hasMSE(), onHttps = location.protocol === 'https:', out = [], hlsOut = [];
-  for (const b of (d && d.body) || []) {
-    const u = b.url || ''; if (b.element !== 'audio' || !/^https?:/.test(u) || /notcompatible|nostream/i.test(u)) continue;
-    const p = u.toLowerCase().split('?')[0], hls = b.media_type === 'hls' || p.endsWith('.m3u8');
-    if (hls ? !hlsOk : /\.(pls|m3u|asx)$/.test(p)) continue; // playlist wrappers can't go straight into <audio>
-    const dst = hls ? hlsOut : out;
-    if (u.startsWith('https:')) dst.push(u);
-    else { dst.push(u.replace(/^http:/, 'https:')); if (!onHttps) dst.push(u); } // https variant first; plain http is mixed content on https pages
-    if (hls) for (const x of dst) HLS_URLS.add(x);
-  }
-  return [...new Set([...out, ...hlsOut])]; // direct streams before HLS
-}
-let probing = 0; const probeWait = [];
-async function probeStream(url, ms = PROBE_MS) { // global concurrency limit across all checks
-  while (probing >= PROBE_CONC) await new Promise(r => probeWait.push(r));
-  probing++;
+function radioBoot() {
+  hideRadioChrome();
   try {
-    return await new Promise(res => {
-      const a = new Audio(); a.muted = true; a.preload = 'auto'; let done = false;
-      const fin = ok => { if (done) return; done = true; clearTimeout(t); a.oncanplay = a.onloadedmetadata = a.onerror = null; try { clearMediaSrc(a); } catch (e) { /* ignore */ } res(ok); };
-      const t = setTimeout(() => fin(false), ms);
-      a.oncanplay = a.onloadedmetadata = () => fin(true); a.onerror = () => fin(false);
-      setMediaSrc(a, url).then(() => { if (!done && !a._hls) a.load(); }, () => fin(false));
-    });
-  } finally { probing--; const n = probeWait.shift(); if (n) n(); }
+    // Seen and ignored. Do not JSON.parse: v1 held third-party stream URLs.
+    localStorage.getItem('crashcars.radio.v1');
+    localStorage.getItem('crashcars.radio.v2');
+  } catch (e) { /* ignore */ }
+  if (settings.musicSrc !== 'arcade') { settings.musicSrc = 'arcade'; saveSettings(); }
 }
-function catIds(key) { const c = RADIO_CATS.find(c => c[0] === key); if (c) return c[1]; return key.startsWith('g:') ? [key.slice(2)] : []; }
-// 1.7 country: TuneIn filters any category by country with &filter=s:n<code> (or s:popular:n<code>); codes come from the
-// category "By Location" pivot (Browse.ashx?id=<cat>&pivot=country&filter=s:<continent>). List below was pulled from that tree.
-const COUNTRY_DATA = 'Albania:2:AL,Algeria:3:DZ,Andorra:5:AD,Angola:6:AO,Antigua-Barbuda:9:AG,Argentina:10:AR,Armenia:11:AM,Aruba:12:AW,Australia:13:AU,Austria:14:AT,Azerbaijan:15:AZ,Bahamas:19:BS,Bahrain:20:BH,Bangladesh:21:BD,Barbados:22:BB,Belarus:23:BY,Belgium:24:BE,Belize:25:BZ,Bermuda:27:BM,Bolivia:29:BO,Bosnia and Herzegovina:30:BA,Botswana:31:BW,Brazil:33:BR,Bulgaria:36:BG,Cambodia:39:KH,Cameroon:40:CM,Canada:41:CA,Cayman Island:43:KY,Chile:46:CL,China:47:CN,Colombia:50:CO,Costa Rica:55:CR,Croatia:57:HR,Cuba:58:CU,Cyprus:59:CY,Czech Republic:60:CZ,Denmark:62:DK,Dominica:64:DM,Dominican Republic:65:DO,DR Congo:53:CD,Ecuador:67:EC,Egypt:68:EG,El Salvador:69:SV,Estonia:72:EE,Falkland Islands:76:FK,Finland:79:FI,France:80:FX,French Guiana:83:GF,Germany:88:DE,Ghana:89:GH,Greece:91:GR,Greenland:92:GL,Grenada:93:GD,Guadeloupe:94:GP,Guatemala:96:GT,Guyana:99:GY,Haiti:101:HT,Honduras:104:HN,Hong Kong:105:HK,Hungary:106:HU,Iceland:107:IS,India:108:IN,Indonesia:109:ID,Iran:110:IR,Iraq:111:IQ,Ireland:112:IE,Israel:113:IL,Italy:114:IT,Jamaica:115:JM,Japan:116:JP,Jordan:117:JO,Kazakhstan:118:KZ,Kenya:119:KE,Kosovo:275:XK,Kyrgyzstan:124:KG,Latvia:127:LV,Lebanon:128:LB,Liberia:130:LR,Lithuania:133:LT,Luxembourg:134:LU,Macedonia:137:MK,Madagascar:138:MG,Malaysia:140:MY,Mali:142:ML,Malta:143:MT,Martinique:145:MQ,Mauritius:147:MU,Mexico:149:MX,Moldova:150:MD,Monaco:151:MC,Montenegro:268:ME,Morocco:154:MA,Mozambique:155:MZ,Namibia:158:NA,Nepal:160:NP,Netherlands:161:NL,Netherlands Antilles:17:CW,New Zealand:163:NZ,Nicaragua:164:NI,Nigeria:166:NG,Norway:169:NO,Oman:170:OM,Pakistan:171:PK,Palestine:173:PS,Panama:174:PA,Paraguay:176:PY,Peru:177:PE,Philippines:178:PH,Poland:180:PL,Portugal:181:PT,Puerto Rico:182:PR,Qatar:183:QA,Reunion:184:RE,Romania:185:RO,Russia:186:RU,Rwanda:187:RW,Saint Lucia:188:LC,Saint Vincent-The Grenadines:189:VC,Saudi Arabia:193:SA,Senegal:194:SN,Serbia:267:YU,Seychelles:195:SC,Sierra Leone:196:SL,Singapore:197:SG,Slovakia:198:SK,Slovenia:199:SI,Solomon Islands:200:SB,Somalia:201:SO,South Africa:202:ZA,South Korea:122:KR,South Sudan:276:SS,Spain:74:ES,Sri Lanka:135:LK,St. Martin:270:MF,Suriname:207:SR,Swaziland:209:SZ,Sweden:210:SE,Switzerland:61:CH,Taiwan:212:TW,Tanzania:214:TZ,Thailand:215:TH,Tokelau:217:TK,Trinidad-Tobago:219:TT,Tunisia:220:TN,Turkey:221:TR,Turks-Caicos Islands:223:TC,Uganda:225:UG,Ukraine:226:UA,United Arab Emirates:18:AE,United Kingdom:100:UK,United States:227:US,Uruguay:229:UY,Uzbekistan:230:UZ,Venezuela:232:VE,Vietnam:233:VN,Virgin Islands (U.S.):235:VI,Zambia:239:ZM';
-const flagOf = iso => iso && iso.length === 2 ? String.fromCodePoint(...[...iso].map(ch => 0x1F1E6 + ch.charCodeAt(0) - 65)) : '🌐';
-const COUNTRIES = COUNTRY_DATA.split(',').map(r => { const [name, n, iso] = r.split(':'); return { name, n: +n, iso, flag: flagOf(iso) }; });
-const POPULAR_C = ['US', 'GB', 'DE', 'CA', 'FR', 'ES', 'IT', 'NL', 'AU', 'IE', 'AT', 'CH', 'BE', 'SE', 'NO', 'DK', 'PL', 'PT', 'BR', 'MX', 'AR', 'JP', 'IN', 'NZ', 'ZA'];
-const WORLD = { name: 'Worldwide', n: 0, iso: '', flag: '🌐' };
-const curCountry = () => COUNTRIES.find(c => c.n === settings.radioCountry) || (settings.radioCountry === 0 ? WORLD : COUNTRIES.find(c => c.iso === 'US'));
-function catPaths(key) {
-  const n = settings.radioCountry;
-  return catIds(key).map(id => { const [i, pre] = id.split('|'), f = n ? 's:' + (pre ? pre + ':' : '') + 'n' + n : pre ? 's:' + pre : '';
-    return '/Browse.ashx?id=' + i + (f ? '&filter=' + f : ''); });
-}
-const catLabel = key => key.startsWith('g:') ? (radio.genre && radio.genre.name) || 'this genre' : key;
-function setCountry(n) {
-  if (n === settings.radioCountry) return;
-  settings.radioCountry = n; saveSettings(); radio.gen = (radio.gen || 0) + 1; radio.cache = {}; radio.prog = {}; // clear + re-verify
-  ctlRefresh.forEach(f => f());
-}
-function verifyCat(key, force) {
-  const c = radio.cache[key];
-  if (!force && c && Date.now() - c.t < RADIO_TTL) return Promise.resolve(c.list);
-  if (radio.prog[key] && !radio.prog[key].done) return radio.prog[key].p;
-  const gen = radio.gen || 0, pr = radio.prog[key] = { checked: 0, total: 0, list: [], done: false, err: '' };
-  pr.p = (async () => {
-    const pages = await Promise.all(catPaths(key).map(p => tuneinGet(p).catch(() => null)));
-    if (!pages.some(Boolean) && catPaths(key).length) pr.err = "Couldn't reach TuneIn (offline or blocked?)";
-    const seen = new Set(), cands = featuredFor(key);
-    for (const f of cands) seen.add(f.id);
-    for (const d of pages) for (const s of stationsFrom(d)) if (!seen.has(s.id)) { seen.add(s.id); cands.push(s); }
-    cands.length = Math.min(cands.length, MAX_CANDS + cands.filter(c => c.feat).length); pr.total = cands.length; renderRadio();
-    const ok = new Set();
-    await Promise.all(cands.map(async s => {
-      try { for (const u of await tuneUrls(s.id)) if (await probeStream(u)) { s.url = u; s.cat = key; ok.add(s); break; } } catch (e) { /* skip station */ }
-      pr.checked++; pr.list = cands.filter(x => ok.has(x)); renderRadio();
-    }));
-    pr.done = true; if (gen === (radio.gen || 0)) radio.cache[key] = { t: Date.now(), list: pr.list }; renderRadio(); // stale country runs are dropped
-    return pr.list;
-  })();
-  return pr.p;
-}
-function radioToast(msg) {
-  const t = $('rToast'); t.textContent = msg; t.classList.remove('hidden', 'fade'); clearTimeout(radioToast.t);
-  radioToast.t = setTimeout(() => t.classList.add('fade'), 2600);
-}
-// ---- playback (plain <audio>; volume = master x music volume; no WebAudio routing since streams aren't CORS-enabled) ----
-function radioEl() {
-  if (radio.el) return radio.el;
-  const a = radio.el = new Audio(); a.preload = 'none';
-  a.addEventListener('error', () => { if (radio.want && a.getAttribute('src')) radioFail('error'); });
-  a.addEventListener('playing', () => { radio.stallT = 0; radioPill(); });
-  a.addEventListener('waiting', () => { radio.stallT = performance.now(); });
-  if (a.textTracks) a.textTracks.addEventListener('addtrack', e => { const t = e.track; if (t.kind !== 'metadata') return; t.mode = 'hidden'; t.addEventListener('cuechange', () => npId3(t)); });
-  return a;
-}
-function radioApply() {
-  const a = radio.el; if (!a) return;
-  a.volume = Math.max(0, Math.min(1, settings.mute || radio.muted ? 0 : (settings.master / 100) * (settings.musicVol / 100) * (gameState === 'paused' ? 0.45 : 1)));
-  const on = radio.want && radioActive() && settings.music;
-  if (!on && !a.paused) a.pause();
-  else if (on && a.paused && radio.started) radioPlayNow();
-  radioPill();
-}
-function radioPlayNow() { // must run inside a user gesture the first time (autoplay rules)
-  const a = radioEl(); radio.started = true;
-  const go = () => { const p = a.play(); if (p) p.catch(onErr); };
-  const onErr = e => { if (e && e.name === 'NotAllowedError') radio.started = false; else if (e && e.name !== 'AbortError') radioFail('play'); };
-  if (radio.cur.hls) HLS_URLS.add(radio.cur.url);
-  if (!needsHlsJs(radio.cur.url)) { setMediaSrc(a, radio.cur.url); go(); } // re-point at the live edge, play() inside the gesture
-  else setMediaSrc(a, radio.cur.url).then(go, () => radioFail('hls'));
-}
-function playStation(s) {
-  if (radio.cur && radio.cur.id !== s.id && radio.started) crTune(); // 1.8: static burst + display flicker
-  radio.cur = { id: s.id, name: s.name, now: s.now, img: s.img, url: s.url, cat: s.cat, br: s.br, hls: HLS_URLS.has(s.url) || undefined };
-  radio.want = true; settings.musicSrc = 'radio'; settings.music = true; saveSettings(); saveRadio();
-  npReset(); // 2.1: new station -> new generation; old song text is cleared at once ('LOADING…')
-  ctlRefresh.forEach(f => f()); radioEl(); radioPlayNow(); applyAudio(); renderRadio();
-}
-function radioStop() { radio.want = false; radio.started = false; const a = radio.el; if (a) { a.pause(); clearMediaSrc(a); } radioPill(); }
-function fallbackArcade(msg) { radioStop(); radio.cur = null; settings.musicSrc = 'arcade'; saveSettings(); ctlRefresh.forEach(f => f()); applyAudio(); renderRadio(); if (msg) radioToast(msg); }
-async function radioSkip(dir, failed) {
-  if (!radio.cur) return;
-  const cur = radio.cur, key = cur.cat || radio.tab;
-  let list = (radio.cache[key] && radio.cache[key].list) || [];
-  if (failed) { list = list.filter(s => s.id !== cur.id); if (radio.cache[key]) radio.cache[key].list = list; }
-  if (!list.length || (list.length === 1 && list[0].id === cur.id)) { radio.searching = true; try { list = (await verifyCat(key, failed)).filter(s => s.id !== cur.id || !failed); } finally { radio.searching = false; } }
-  if (!list.length) return fallbackArcade('NO LIVE STATIONS — ARCADE MUSIC');
-  const i = list.findIndex(s => s.id === cur.id), n = list[i < 0 ? 0 : (i + dir + list.length) % list.length];
-  if (failed) radioToast('STATION DROPPED — NOW: ' + n.name.toUpperCase());
-  playStation(n);
-}
-function radioFail(why) {
-  const now = performance.now(); radio.skips = radio.skips.filter(t => now - t < 30000); radio.skips.push(now);
-  if (radio.skips.length > 5) return fallbackArcade('RADIO KEEPS DROPPING — ARCADE MUSIC');
-  radio.want = false; if (radio.el) radio.el.pause();
-  radio.noSig = performance.now(); crPoke(); // 1.8: head unit shows NO SIGNAL briefly before the auto-skip
-  clearTimeout(radio.failTO); radio.failTO = setTimeout(() => { radio.noSig = 0; radioSkip(1, true); }, 1300);
-}
-setInterval(() => { // stall watchdog: a stream that stops delivering for 12 s counts as dead
-  const a = radio.el;
-  if (a && radio.want && radio.started && !a.paused && radio.stallT && performance.now() - radio.stallT > 12000) { radio.stallT = 0; radioFail('stall'); }
-}, 1000);
-function radioResume() { if (radio.want && radioActive() && settings.music && !radio.started && !radio.booting) { radioEl(); radioPlayNow(); applyAudio(); } }
-async function radioBoot() { // re-verify the remembered station on load; fall back to Arcade if it's dead
-  if (settings.musicSrc !== 'radio') return;
-  const s = radio.saved;
-  if (!s) { settings.musicSrc = 'arcade'; saveSettings(); return; }
-  radio.booting = true; radio.cur = s; radio.want = true; radioPill();
-  if (s.hls) HLS_URLS.add(s.url);
-  let ok = await probeStream(s.url);
-  if (!ok) { try { for (const u of await tuneUrls(s.id)) if (await probeStream(u)) { s.url = u; s.hls = HLS_URLS.has(u) || undefined; ok = true; break; } } catch (e) { /* offline */ } }
-  radio.booting = false;
-  if (!ok) return fallbackArcade('SAVED STATION IS OFFLINE — ARCADE MUSIC');
-  saveRadio(); radioPill();
-  if (actx) radioResume(); // otherwise starts on the next tap / key (autoplay rules)
-}
-// ---- UI ----
-function radioPill() {
-  const p = $('radioPill'); if (!p) return;
-  const show = radioActive() && settings.music && !settings.carRadio; // 1.8: the car radio head unit replaces this pill
-  p.classList.toggle('hidden', !show);
-  if (!show) return;
-  const a = radio.el, live = a && !a.paused && a.readyState >= 3;
-  $('rpName').textContent = (radio.booting ? 'CHECKING… ' : !radio.started ? 'TAP TO PLAY: ' : '') + radio.cur.name;
-  p.classList.toggle('live', !!live);
-}
-function openRadio(from, pick) {
-  if (from === 'hud') { pauseGame(); from = 'pause'; }
-  radio.from = from; initAudio();
-  for (const id of ['settings', 'pause']) $(id).classList.add('hidden');
-  $('radio').classList.remove('hidden');
-  if (radio.cur && radio.cur.cat) { if (radio.cur.cat.startsWith('g:')) { radio.tab = 'GENRES'; radio.genre = radio.genre || { id: radio.cur.cat.slice(2), name: 'Genre' }; } else radio.tab = radio.cur.cat; }
-  radioLoadTab(false);
-  showPicker(!!pick);
-}
-function closeRadio() {
-  showPicker(false); $('radio').classList.add('hidden');
-  if (radio.from === 'settings') { $('settings').classList.remove('hidden'); ctlRefresh.forEach(f => f()); }
-  else if (radio.from === 'pause' && gameState === 'paused') $('pause').classList.remove('hidden');
-  radio.from = null; blurUI();
-}
-const radioKey = () => radio.tab === 'GENRES' ? (radio.genre ? 'g:' + radio.genre.id : null) : radio.tab;
-function radioLoadTab(force) {
-  const key = radioKey();
-  if (key) verifyCat(key, force).catch(() => {});
-  else if (!radio.genres || force) {
-    radio.genres = 'loading';
-    tuneinGet('/Browse.ashx?c=music').then(d => { radio.genres = [...walkOutline(d.body)].filter(x => x.type === 'link' && x.guide_id).map(x => ({ id: x.guide_id, name: x.text })); renderRadio(); })
-      .catch(() => { radio.genres = null; radio.genreErr = true; renderRadio(); });
-  }
-  renderRadio();
-}
-function renderRadio() {
-  radioPill();
-  if ($('radio').classList.contains('hidden')) return;
-  const cc = curCountry(); $('rCountry').innerHTML = `<span class="fl">${cc.flag}</span>${escH(cc.name.toUpperCase())} ▾`;
-  if (radio.picker) return;
-  const tabs = [...RADIO_CATS.map(c => c[0]), 'GENRES'];
-  $('rTabs').innerHTML = tabs.map(t => `<button data-t="${t}" class="${t === radio.tab ? 'on' : ''}">${t.toUpperCase()}</button>`).join('');
-  const c = radio.cur;
-  $('rNow').innerHTML = c ? `<b>${radio.started && radio.want ? '▶ NOW PLAYING' : 'SELECTED'}:</b> ${escH(c.name)}` : 'NOW PLAYING: ARCADE MUSIC (built-in synth)';
-  const key = radioKey(), st = $('rStatus'), list = $('rList');
-  if (!key) { // genre picker
-    st.innerHTML = radio.genres === 'loading' ? '<i class="spin"></i> LOADING GENRES…' : radio.genreErr && !radio.genres ? "Couldn't reach TuneIn" : 'PICK A GENRE';
-    list.innerHTML = Array.isArray(radio.genres) ? radio.genres.map(g => `<button class="gn" data-g="${escH(g.id)}">${escH(g.name)}</button>`).join('') : '';
-    return;
-  }
-  const cached = radio.cache[key], pr = radio.prog[key], busy = pr && !pr.done, items = busy ? pr.list : cached ? cached.list : [];
-  const back = radio.tab === 'GENRES' ? `<button class="gb" id="rGenBack">◀ GENRES</button> <b>${escH(radio.genre.name)}</b> &nbsp;` : '';
-  st.innerHTML = back + (busy ? `<i class="spin"></i> CHECKING STATIONS… ${pr.checked}/${pr.total || '?'} &nbsp;(${pr.list.length} live)`
-    : pr && pr.err && !items.length ? escH(pr.err) : !items.length && (cached || (pr && pr.done)) ? `No live stations found for ${escH(catLabel(key))} in ${escH(curCountry().name)} — try another category or country`
-    : `${items.length} LIVE STATION${items.length === 1 ? '' : 'S'} in ${escH(curCountry().name)} — verified ${cached ? new Date(cached.t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : ''}`);
-  list.innerHTML = items.map(s => `<button class="st${c && c.id === s.id ? ' on' : ''}" data-id="${escH(s.id)}">
-    <span class="lg">${s.img ? `<img src="${escH(s.img)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}</span>
-    <span class="tx"><b>${s.feat ? '<i class="ft">FEATURED</i> ' : ''}${escH(s.name)}</b><small>${escH(s.now || ' ')}</small></span><em>${c && c.id === s.id ? '▶' : s.feat ? '★' : s.br ? s.br + 'k' : ''}</em></button>`).join('');
-}
-// ---- 1.7 country picker (searchable; popular first, then all TuneIn countries A-Z) ----
-function showPicker(on) {
-  radio.picker = on;
-  for (const id of ['rTabs', 'rNow', 'rStatus', 'rList']) $(id).classList.toggle('hidden', on);
-  $('rPick').classList.toggle('hidden', !on);
-  if (on) { $('rcSearch').value = ''; renderPicker(); refreshCountries(); setTimeout(() => $('rcSearch').focus(), 30); } else renderRadio();
-}
-function renderPicker() {
-  const q = $('rcSearch').value.trim().toLowerCase(), cur = settings.radioCountry;
-  const btn = c => `<button class="cn${c.n === cur ? ' on' : ''}" data-n="${c.n}"><span class="fl">${c.flag}</span>${escH(c.name)}</button>`;
-  const hit = c => !q || c.name.toLowerCase().includes(q) || c.iso.toLowerCase() === q;
-  const pop = POPULAR_C.map(i => COUNTRIES.find(c => c.iso === i)).filter(c => c && hit(c)), all = [WORLD, ...COUNTRIES].filter(hit);
-  $('rcList').innerHTML = (q ? '' : `<div class="cnh">POPULAR</div>${pop.map(btn).join('')}<div class="cnh">ALL COUNTRIES (TuneIn)</div>`) + (all.map(btn).join('') || '<div class="cnh">No matching country</div>');
-}
-let countriesFetched = false;
-function refreshCountries() { // merge any countries TuneIn added since the list was built (Top 40 "By Location" pivot per continent)
-  if (countriesFetched) return; countriesFetched = true;
-  const conts = ['r101215', 'r101216', 'r100297', 'r101162', 'r101320', 'r101217', 'r101218', 'r101219'];
-  Promise.all(conts.map(r => tuneinGet('/Browse.ashx?id=c57943&pivot=country&filter=s:' + r).catch(() => null))).then(ds => {
-    let added = 0;
-    for (const d of ds) for (const x of walkOutline(d && d.body)) {
-      const m = /filter=s:n(\d+)/.exec(x.URL || ''); if (!m || COUNTRIES.some(c => c.n === +m[1])) continue;
-      COUNTRIES.push({ name: x.text, n: +m[1], iso: '', flag: '🌐' }); added++;
-    }
-    if (added) { COUNTRIES.sort((a, b) => a.name.localeCompare(b.name)); if (radio.picker) renderPicker(); }
-  });
-}
-$('rcSearch').addEventListener('input', renderPicker);
-$('rcSearch').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Escape') showPicker(false); if (e.key === 'Enter') { const b = $('rcList').querySelector('.cn'); if (b) b.click(); } });
-$('rcList').addEventListener('click', e => { const b = e.target.closest('.cn'); if (!b) return; setCountry(+b.dataset.n); showPicker(false); radioLoadTab(false); });
-$('rCountry').onclick = () => showPicker(!radio.picker);
-$('rTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; radio.tab = b.dataset.t; if (radio.tab !== 'GENRES') radio.genre = null; radioLoadTab(false); });
-$('rList').addEventListener('click', e => {
-  const g = e.target.closest('.gn'); if (g) { radio.genre = { id: g.dataset.g, name: g.textContent }; radioLoadTab(false); return; }
-  const b = e.target.closest('.st'); if (!b) return;
-  const key = radioKey(), src = (radio.cache[key] && radio.cache[key].list) || (radio.prog[key] && radio.prog[key].list) || [];
-  const s = src.find(x => x.id === b.dataset.id); if (s) playStation(s);
-});
-$('rStatus').addEventListener('click', e => { if (e.target.id === 'rGenBack') { radio.genre = null; renderRadio(); } });
-$('rRefresh').onclick = () => radioLoadTab(true);
-$('rArcade').onclick = () => fallbackArcade();
-$('rBack').onclick = closeRadio;
-for (const id of ['rpPrev', 'rpNext', 'rpName']) $(id).addEventListener('pointerdown', e => {
-  e.preventDefault(); e.stopPropagation(); initAudio();
-  if (id === 'rpName') { if (!radio.started) radioResume(); else openRadio(gameState === 'play' ? 'hud' : radio.from || 'title'); }
-  else radioSkip(id === 'rpNext' ? 1 : -1, false);
-});
 
-// ---------------- 1.8 car radio head unit (HUD) ----------------
-// Shown while a real station is selected (not Arcade). The EQ meter is simulated: TuneIn streams don't send CORS headers,
-// so routing them through a WebAudio AnalyserNode would only read silence (and mute the stream).
-const cr = { lastPoke: performance.now(), tuneT: 0, expanded: false, info: {}, eq: new Float32Array(14), eqT: 0, mq: '', npT: 0 };
-const crEl = $('carRadio'), crCtx = $('crEq').getContext('2d');
-function crPoke() { cr.lastPoke = performance.now(); crEl.classList.remove('dim'); }
-function crTune() {
-  cr.tuneT = performance.now(); crPoke();
-  if (!actx || settings.mute) return; // short band-passed noise burst ("tuning static") at music volume
-  const t = actx.currentTime, src = actx.createBufferSource(); src.buffer = noiseBuf;
-  const f = actx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.setValueAtTime(1800, t); f.frequency.linearRampToValueAtTime(3600, t + 0.4); f.Q.value = 0.7;
-  const g = actx.createGain(), v = 0.22 * (settings.musicVol / 100);
-  g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(v, t + 0.03); g.gain.setValueAtTime(v, t + 0.3); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.55);
-  src.connect(f); f.connect(g); g.connect(masterG); src.start(t, Math.random()); src.stop(t + 0.6);
-}
-const freqFrom = txt => { // "FM 101.5" from names like "Star 101.5" / "Fly 92.3 (Troy, NY)" / "WGN 720 AM"
-  let m = /\b(8[89]|9\d|10[0-7])[.,]\d\b/.exec(txt || ''); if (m) return 'FM ' + m[0].replace(',', '.');
-  m = /\b(\d{3,4})\s?AM\b/i.exec(txt || ''); if (m && +m[1] >= 530 && +m[1] <= 1710) return 'AM ' + m[1];
-  return '';
-};
-// ---- 2.1 now playing: per-station generation token, fresh sources, 15-20 s polling ----
-// Sources (best first): in-stream ID3 (HLS, e.g. K-LOVE: exact, arrives with the audio) -> StreamTheWorld/Triton
-// now-playing API -> Live365 station API -> TuneIn feed (Secondary.Title only; its Header falls back to the slogan).
-// Every request carries the generation it was made for; anything that comes back for an older station is dropped.
-const np = { gen: 0, cur: null, song: null, state: 'idle', src: '', next: 0, busy: false, resetT: 0, log: [] };
-function npReset() {
-  np.gen++; np.cur = radio.cur; np.song = null; np.state = 'loading'; np.src = ''; np.next = 0; np.busy = false; np.resetT = performance.now();
-  cr.info = { id: radio.cur && radio.cur.id };
-  if (radio.cur) { radio.cur.now = 'LOADING…'; crDescribe(np.gen); }
-}
-function npSet(gen, song, src) {
-  if (gen !== np.gen || !radio.cur) return false;
-  if (np.src === 'id3' && src !== 'id3') return false; // in-stream tags win over polled guesses
-  song = String(song || '').replace(/\s+/g, ' ').trim();
-  if (song) { if (song !== np.song) np.log.push([Math.round(performance.now() / 1000), radio.cur.id, src, song]); np.song = song; np.state = 'song'; np.src = src; }
-  else if (np.src !== 'id3') { np.song = null; np.state = 'live'; }
-  radio.cur.now = np.state === 'song' ? np.song : np.state === 'live' ? 'LIVE' : 'LOADING…';
-  if (np.log.length > 60) np.log.splice(0, 20);
-  return true;
-}
-function npFetch(url, type = 'json', ms = 8000) {
-  const ac = window.AbortController ? new AbortController() : null, t = setTimeout(() => ac && ac.abort(), ms);
-  return fetch(url, { signal: ac && ac.signal, cache: 'no-store' }).then(r => { if (!r.ok) throw new Error(r.status); return type === 'json' ? r.json() : r.text(); }).finally(() => clearTimeout(t));
-}
-async function npTriton(mount) {
-  const x = new DOMParser().parseFromString(await npFetch('https://np.tritondigital.com/public/nowplaying?mountName=' + encodeURIComponent(mount) + '&numberToFetch=1&eventType=track', 'text'), 'text/xml');
-  const i = x.querySelector('nowplaying-info'); if (!i) return null;
-  const P = k => { const e = i.querySelector(`property[name="${k}"]`); return e ? e.textContent.trim() : ''; };
-  const st = +P('cue_time_start'), du = +P('cue_time_duration');
-  if (st && du && Date.now() > st + du + 90e3) return ''; // the last cue is long over (talk/ads): don't show it
-  return [P('track_artist_name'), P('cue_title')].filter(Boolean).join(' - ');
-}
-async function npLive365(mid) {
-  const d = await npFetch('https://api.live365.com/station/' + mid), t = d && d['current-track'];
-  if (!t || (t.end && Date.now() > Date.parse(t.end) + 90e3)) return '';
-  return [t.artist, t.title].filter(Boolean).join(' - ');
-}
-async function npTuneIn(id) { // CORS works today; JSONP if that ever changes
-  let d; try { d = await npFetch('https://feed.tunein.com/profiles/' + encodeURIComponent(id) + '/nowPlaying'); }
-  catch (e) { d = await jsonpGet('https://feed.tunein.com/profiles/' + encodeURIComponent(id) + '/nowPlaying'); }
-  np.ttl = +(d && d.Ttl) || 0;
-  return (d && d.Secondary && d.Secondary.Title) || ''; // no Secondary = TuneIn has no song for this station
-}
-async function npPoll() {
-  const c = radio.cur;
-  if (!c) return;
-  if (np.cur !== c) npReset();
-  if (np.busy || !radioActive() || !radio.started || performance.now() < np.next) return;
-  if (np.src === 'id3') { np.next = performance.now() + 20e3; return; } // tags arrive with the audio
-  if (needsId3(c) && performance.now() - np.resetT < 6000) return; // HLS: give the in-stream tag a moment (TuneIn runs ahead of the audio)
-  np.busy = true; const gen = np.gen, url = c.url || ''; let song = null, src = '', ok = false;
-  const stw = /streamtheworld\.com\/.*?\/([A-Z0-9_]+?)(AAC)?\.(mp3|aac)\b/i.exec(url), l365 = /live365\.com\/(a\d+)/i.exec(url);
-  try {
-    if (stw) for (const m of [stw[1] + (stw[2] || ''), stw[1]]) { try { song = await npTriton(m); } catch (e) { song = null; } if (song) { src = 'triton'; break; } }
-    if (!song && l365) { try { song = await npLive365(l365[1]); if (song) src = 'live365'; } catch (e) { /* fall through */ } }
-    if (!song) { song = await npTuneIn(c.id); src = song ? 'tunein' : ''; }
-    ok = true;
-  } catch (e) { /* offline: keep what we have, retry soon */ }
-  if (gen !== np.gen) return; // station changed meanwhile (busy belongs to the new generation now)
-  np.busy = false;
-  if (ok) npSet(gen, song, src);
-  else if (np.state === 'loading') npSet(gen, '', '');
-  np.next = performance.now() + (src === 'tunein' && np.ttl ? Math.min(30, Math.max(15, np.ttl)) : 15) * 1000;
-}
-function npId3(track) { // HLS ID3 timed metadata (hls.js and native HLS both surface it as a hidden 'metadata' TextTrack)
-  if (performance.now() - np.resetT < 800 || !radio.cur || !needsId3(radio.cur)) return;
-  let title = '', artist = '';
-  for (const cue of track.activeCues || []) {
-    const v = cue.value || {}, d = typeof v.data === 'string' ? v.data : '';
-    if (v.key === 'TIT2' && d) title = d; else if (v.key === 'TPE1' && d) artist = d;
-  }
-  if (title) npSet(np.gen, artist ? artist + ' - ' + title : title, 'id3');
-}
-const needsId3 = c => HLS_URLS.has(c.url);
-let jsonpG = 0;
-function jsonpGet(url, ms = 8000) {
-  return new Promise((res, rej) => {
-    const cb = '__np' + (++jsonpG), s = document.createElement('script'); let done = false;
-    const fin = (err, d) => { if (done) return; done = true; clearTimeout(t); s.remove(); window[cb] = () => { delete window[cb]; }; err ? rej(err) : res(d); };
-    const t = setTimeout(() => fin(new Error('timeout')), ms);
-    window[cb] = d => { delete window[cb]; fin(null, d); };
-    s.onerror = () => fin(new Error('network'));
-    s.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cb; document.head.appendChild(s);
-  });
-}
-function crDescribe(gen) { // TuneIn Describe: AM/FM frequency for the head unit (once per station)
-  const id = radio.cur.id;
-  tuneinGet('/Describe.ashx?id=' + encodeURIComponent(id)).then(d => {
-    if (gen !== np.gen) return; const b = (d && d.body && d.body[0]) || {};
-    cr.info.freq = b.frequency && /^(FM|AM)$/i.test(b.band || '') ? `${b.band.toUpperCase()} ${b.frequency}` : ''; // internet-only stations report band "Stream"
-  }).catch(() => {});
-}
-setInterval(npPoll, 1000);
-function crPreset() {
-  const c = radio.cur, l = c && radio.cache[c.cat] && radio.cache[c.cat].list; const i = l ? l.findIndex(s => s.id === c.id) : -1;
-  return i >= 0 ? 'P' + (i + 1) : '';
-}
-function carRadioHUD(dt) {
-  const c = radio.cur, a = radio.el;
-  if (c && np.cur !== c) npReset(); // any station swap (boot, skip, pick) shows the new one immediately
-  const show = settings.carRadio && radioActive() && settings.music && (gameState === 'play' || gameState === 'paused') && !aft.on;
-  crEl.classList.toggle('off', !show);
-  if (!show) { cr.expanded = false; crEl.classList.remove('exp'); return; }
-  const now = performance.now();
-  if (isTouch && now - (cr.layT || 0) > 700) { // touch: sit just below whatever HUD occupies the top-centre column
-    cr.layT = now; const cx = innerWidth / 2, half = crEl.offsetWidth / 2 + 6; let top = 0;
-    for (const id of ['speedo', 'heat', 'dmgBox', 'combo', 'comboBar', 'pauseBtn']) {
-      const e = $(id); if (!e || e.offsetParent === null || e.classList.contains('hidden')) continue;
-      const r = e.getBoundingClientRect(); if (r.width && r.right > cx - half && r.left < cx + half) top = Math.max(top, r.bottom);
-    }
-    crEl.style.setProperty('--crTop', Math.round(top + 6) + 'px');
-  }
-  const tuning = now - cr.tuneT < 650, noSig = !!radio.noSig, live = a && !a.paused && a.readyState >= 3 && !noSig;
-  if (now - cr.lastPoke > 5000 && !crEl.classList.contains('dim')) { crEl.classList.add('dim'); if (cr.expanded) { cr.expanded = false; crEl.classList.remove('exp'); } }
-  crEl.classList.toggle('flick', tuning || noSig);
-  const band = noSig ? '----' : cr.info.freq || freqFrom(c.name) || crPreset() || 'NET'; setT('crBand', band);
-  const pre = crPreset(); setT('crPre', band === pre ? '' : pre);
-  const cc = curCountry(); setT('crFlag', cc.flag);
-  setT('crAir', noSig ? 'NO SIG' : radio.booting ? 'CHECK' : !radio.started ? 'TAP ▶' : live ? 'ON AIR' : 'TUNING');
-  setC('crAir', 'on', !!live);
-  const muted = radio.muted || settings.mute;
-  const txt = noSig ? 'NO SIGNAL' : radio.searching ? 'SEARCHING STATIONS…' : tuning ? 'TUNING…' : !radio.started ? 'TAP TO PLAY  ' + c.name : (muted ? '[MUTE]  ' : '') + c.name + (c.now ? '  •  ' + c.now : '');
-  if (txt !== cr.mq) { // marquee only when the text overflows
-    cr.mq = txt; const s = $('crText'); s.textContent = txt; s.classList.remove('run');
-    const w = $('crMq').clientWidth;
-    if (s.scrollWidth > w) { s.textContent = txt + '     ' + txt; s.style.setProperty('--d', Math.max(6, txt.length * 0.22) + 's'); s.classList.add('run'); }
-  }
-  const sig = live ? 4 : tuning ? 1 + ((now / 120) | 0) % 3 : 0;
-  if (sig !== cr.sigN) { cr.sigN = sig; $('crSig').querySelectorAll('i').forEach((el, i) => el.classList.toggle('on', i < sig)); }
-  if (cr.knobV !== settings.musicVol) { cr.knobV = settings.musicVol; $('crKnob').style.setProperty('--r', (-135 + settings.musicVol * 2.7) + 'deg'); }
-  // simulated level meter: random bands + a 120 BPM pump, scaled by volume, flat when silent
-  const lvl = live && !muted ? 0.35 + 0.65 * settings.musicVol / 100 : 0, beat = Math.pow(1 - ((now / 500) % 1), 3);
-  const W = crCtx.canvas.width, H = crCtx.canvas.height, n = cr.eq.length, bw = W / n;
-  crCtx.clearRect(0, 0, W, H);
-  for (let i = 0; i < n; i++) {
-    const target = lvl * Math.min(1, (0.25 + Math.random() * 0.55) * (1 - i / n * 0.45) + beat * (i < 4 ? 0.45 : 0.12));
-    cr.eq[i] += (target - cr.eq[i]) * Math.min(1, dt * (target > cr.eq[i] ? 22 : 6));
-    const h = Math.max(1, Math.round(cr.eq[i] * H / 2) * 2);
-    for (let y = H - 2; y >= H - h; y -= 2) { crCtx.fillStyle = y < H * 0.3 ? '#ff7a3a' : '#ffbf3a'; crCtx.fillRect(i * bw + 1, y, bw - 2, 1.4); }
-  }
-}
-function crAction(act) {
-  crPoke(); initAudio();
-  if (act === 'expand') { cr.expanded = !cr.expanded; crEl.classList.toggle('exp', cr.expanded); return; }
-  if (!radio.started && act !== 'menu') { radioResume(); return; }
-  if (act === 'prev' || act === 'next') radioSkip(act === 'next' ? 1 : -1, false);
-  else if (act === 'volup' || act === 'voldn') { settings.musicVol = Math.max(0, Math.min(100, settings.musicVol + (act === 'volup' ? 10 : -10))); saveSettings(); applyAudio(); ctlRefresh.forEach(f => f()); }
-  else if (act === 'mute') { radio.muted = !radio.muted; applyAudio(); }
-  else if (act === 'menu') openRadio(gameState === 'play' ? 'hud' : 'pause');
-}
-crEl.addEventListener('pointerdown', e => {
-  e.stopPropagation(); const b = e.target.closest('[data-a]');
-  if (b) { e.preventDefault(); crAction(b.dataset.a); } else crPoke();
-});
-crEl.addEventListener('pointermove', () => crPoke(), { passive: true });
 
 // ======================================================================================
 // 1.9 ENVIRONMENT: streamed terrain chunks (hills, rivers, lakes, farm fields), instanced
@@ -4502,6 +4051,7 @@ function woodSound(k, p) {
   noiseHit(0.25, 900, 0.4 * k * pr, 'bandpass'); noiseHit(0.6, 220, 0.3 * k * pr, 'lowpass', 0.08);
 }
 
+
 // ======================================================================================
 // 1.9 OIL SPILLS + PERSISTENT CRASH DEBRIS (tire punctures, launches) + NPC hazard avoidance
 // ======================================================================================
@@ -4753,6 +4303,7 @@ function spillUpdate(pz) {
   }
 }
 function spillReset() { for (const s of slicks) { s.mesh.visible = false; slickPool.push(s.mesh); } slicks.length = 0; }
+
 
 // ================= 2.0: time of day, weather, snow plows =================
 const HOUR_SEC = 600;                       // 1 in-game hour = 10 real minutes of active play
@@ -5385,6 +4936,7 @@ function wxFrame(rawDt, dt) {
 addSnow(terrMat, 0.15); addSnow(deckMat, 0.2);
 for (const m of new Set(Object.entries(PM_).filter(([k]) => !['lamp', 'pole', 'signBoard', 'signPost', 'house'].includes(k)).map(([, m]) => m))) addSnow(m, 0.15);
 
+
 // ================= 2.2 crash replay: rolling recorder + playback (camera views, timeline UI, sounds) =================
 // Recording (only while a run is live): every ~1/30 s of sim time one frame is written into fixed-size ring buffers
 //  - per vehicle (Float32, z relative to a per-frame origin): visible, position, quaternion, body roll/pitch, steer, wiper, flames, wheel spin
@@ -5977,23 +5529,29 @@ function rpOpen(mode) {
   for (const k in keys) keys[k] = false; clearTouch(); boosting = false;
   if (engGain) engGain.gain.value = 0; sirenUpdate(0, false, 0.016);
   document.body.classList.add('replaying');
-  $('over').classList.add('hidden'); $('rpUI').classList.remove('hidden');
+  for (const id of ['over', 'pause', 'settings', 'radio']) $(id).classList.add('hidden');
+  $('rpUI').classList.remove('hidden');
   rpPlan(); rpBuildMarkers();
   rc.snap = true; rc.shot = -1; rc.tvI = -1;
   rc.orb.yaw = Math.atan2(camera.position.x - player.pos.x, camera.position.z - player.pos.z); rc.orb.pitch = 0.45; rc.orb.dist = 28;
   rp.sndI = rp.snd.findIndex(e => e.t > rp.T); if (rp.sndI < 0) rp.sndI = rp.snd.length;
   rpApply(rp.T); rpCamera(0.016); rpUI();
   blurUI();
+  const exp = $('rpExport');
+  if (exp && !rpRec) { exp.textContent = rpPending ? 'SAVE' : 'VIDEO'; exp.classList.toggle('on', !!rpPending); }
   return true;
 }
 function rpClose() {
   if (!rp.on) return;
+  const saving = rpRec ? rpExportStop(true) : null;
+  if (saving) saving.then(rpReleaseStream, rpReleaseStream); else rpReleaseStream();
   rpRestoreLive();
   rp.on = false; gameState = rp.prevState === 'replay' ? 'play' : rp.prevState;
   camera.up.set(0, 1, 0);
   document.body.classList.remove('replaying'); $('rpUI').classList.add('hidden');
   for (const k in keys) keys[k] = false; clearTouch();
   if (gameState === 'over') $('over').classList.remove('hidden');
+  else if (gameState === 'paused') $('pause').classList.remove('hidden');
   else if (gameState === 'play' && isTouch) { $('touch').classList.remove('hidden'); layoutTouch(); }
   applyAudio(); blurUI();
   rp.nextS = rp.t; last = performance.now();
@@ -6085,7 +5643,109 @@ function rpSetSpeed(s) { rp.speed = s; rpUIKey = ''; }
   cv.addEventListener('wheel', e => { if (!rp.on) return; e.preventDefault(); if (RP_CAMS[rp.cam][1] !== 'free') rpSetCam(6); rc.orb.dist = clamp(rc.orb.dist * Math.exp(e.deltaY * 0.0012), 5, 150); }, { passive: false });
   $('irBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); rpOpen('instant'); });
   $('oReplay').addEventListener('click', () => rpOpen('final'));
+  rpExportGate();
+  $('rpExport').addEventListener('click', () => {
+    if (rpPending) { rpDownload(rpPending.blob, rpPending.mime); rpPending = null; $('rpExport').textContent = 'VIDEO'; $('rpExport').classList.remove('on'); return; }
+    if (rpRec) rpExportStop(true); else rpExportStart();
+  });
 })();
+// ---------------- 2.4 replay video export (local MediaRecorder, no upload) ----------------
+// WebM is preferred. MP4 is used only when WebM is not supported and MP4 is.
+// Frames are pulled with requestFrame() right after the WebGL draw (preserveDrawingBuffer stays off).
+let rpRec = null, rpPending = null, rpStream = null;
+function rpVideoMime() {
+  if (typeof MediaRecorder === 'undefined' || typeof MediaRecorder.isTypeSupported !== 'function') return '';
+  const webm = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+  const mp4 = ['video/mp4;codecs=avc1.42E01E', 'video/mp4;codecs=avc1', 'video/mp4'];
+  const ok = t => { try { return MediaRecorder.isTypeSupported(t); } catch (e) { return false; } };
+  for (const t of webm) if (ok(t)) return t;
+  for (const t of mp4) if (ok(t)) return t;
+  return '';
+}
+function rpCanExport() {
+  return !!(rpVideoMime() && renderer && renderer.domElement && typeof renderer.domElement.captureStream === 'function');
+}
+function rpExportGate() {
+  const b = $('rpExport'); if (!b) return;
+  const ok = rpCanExport();
+  b.classList.toggle('hidden', !ok);
+  b.disabled = !ok;
+}
+function rpGrabFrame() {
+  const track = rpRec && rpRec.track;
+  if (!track || typeof track.requestFrame !== 'function') return;
+  try { track.requestFrame(); } catch (e) { /* canvas not ready this frame */ }
+}
+function rpDownload(blob, mime) {
+  if (!blob || !blob.size) return;
+  const ext = /mp4/i.test(mime || '') ? 'mp4' : 'webm';
+  const a = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  a.href = url; a.download = 'crash-cars-replay-' + VERSION + '.' + ext; a.rel = 'noopener';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 20000);
+}
+function rpReleaseStream() {
+  if (!rpStream) return;
+  try { rpStream.getTracks().forEach(t => t.stop()); } catch (e) { /* ignore */ }
+  rpStream = null;
+}
+function rpCanvasStream() {
+  const live = rpStream && rpStream.getVideoTracks().some(t => t.readyState === 'live');
+  if (live) return rpStream;
+  rpReleaseStream();
+  rpStream = renderer.domElement.captureStream(0);
+  return rpStream;
+}
+function rpExportStart() {
+  if (rpRec || !rp.on) return false;
+  const mime = rpVideoMime();
+  if (!mime) { rpExportGate(); return false; }
+  rpPending = null;
+  let stream;
+  try { stream = rpCanvasStream(); }
+  catch (e) { rpExportGate(); return false; }
+  const track = stream.getVideoTracks()[0];
+  let rec;
+  try { rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 2500000 }); }
+  catch (e) {
+    rpReleaseStream();
+    const b = $('rpExport'); if (b) { b.classList.add('hidden'); b.disabled = true; }
+    return false;
+  }
+  const chunks = [];
+  rec.ondataavailable = ev => { if (ev.data && ev.data.size) chunks.push(ev.data); };
+  rec.onerror = () => { if (rpRec && rpRec.rec === rec) rpExportStop(false); };
+  rpRec = { rec, chunks, stream, track, mime };
+  try { rec.start(200); } catch (e) { rpRec = null; rpReleaseStream(); return false; }
+  const b = $('rpExport'); if (b) { b.classList.add('on'); b.textContent = 'STOP'; }
+  rpGrabFrame();
+  return true;
+}
+function rpExportStop(download = true) {
+  const rec = rpRec;
+  if (!rec) return Promise.resolve(rpPending ? rpPending.blob : null);
+  rpRec = null;
+  const b = $('rpExport');
+  return new Promise(resolve => {
+    let done = false;
+    const finish = () => {
+      if (done) return; done = true;
+      const blob = new Blob(rec.chunks, { type: (rec.mime || 'video/webm').split(';')[0] });
+      if (download && blob.size) {
+        rpPending = { blob, mime: rec.mime };
+        rpDownload(blob, rec.mime);
+        if (b) { b.classList.add('on'); b.textContent = 'SAVE'; }
+      } else if (b && rpCanExport()) { b.classList.remove('on'); b.textContent = 'VIDEO'; }
+      resolve(blob);
+    };
+    rec.rec.onstop = finish;
+    try {
+      if (rec.rec.state === 'inactive') finish();
+      else { try { rec.rec.requestData(); } catch (e) { /* ignore */ } rec.rec.stop(); }
+    } catch (e) { finish(); }
+  });
+}
 function rpKey(e) { // keyboard while the replay is up
   e.preventDefault(); if (e.repeat && !['ArrowLeft', 'ArrowRight', 'Comma', 'Period'].includes(e.code)) return;
   const c = e.code;
@@ -6100,6 +5760,7 @@ function rpKey(e) { // keyboard while the replay is up
   else if (c === 'Equal' || c === 'NumpadAdd' || c === 'ArrowUp') { const S = [0.25, 0.5, 1, 2]; rpSetSpeed(S[Math.min(3, S.indexOf(rp.speed) + 1)]); }
   else if (c === 'KeyM') { settings.mute = !settings.mute; applyAudio(); saveSettings(); }
 }
+
 
 // ---------------- world streaming ----------------
 function updateWorld() {
@@ -6259,9 +5920,7 @@ function updateHUD(rdt) {
 // ---------------- settings UI ----------------
 const SCHEMA = [
   { sec: 'SOUND', col: 0, c: 0, items: [{ k: 'master', t: 'range', l: 'MASTER VOLUME' }, { k: 'sfx', t: 'range', l: 'SFX VOLUME' }, { k: 'mute', t: 'toggle', l: 'MUTE ALL' }] },
-  { sec: 'MUSIC', col: 0, c: 1, items: [{ k: 'music', t: 'toggle', l: 'MUSIC' }, { k: 'musicSrc', t: 'seg', l: 'MUSIC SOURCE', opts: [['arcade', 'ARCADE'], ['radio', 'RADIO']] },
-    { k: 'musicVol', t: 'range', l: 'MUSIC VOLUME' }, { k: 'radioBtn', t: 'btn', l: 'RADIO STATIONS', b: 'BROWSE' },
-    { k: 'radioCountry', t: 'btn', l: 'RADIO COUNTRY' }, { k: 'carRadio', t: 'toggle', l: 'SHOW CAR RADIO' }] },
+  { sec: 'MUSIC', col: 0, c: 1, items: [{ k: 'music', t: 'toggle', l: 'MUSIC' }, { k: 'musicVol', t: 'range', l: 'MUSIC VOLUME' }] },
   { sec: 'DISPLAY', col: 1, c: 2, items: [
     { k: 'quality', t: 'seg', l: 'GRAPHICS', opts: [['auto', 'AUTO'], ['low', 'LOW'], ['medium', 'MED'], ['high', 'HIGH']] },
     { k: 'shadows', t: 'toggle', l: 'SHADOWS' }, { k: 'shake', t: 'toggle', l: 'CAMERA SHAKE' }, { k: 'shakeAmt', t: 'range', l: 'SHAKE INTENSITY' },
@@ -6298,22 +5957,17 @@ function buildSettings() {
         const upd = () => { b.classList.toggle('on', get()); b.textContent = get() ? 'ON' : 'OFF'; };
         b.onclick = () => {
           if (it.k === 'fullscreen') toggleFullscreen();
-          else { settings[it.k] = !settings[it.k]; applySettings(); saveSettings(); if (it.k === 'carRadio') radioPill(); }
+          else { settings[it.k] = !settings[it.k]; applySettings(); saveSettings(); }
           upd();
         };
         ctl.append(b); ctlRefresh.push(upd);
       } else if (it.t === 'btn') {
         const b = document.createElement('button'); b.className = 'tg wide' + (it.b ? '' : ' cty'); b.id = 's_' + it.k; b.textContent = it.b || '';
-        b.onclick = () => openRadio('settings', !it.b); ctl.append(b);
-        if (!it.b) ctlRefresh.push(() => { const c = curCountry(); b.textContent = c.flag + ' ' + c.name.toUpperCase(); });
+        b.onclick = () => {}; ctl.append(b);
       } else {
         const seg = document.createElement('div'); seg.className = 'seg'; seg.id = 's_' + it.k;
         const btns = it.opts.map(([val, lab]) => { const b = document.createElement('button'); b.textContent = lab; b.dataset.v = val; b.onclick = () => {
-          if (it.k === 'musicSrc') { // 1.6: Radio needs a picked station; Arcade stops the stream
-            if (val === 'radio' && !radio.cur) { openRadio('settings'); return; }
-            if (val === 'arcade') { fallbackArcade(); upd(); return; }
-            radio.want = true; settings.musicSrc = val; saveSettings(); radioResume(); applyAudio(); upd(); return;
-          }
+          if (it.k === 'musicSrc') return; // radio is off; arcade is the only music source
           settings[it.k] = val; if (it.k === 'steerMode' && val === 'tilt') requestTilt(); applySettings(); saveSettings(); upd(); }; seg.append(b); return b; });
         const upd = () => btns.forEach(b => b.classList.toggle('on', b.dataset.v === settings[it.k]));
         ctl.append(seg); ctlRefresh.push(upd);
@@ -6540,11 +6194,12 @@ function frame(now) {
   requestAnimationFrame(frame);
   const realDt = Math.min(2, Math.max(0, (now - last) / 1000)), rawDt = Math.min(0.5, realDt); last = now;
   if (document.hidden) return; // 2.1: nothing to simulate or draw in a background tab
-  if (rp.on) { rpFrame(rawDt); renderPrep(); renderer.render(scene, camera); return; } // 2.2 replay: the game is frozen
+  if (rp.on) { rpFrame(rawDt); renderPrep(); renderer.render(scene, camera); rpGrabFrame(); return; } // 2.2 replay: the game is frozen
   tick(rawDt, realDt);
   if (gameState === 'paused') { if (now - pausedDrawT < 250) return; pausedDrawT = now; } // static scene behind the pause menu: 4 fps is plenty
   renderPrep();
   renderer.render(scene, camera);
+  rpGrabFrame();
   autoQuality(realDt);
   if (++frameNo === 20) schedulePrecompile(0); // deferred: the title screen is up and interactive first
 }
@@ -6675,6 +6330,16 @@ COLORS.forEach(c => {
   swWrap.appendChild(b);
 });
 buildSettings();
+function runInProgress() {
+  return gameState === 'play' || gameState === 'paused' || gameState === 'over' || gameState === 'replay' || gameState === 'over-restart' || aft.on;
+}
+function goArcade() {
+  if (runInProgress() && !confirm('A run is in progress. Go back to the Arcade?')) return;
+  location.assign('/arcade/');
+}
+$('arcadeBack').onclick = goArcade;
+$('pArcade').onclick = goArcade;
+$('oArcade').onclick = goArcade;
 $('play').onclick = startGame;
 $('tSettings').onclick = () => { initAudio(); openSettings('title'); };
 $('pSettings').onclick = () => openSettings('pause');
@@ -6687,6 +6352,19 @@ $('restart').onclick = () => { gameState = 'over-restart'; startGame(); };
 $('oTitle').onclick = toTitle;
 $('pauseBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); pauseGame(); });
 document.addEventListener('pointerdown', () => initAudio(), { once: false, passive: true });
+// A focused slider or text field inside a closed menu used to keep arrow keys (2.3 country search
+// also stopPropagation'd every key). Blur a stranded control so the car gets the arrows. A field
+// that is actually open keeps its keys and does not also steer.
+function typingInOpenMenu(e) {
+  const t = e.target;
+  if (!t || !t.closest) return false;
+  const field = t.closest('input, textarea, select');
+  if (!field) return false;
+  const menu = field.closest('#radio, #settings, #pause, #over, #title');
+  if (menu && !menu.classList.contains('hidden')) return true;
+  if (field.blur) field.blur();
+  return false;
+}
 addEventListener('keydown', e => {
   if (rp.on) { rpKey(e); return; } // 2.2 replay controls
   if (aft.on && gameState === 'play') { // aftermath: controls are off, any key skips to the summary
@@ -6694,8 +6372,9 @@ addEventListener('keydown', e => {
     if (!e.repeat && aft.t > AFT_SKIP_AFTER) endAftermath('skip');
     return;
   }
+  if (typingInOpenMenu(e)) return;
   const inRadio = !$('radio').classList.contains('hidden');
-  if (inRadio) { if (e.code === 'Escape') { if (radio.picker) showPicker(false); else closeRadio(); } return; }
+  if (inRadio) { if (e.code === 'Escape') closeRadio(); return; }
   const inMenu = !$('settings').classList.contains('hidden');
   if (gameState === 'play' && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();
   if (e.code === 'Escape' || e.code === 'KeyP') {
@@ -6703,7 +6382,13 @@ addEventListener('keydown', e => {
     return;
   }
   if (e.repeat) { if (gameState === 'play') keys[e.code] = true; return; }
-  if (gameState === 'title') { if (!inMenu && (e.code === 'Enter' || e.code === 'Space')) { e.preventDefault(); startGame(); } return; }
+  if (gameState === 'title') {
+    if (!inMenu && (e.code === 'Enter' || e.code === 'Space')) {
+      if (e.target && e.target.closest && e.target.closest('button, a, input, textarea, select')) return;
+      e.preventDefault(); startGame();
+    }
+    return;
+  }
   if (gameState === 'over' && e.code === 'KeyT' && !$('oReplay').classList.contains('hidden')) { rpOpen('final'); return; }
   if (gameState !== 'play') return;
   keys[e.code] = true;
@@ -6865,13 +6550,14 @@ window.__game = {
   get airborne() { return player.state === 'free' && !player.touching && airT > 0.25; },
   start: startGame, spawnPileAhead, openSettings, pause: pauseGame, rupture, gasHit, applyDamage, V3, pickups, get nitro() { return nitro; }, set nitro(v) { nitro = v; }, touchK, layoutTouch, get isTouch() { return isTouch; }, get trauma() { return trauma; }, addShake, flash,
   police, spawnCop, spawnRoadblock, copStats, get heat() { return heat; }, set heat(v) { heat = v; heatCalmT = 0; stats.maxHeat = Math.max(stats.maxHeat, Math.floor(v)); }, get siren() { return siren && siren.g.gain.value; },
-  radio, np, npPoll, openRadio, closeRadio, setCountry, showPicker, COUNTRIES, catPaths, verifyCat, playStation, radioFail, radioSkip, probeStream, tuneUrls, tuneinGet,
+  radio, openRadio, closeRadio, playStation, radioFail, radioSkip, loadStations, fallbackArcade,
   camera, scene, Car, groundAt, pickLivery, aft, disableCar, endAftermath, fireballs, debris,
   chunks, slicks, addSlick, spillGlassAt(x, z, n) { for (let i = 0; i < n; i++) { const m = new THREE.Mesh(glassShardGeo, glassShardMat); m.position.set(x + rand(-0.3, 0.3), 0.04, z + rand(-1, 1)); scene.add(m); debris.push({ mesh: m, vel: new V3(), ang: new V3(), life: 40, r: 0.02, persist: true, size: 0.14, glass: true, rest: true }); } }, railBroken, waterAt, terrainH, onBridge, riverOf, lakeOf, puncture, igniteSlick, inView, blast, spawnTraffic, partMesh, WATER_Y, RAIL_X, get runCause() { return runCause; }, get simTime() { return simTime; }, envReset,
   wx, wxSet, wxPlows, spawnPlow, snowAt, wxGrip, laneSnow, laneSeg, SNOW_CELL, SNOW_ROWS, sky3, spots, lampLights, initTimeOfDay, resetRun,
   get hour() { return gameHour; }, set hour(v) { gameHour = v; }, get timeMul() { return wxTimeMul; }, set timeMul(v) { wxTimeMul = v; },
   applySettings, renderPrep, renderer, batchList, get badMats() { return badMats; }, saneMat, popup, banner, get dynScale() { return dyn.scale; }, get warmed() { return pcDone; }, get autoTier() { return autoTier; },
   rp, rpOpen, rpClose, rpSeek, rpSetCam, rpSetSpeed, rpRange, rpApply, rpFind, RP_CAMS, rc, get rpCount() { return rp.count; },
+  rpExportStart, rpExportStop, rpCanExport, rpVideoMime, get rpRecording() { return !!rpRec; },
   tick(n, dt = 1 / 30) { for (let i = 0; i < n && gameState === 'play'; i++) tick(dt); },
   sim(sec) { const n = Math.round(sec * 60); for (let i = 0; i < n; i++) { physicsStep(1 / 60); updateWorld(); } },
 };
@@ -6883,3 +6569,4 @@ requestAnimationFrame(frame);
 </script>
 </body>
 </html>
+
