@@ -84,15 +84,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 
 $user = tylilo_admin_current();
 if ($user !== null) {
-    $html = '<div class="card"><h2>Hello, ' . tylilo_e((string) $user['username']) . '</h2>';
-    $html .= '<p>Your role is ' . tylilo_e((string) $user['role']) . '.</p>';
-    if (tylilo_admin_is_owner($user)) {
-        $html .= '<p>Notes, the to-do list, users, and game versions are in the menu.</p>';
-    } else {
-        $html .= '<p>Your notes, to-dos, feedback, and ideas are in the menu.</p>';
-    }
-    $html .= '</div>';
-    tylilo_admin_layout('Admin', $html);
+    tylilo_admin_layout('Admin', tylilo_admin_dashboard_html($user));
     exit;
 }
 

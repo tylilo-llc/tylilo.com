@@ -2513,9 +2513,9 @@ html.signal.admin .admin-subhead {
 
 html.signal.admin .admin-menu-toggle {
   border-radius: 4px;
-  border: 1px solid #8FB0D4;
-  background: transparent;
-  color: var(--hero-text);
+  border: 1px solid var(--line, #5C6B80);
+  background: var(--card-bg);
+  color: var(--ink);
   font-weight: 600;
   min-width: 44px;
   min-height: 44px;
@@ -2524,15 +2524,16 @@ html.signal.admin .admin-menu-toggle {
 }
 
 html.signal.admin .admin-menu-toggle:hover {
-  background: rgba(247, 249, 252, 0.1);
+  background: var(--chip-bg);
 }
 
-html.signal.admin .admin-menu-bar .tagline {
+html.signal.admin .admin-menu-bar .tagline,
+html.signal.admin main .tagline {
   font-size: 1.25rem;
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.2;
-  color: var(--hero-text);
+  color: var(--ink);
 }
 
 html.signal.admin .admin-menu-panel {
@@ -2665,3 +2666,156 @@ html.signal .inq-retain a { color: var(--focus); font-weight: 600; text-decorati
 .contact-inquiry summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 600; }
 .contact-export,
 .card .inq-admin-delete { margin-top: 16px; }
+
+/* Admin shell: sidebar on desktop, grouped menu on small screens. */
+html.signal.admin .admin-shell {
+  width: 100%;
+}
+
+html.signal.admin .admin-menu {
+  position: relative;
+  width: 100%;
+}
+
+html.signal.admin .admin-menu-bar {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 8px 16px;
+}
+
+html.signal.admin .admin-menu-note {
+  margin: 0.1rem 0;
+  padding: 0.5rem 0.8rem;
+  color: var(--muted);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+html.signal.admin .admin-menu-panel a:focus-visible,
+html.signal.admin .admin-menu-panel button:focus-visible,
+html.signal.admin .admin-menu-toggle:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+html.signal.admin .admin-dash {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+html.signal.admin .admin-dash-card h2 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+}
+
+html.signal.admin .admin-dash-card p {
+  margin: 0 0 8px;
+}
+
+html.signal.admin .admin-dash-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 12px 0 0;
+}
+
+html.signal.admin .admin-dash-actions a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 600;
+}
+
+@media (min-width: 720px) {
+  html.signal.admin .admin-dash {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  html.signal.admin .hero {
+    padding-bottom: 0;
+  }
+
+  html.signal.admin .admin-shell {
+    display: grid;
+    grid-template-columns: 16.5rem minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    align-items: start;
+    min-height: calc(100vh - 4.75rem);
+  }
+
+  html.signal.admin .admin-menu {
+    display: contents;
+  }
+
+  html.signal.admin .admin-menu-bar {
+    grid-column: 2;
+    grid-row: 1;
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    padding: 16px 32px 0;
+  }
+
+  html.signal.admin .admin-menu-toggle {
+    display: none;
+  }
+
+  html.signal.admin .admin-menu-panel,
+  html.js .admin-menu-panel,
+  html.js .admin-menu-panel.is-open,
+  html.signal.admin html.js .admin-menu-panel {
+    display: block;
+    position: sticky;
+    top: 4.75rem;
+    left: auto;
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    z-index: 4;
+    width: 16.5rem;
+    max-width: none;
+    height: calc(100vh - 4.75rem);
+    max-height: calc(100vh - 4.75rem);
+    margin: 0;
+    padding: 16px 12px 24px;
+    overflow: auto;
+    border: 0;
+    border-right: 1px solid var(--line, #5C6B80);
+    border-radius: 0;
+    box-shadow: none;
+    background: var(--card-bg);
+  }
+
+  html.signal.admin .admin-shell > main,
+  html.signal.admin main#main {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  html.signal.admin .admin-shell .wrap {
+    max-width: none;
+    padding: 16px 32px 64px;
+  }
+}
+
+@media (min-width: 1024px) {
+  html.js .admin-menu-panel {
+    display: block;
+  }
+}
+
+@media (max-width: 1023px) {
+  html.js .admin-menu-panel.is-open {
+    position: fixed;
+    left: 16px;
+    right: auto;
+    top: 9.25rem;
+    width: min(20rem, calc(100% - 32px));
+    max-height: calc(100vh - 9.75rem);
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
