@@ -191,7 +191,13 @@ jobs:
             "https://preview.tylilo.com/tylilo-preview-docroot.php" \
             "http://preview.tylilo.com/tylilo-preview-docroot.php"
           do
-            body=$(curl -k --silent --show-error --netrc-file "$probe_netrc" --connect-timeout 20 --max-time 20 "$url" || true)
+            probe_out="$work/probe-body"
+            probe_code=$(curl -k --silent --show-error --netrc-file "$probe_netrc" --output "$probe_out" \
+              --write-out '%{http_code}' --connect-timeout 20 --max-time 20 "$url" || true)
+            body=$(cat "$probe_out" 2>/dev/null || true)
+            rm -f "$probe_out"
+            # Print only the status and length, never the body (it holds the server path).
+            echo "Document-root probe over ${url%%://*}: HTTP ${probe_code}, ${#body} bytes."
             case "$body" in
               */preview.tylilo.com)
                 docroot="$body"
